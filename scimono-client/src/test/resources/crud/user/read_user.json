@@ -1,0 +1,71 @@
+{
+  "response" : {
+    "id": "${id}",
+    "meta": {
+      "created": "2019-03-05T14:34:02.382Z",
+      "lastModified": "2019-03-05T14:34:02.382Z",
+      "location": "http://localhost:8080/scim/v2/Users/${id}",
+      "version": "${version}",
+      "resourceType": "User"
+    },
+    "externalId": "testuser",
+    "schemas": [
+      "urn:ietf:params:scim:schemas:core:2.0:User"
+    ],
+    "userName": "testuser",
+    "name": {
+      "formatted": "Mr. Test Something User I",
+      "givenName": "Test",
+      "middleName": "Something",
+      "familyName": "User",
+      "honorificPrefix": "Mr.",
+      "honorificSuffix": "I"
+    },
+    "displayName": "Test User",
+    "nickName": "TUser",
+    "profileUrl": "https://www.facebook.com/test.user",
+    "title": "Software Architect",
+    "userType": "Employee",
+    "preferredLanguage": "Български",
+    "locale":"bg-BG",
+    "timezone":"Europe/Sofia",
+    "active": true,
+    "emails": [
+      {
+        "value": "test.user@testuser.com",
+        "type": "work",
+        "primary": true
+      }
+    ],
+    "addresses": [
+      {
+        "type": "work",
+        "streetAddress": "бул. Цар Борис III 136a",
+        "locality": "София",
+        "region": "СА",
+        "postalCode": "1000",
+        "country": "BG",
+        "formatted": "бул. Цар Борис III 136А\nСофия, България",
+        "primary": true
+      }
+    ],
+    "phoneNumbers": [
+      {
+        "value": "359 2 9157 332",
+        "type": "work"
+      }
+    ],
+    "ims": [
+      {
+        "value": "icata87",
+        "type": "aim"
+      }
+    ],
+    "photos": [
+      {
+        "value": "https://www.facebook.com/test.user",
+        "type": "photo"
+      }
+    ]
+  }
+}
