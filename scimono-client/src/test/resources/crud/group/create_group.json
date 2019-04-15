@@ -1,0 +1,35 @@
+{
+  "request" : {
+    "schemas": ["urn:ietf:params:scim:schemas:core:2.0:Group"],
+    "displayName": "${displayName}",
+    "members": [
+      {
+        "display": "Babs Jensen",
+        "value": "2819c223-7f76-453a-919d-413861904646",
+        "type" : "User"
+      }
+    ]
+  },
+  "response" : {
+    "id": "${id}",
+    "meta": {
+      "created": "2019-03-05T14:34:02.382Z",
+      "lastModified": "2019-03-05T14:34:02.382Z",
+      "location": "http://localhost:8080/scim/v2/Groups/${id}",
+      "version": "${version}",
+      "resourceType": "Group"
+    },
+    "schemas": [
+      "urn:ietf:params:scim:schemas:core:2.0:Group"
+    ],
+    "displayName": "Group with members",
+    "members": [
+      {
+        "display": "Babs Jensen",
+        "$ref": "https://example.com/v2/Users/2819c223...413861904646",
+        "value": "2819c223-7f76-453a-919d-413861904646",
+        "type" : "User"
+      }
+    ]
+  }
+}

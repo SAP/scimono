@@ -1,0 +1,44 @@
+{
+  "response" : {
+    "totalResults": 2,
+    "itemsPerPage": 2,
+    "startIndex": 1,
+    "schemas": [
+      "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+    ],
+    "Resources": [
+      {
+        "id": "000cc9f6-516a-4e87-8f5c-45ddb376478b",
+        "meta": {
+          "created": "2019-01-02T08:32:13.186666666Z",
+          "lastModified": "2019-01-02T08:32:13.336666666Z",
+          "location": "http://localhost:8080/idds/scim/Users/000cc9f6-516a-4e87-8f5c-45ddb376478b",
+          "version": "5f624722-f45e-4b3f-aef8-c5139da23aff",
+          "resourceType": "User"
+        },
+        "schemas": [
+          "urn:ietf:params:scim:schemas:core:2.0:User"
+        ],
+        "userName": "testPatchUserReplaceOperationForSimpleAttributeWithCorrectAttributes204",
+        "displayName": "AdoDisplayName",
+        "active": true
+      },
+      {
+        "id": "000cc9f6-516a-4e87-8f5c-45ddb376478b",
+        "meta": {
+          "created": "2019-01-02T08:32:13.186666666Z",
+          "lastModified": "2019-01-02T08:32:13.336666666Z",
+          "location": "http://localhost:8080/idds/scim/Users/000cc9f6-516a-4e87-8f5c-45ddb376478b",
+          "version": "5f624722-f45e-4b3f-aef8-c5139da23aff",
+          "resourceType": "User"
+        },
+        "schemas": [
+          "urn:ietf:params:scim:schemas:core:2.0:User"
+        ],
+        "userName": "testPatchUserReplaceOperationForSimpleAttributeWithCorrectAttributes204",
+        "displayName": "AdoDisplayName",
+        "active": true
+      }
+    ]
+  }
+}

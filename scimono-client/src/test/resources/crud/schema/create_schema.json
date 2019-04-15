@@ -1,0 +1,69 @@
+{
+  "request": {
+    "id": "urn:sap:cloud:scim:schemas:extension:custom:2.0:Test",
+    "schemas": [
+      "urn:ietf:params:scim:schemas:core:2.0:Schema"
+    ],
+    "name": "Test",
+    "description": "Test description!",
+    "attributes": [
+      {
+        "name": "displayName",
+        "type": "string",
+        "multiValued": false,
+        "description": "A human-readable name for the Test. REQUIRED.",
+        "required": false,
+        "caseExact": false,
+        "mutability": "readWrite",
+        "returned": "default",
+        "uniqueness": "none",
+        "canonicalValues": [
+          "a",
+          "b",
+          "c"
+        ],
+        "referenceTypes": [
+          "external",
+          "uri"
+        ]
+      }
+    ]
+  },
+  "response": {
+    "id": "urn:sap:cloud:scim:schemas:extension:custom:2.0:Test",
+    "meta": {
+      "created": "2019-03-05T14:34:02.382Z",
+      "lastModified": "2019-03-05T14:34:02.382Z",
+      "location": "http://localhost:8080/scim/v2/Schemas/${id}",
+      "version": "${version}",
+      "resourceType": "Schema"
+    },
+    "schemas": [
+      "urn:ietf:params:scim:schemas:core:2.0:Schema"
+    ],
+    "name": "Test",
+    "description": "Test description!",
+    "attributes": [
+      {
+        "name": "displayName",
+        "type": "string",
+        "multiValued": false,
+        "description": "A human-readable name for the Test. REQUIRED.",
+        "required": false,
+        "caseExact": false,
+        "mutability": "readWrite",
+        "returned": "default",
+        "uniqueness": "none",
+        "canonicalValues": [
+          "a",
+          "b",
+          "c"
+        ],
+        "referenceTypes": [
+          "external",
+          "uri"
+        ]
+      }
+    ]
+  }
+}

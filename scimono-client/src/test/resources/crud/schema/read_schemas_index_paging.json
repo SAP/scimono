@@ -1,0 +1,68 @@
+{
+  "response" : {
+    "totalResults": 2,
+    "itemsPerPage": 2,
+    "startIndex": 1,
+    "schemas": [
+      "urn:ietf:params:scim:api:messages:2.0:ListResponse"
+    ],
+    "Resources": [
+      {
+        "id": "urn:sap:cloud:scim:schemas:extension:custom:2.0:Test",
+        "meta": {
+          "created": "2019-03-05T14:34:02.382Z",
+          "lastModified": "2019-03-05T14:34:02.382Z",
+          "location": "http://localhost:8080/scim/v2/Schemas/${id}",
+          "version": "${version}",
+          "resourceType": "Schema"
+        },
+        "schemas": [
+          "urn:ietf:params:scim:schemas:core:2.0:Schema"
+        ],
+        "name": "Test",
+        "description": "Test description!",
+        "attributes": [
+          {
+            "name": "someInternalId",
+            "type": "string",
+            "multiValued": false,
+            "description": "Super secret internal system id",
+            "required": false,
+            "caseExact": true,
+            "mutability": "readWrite",
+            "returned": "default",
+            "uniqueness": "server"
+          }
+        ]
+      },
+      {
+        "id": "urn:sap:cloud:scim:schemas:extension:custom:2.0:AnotherTest",
+        "meta": {
+          "created": "2019-03-05T14:34:02.382Z",
+          "lastModified": "2019-03-05T14:34:02.382Z",
+          "location": "http://localhost:8080/scim/v2/Schemas/${id}",
+          "version": "${version}",
+          "resourceType": "Schema"
+        },
+        "schemas": [
+          "urn:ietf:params:scim:schemas:core:2.0:Schema"
+        ],
+        "name": "AnotherTest",
+        "description": "Test description!",
+        "attributes": [
+          {
+            "name": "someInternalId",
+            "type": "string",
+            "multiValued": false,
+            "description": "Super secret internal system id",
+            "required": false,
+            "caseExact": true,
+            "mutability": "readWrite",
+            "returned": "default",
+            "uniqueness": "server"
+          }
+        ]
+      }
+    ]
+  }
+}

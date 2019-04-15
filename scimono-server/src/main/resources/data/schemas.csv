@@ -1,0 +1,7 @@
+ID,CREATED,LAST_MODIFIED,VERSION,NAME,DESCRIPTION
+urn:ietf:params:scim:schemas:core:2.0:Group,2017-01-24T13:42:09.137Z,2017-01-24T13:42:09.137Z,7f60548b-64ed-4a3a-9789-a86022c2fd69,Group,Group
+urn:ietf:params:scim:schemas:core:2.0:ResourceType,2017-01-24T13:42:09.137Z,2017-01-24T13:42:09.137Z,7b4764c5-7d18-4eb7-9500-8472acf35562,ResourceType,Specifies the schema that describes a SCIM resource type
+urn:ietf:params:scim:schemas:core:2.0:Schema,2017-01-24T13:42:09.137Z,2017-01-24T13:42:09.137Z,7820c1e3-9bd3-42f3-8b27-0cf31b4eeff1,Schema,Specifies the schema that describes a SCIM schema
+urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig,2017-01-24T13:42:09.137Z,2017-01-24T13:42:09.137Z,b2a13e26-2947-4f89-a34c-c537545923a9,Service Provider Configuration,Schema for representing the service provider's configuration
+urn:ietf:params:scim:schemas:core:2.0:User,2017-01-24T13:42:09.137Z,2017-01-24T13:42:09.137Z,15c42927-b59e-4406-8312-b2289020fc6f,User,User Account
+urn:ietf:params:scim:schemas:extension:enterprise:2.0:User,2017-01-24T13:42:09.137Z,2017-01-24T13:42:09.137Z,ab4931c2-708a-437c-aba1-9366a0d36a9c,EnterpriseUser,Enterprise User
