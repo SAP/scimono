@@ -28,8 +28,8 @@ SCIMono provides drop-in support for serving a SCIM v2 API. Supported features:
 ## Download
   Clone the repository to your local machine.
   ```text
-  git clone https://github.wdf.sap.corp/idstore/scim-library.git
-  cd scim-library
+  git clone https://github.com/SAP/scimono.git
+  cd scimono
 ```
 
 ## Installation
@@ -42,7 +42,7 @@ mvn clean install
   ```
     <dependency>
         <groupId>com.sap.scimono</groupId>
-        <artifactId>scim-lib</artifactId>
+        <artifactId>scimono-server</artifactId>
         <version>${project.version}</version>
     </dependency>
   ```
@@ -58,7 +58,7 @@ mvn clean install
     public class MySCIMApi extends SCIMApplication {}
   ```
 
-  Please follow [this tutorial](https://github.wdf.sap.corp/idstore/scim-library-demo), for more details on how to 
+  Please follow [this tutorial](https://github.com/SAP/scimono/scim-library-demo), for more details on how to 
   build your SCIM 2.0 REST API with SAP SCIMono.  
 
 # Configuration
@@ -81,12 +81,12 @@ The library provides 5 standard callbacks that plug into the default resources:
 They are instantiated on a per-request basis (multi-tenancy support is straightforward to achieve) and are cached for the lifetime of the request. To use them, override the corresponding methods exposed by SCIMApplication:
 
 ```
-import com.sap.security.iag.idstore.scim.SCIMApplication;
-import com.sap.security.iag.idstore.scim.callback.config.SCIMConfigurationCallback;
-import com.sap.security.iag.idstore.scim.callback.groups.GroupsCallback;
-import com.sap.security.iag.idstore.scim.callback.schemas.SchemasCallback;
-import com.sap.security.iag.idstore.scim.callback.users.UsersCallback;
-import com.sap.security.iag.idstore.scim.callback.users.ResourceTypesCallback;
+import com.sap.scimono.SCIMApplication;
+import com.sap.scimono.callback.config.SCIMConfigurationCallback;
+import com.sap.scimono.callback.groups.GroupsCallback;
+import com.sap.scimono.callback.schemas.SchemasCallback;
+import com.sap.scimono.callback.users.UsersCallback;
+import com.sap.scimono.callback.users.ResourceTypesCallback;
 
 import javax.ws.rs.ApplicationPath;
 
@@ -121,7 +121,7 @@ public class MySCIMApi extends SCIMApplication {
 
 The library also provides an extension point for custom resources. Example snippet:
 ```
-import com.sap.security.iag.idstore.scim.SCIMApplication;
+import com.sap.scimono.SCIMApplication;
 
 import javax.ws.rs.ApplicationPath;
 import java.util.Set;
@@ -145,11 +145,11 @@ The current features are **not** currently supported but might be in the future:
   
 # Known Issues
 
-A list of known issues is available on the [GitHub issues page](https://github.wdf.sap.corp/idstore/scim-library/issues) of this project.
+A list of known issues is available on the [GitHub issues page](https://github.com/SAP/scimono/issues) of this project.
 
 # How to obtain support
 
-For any question please [open an issue](https://github.wdf.sap.corp/idstore/scim-library/issues/new) in GitHub and make 
+For any question please [open an issue](https://github.com/SAP/scimono/issues/new) in GitHub and make 
 use of the labels in order to refer to the sample and to categorize the kind of the issue.
 
 # Contributing
