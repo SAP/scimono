@@ -41,7 +41,7 @@ mvn clean install
   To use it, you need the following Maven dependency:
   ```
     <dependency>
-        <groupId>com.sap.scim</groupId>
+        <groupId>com.sap.scimono</groupId>
         <artifactId>scim-lib</artifactId>
         <version>${project.version}</version>
     </dependency>
