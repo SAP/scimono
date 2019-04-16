@@ -50,7 +50,7 @@ mvn clean install
   Exposing an API endpoint is then as easy as:
     
   ```
-    import com.sap.security.iag.idstore.scim.SCIMApplication;
+    import com.sap.scimono.SCIMApplication;
     
     import javax.ws.rs.ApplicationPath;
     
