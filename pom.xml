@@ -22,7 +22,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <jackson.version>2.9.6</jackson.version>
 
-        <org.mockito.version>1.9.5</org.mockito.version>
+        <org.mockito.version>2.27.0</org.mockito.version>
         <wiremock-version>2.22.0</wiremock-version>
         <junit-jupiter-version>5.4.1</junit-jupiter-version>
     </properties>
@@ -99,9 +99,9 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
-    
+
     <build>
-    	<pluginManagement>
+        <pluginManagement>
             <plugins>
                 <plugin>
                     <groupId>org.antlr</groupId>
@@ -113,7 +113,7 @@
                     </configuration>
                 </plugin>
             </plugins>
-    	</pluginManagement>
+        </pluginManagement>
     </build>
 
 </project>
