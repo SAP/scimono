@@ -79,7 +79,19 @@ public interface SchemasCallback {
    */
   boolean isValidSchemaName(final String schemaName);
 
-  Attribute getAttribute(String path);
+  /**
+   * Returns SCIM attribute definition
+   *
+   * @param path represents full attribute notation starting with schema name (eg. urn:ietf:params:scim:schemas:core:2.0:Schema:description)
+   * @return @{@link Attribute} if exists with specified schema or null
+   */
+  default Attribute getAttribute(String path) {
+    List<Attribute> attrHierarchy = getComplexAttributePath(path);
+    if (attrHierarchy.isEmpty()) {
+      return null;
+    }
+    return attrHierarchy.get(attrHierarchy.size() - 1);
+  }
 
   //TODO this could probably be optimized (e.g. it reads all schemas then returns only an id, which is used to read the schema again in getComplexAttributePath)
   default String getSchemaIdFromAttributeNotation(String attrNotation) {
