@@ -5,12 +5,49 @@
     <groupId>com.sap.scimono</groupId>
     <artifactId>scimono-parent</artifactId>
     <version>0.0.1-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
     <name>SAP SCIMono Library</name>
+    <description>SAP SCIMono provides drop-in support for serving a SCIM v2 API. </description>
+    <url>https://github.com/SAP/scimono</url>
+
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+
+    <organization>
+        <name>SAP SE</name>
+        <url>https://www.sap.com</url>
+    </organization>
+
+    <developers>
+        <developer>
+            <name>Hristo Borisov</name>
+            <email>hristo.borisov@sap.com</email>
+            <organization>SAP</organization>
+            <organizationUrl>https://www.sap.com</organizationUrl>
+        </developer>
+        <developer>
+            <name>Aleyidin Karaimin</name>
+            <email>aleyidin.karaimin@sap.com</email>
+            <organization>SAP</organization>
+            <organizationUrl>https://www.sap.com</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:https://github.com/SAP/scimono.git</connection>
+        <developerConnection>scm:git:https://github.com/SAP/scimono.git</developerConnection>
+        <url>https://github.com/SAP/scimono</url>
+    </scm>
+
     <modules>
         <module>scimono-client</module>
         <module>scimono-server</module>
     </modules>
-    <packaging>pom</packaging>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -117,4 +154,3 @@
     </build>
 
 </project>
-
