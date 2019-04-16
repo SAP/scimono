@@ -22,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ActionResponseStatusConfigTest {
-  @ParameterizedTest(name = "test '{0}' is part of expected Responses")
+  @ParameterizedTest(name = "Test that response status: {0} is part of expected Responses")
   @EnumSource(value = Response.Status.class, names = {"OK", "CREATED"})
   void testIfResponseStatusIsPartOfSuccessfulResponseStatuses(Response.Status responseStatus) {
     ActionResponseStatusConfig responseStatusConfig = new ActionResponseStatusConfig(Arrays.asList(Response.Status.OK, Response.Status.CREATED));
@@ -34,7 +34,7 @@ public class ActionResponseStatusConfigTest {
     // @formatter:on
   }
 
-  @ParameterizedTest(name = "test '{0}' is NOT part of expected Responses")
+  @ParameterizedTest(name = "Test that response status: {0} is NOT part of expected Responses")
   @EnumSource(value = Response.Status.class, names = {"NOT_FOUND", "NOT_IMPLEMENTED"})
   void testIfResponseStatusIsNOTPartOfSuccessfulResponseStatuses(Response.Status responseStatus) {
     ActionResponseStatusConfig responseStatusConfig = new ActionResponseStatusConfig(Arrays.asList(Response.Status.OK, Response.Status.CREATED));
