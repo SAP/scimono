@@ -56,10 +56,7 @@ mvn clean install
     
     @ApplicationPath("scim")
     public class MySCIMApi extends SCIMApplication {}
-  ```
-
-  Please follow [this tutorial](https://github.com/SAP/scimono/scim-library-demo), for more details on how to 
-  build your SCIM 2.0 REST API with SAP SCIMono.  
+  ```  
 
 # Configuration
 
