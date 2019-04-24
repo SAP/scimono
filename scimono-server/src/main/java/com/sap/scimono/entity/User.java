@@ -711,17 +711,6 @@ public final class User extends Resource<User> {
         throw new InvalidInputException("The given user must not be null");
       }
     }
-    
-    /**
-     * Sets the userName (See {@link User#getUserName()}).
-     *
-     * @param userName the user name of the {@link User}
-     * @return the builder itself
-     */
-    public Builder setUserName(final String userName) {
-      this.userName = userName;
-      return this;
-    }
 
     /**
      * Sets the components of the {@link User}'s real name (See {@link User#getName()}).
