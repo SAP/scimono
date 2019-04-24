@@ -1,5 +1,7 @@
 package com.sap.scimono.client;
 
+import com.sap.scimono.client.query.IdentityPageQuery;
+import com.sap.scimono.client.query.IndexPageQuery;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
@@ -30,20 +32,40 @@ public class GroupRequest {
     return resourceRequestDelegate.readAllResources(new GenericType<PagedByIndexSearchResult<Group>>(){});
   }
 
+  public SCIMResponse<PagedByIndexSearchResult<Group>> readAllGroups(String filter) {
+    return resourceRequestDelegate.readAllResources(new GenericType<PagedByIndexSearchResult<Group>>(){}, filter);
+  }
+
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups() {
     return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<Group>>(){});
+  }
+
+  public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups(String filter) {
+    return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<Group>>(){}, filter);
   }
 
   public SCIMResponse<PagedByIdentitySearchResult<Group>> readMultipleGroups(IdentityPageQuery identityPageQuery) {
     return resourceRequestDelegate.readMultipleResources(identityPageQuery, new GenericType<PagedByIdentitySearchResult<Group>>(){});
   }
 
+  public SCIMResponse<PagedByIdentitySearchResult<Group>> readMultipleGroups(IdentityPageQuery identityPageQuery, String filter) {
+    return resourceRequestDelegate.readMultipleResources(identityPageQuery, filter, new GenericType<PagedByIdentitySearchResult<Group>>(){});
+  }
+
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups(IndexPageQuery indexPageQuery) {
     return resourceRequestDelegate.readMultipleResources(indexPageQuery, new GenericType<PagedByIndexSearchResult<Group>>(){});
   }
 
+  public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups(IndexPageQuery indexPageQuery, String filter) {
+    return resourceRequestDelegate.readMultipleResources(indexPageQuery, filter, new GenericType<PagedByIndexSearchResult<Group>>(){});
+  }
+
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroupsWithoutPaging() {
     return resourceRequestDelegate.readMultipleResourcesWithoutPaging(new GenericType<PagedByIndexSearchResult<Group>>(){});
+  }
+
+  public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroupsWithoutPaging(String filter) {
+    return resourceRequestDelegate.readMultipleResourcesWithoutPaging(new GenericType<PagedByIndexSearchResult<Group>>(){}, filter);
   }
 
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroupsIndexed(Response response) {

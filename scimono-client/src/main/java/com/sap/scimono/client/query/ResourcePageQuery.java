@@ -1,4 +1,4 @@
-package com.sap.scimono.client;
+package com.sap.scimono.client.query;
 
 import javax.ws.rs.client.WebTarget;
 import java.util.HashMap;
@@ -61,19 +61,4 @@ public class ResourcePageQuery implements IdentityPageQuery, IndexPageQuery {
     return new ResourcePageQuery().withStartIndexAndCount(DEFAULT_START_INDEX, DEFAULT_COUNT);
   }
 
-}
-interface FilterPageQuery {
-  WebTarget apply(WebTarget target);
-}
-
-interface IdentityPageQuery extends FilterPageQuery {
-  IdentityPageQuery withStartId(String startId);
-
-  IdentityPageQuery withStartIdAndCount(String startId, int count);
-}
-
-interface IndexPageQuery extends FilterPageQuery {
-  IndexPageQuery withStartIndex(long startIndex);
-
-  IndexPageQuery withStartIndexAndCount(long startIndex, int count);
 }
