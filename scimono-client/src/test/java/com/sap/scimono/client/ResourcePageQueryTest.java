@@ -1,5 +1,6 @@
 package com.sap.scimono.client;
 
+import com.sap.scimono.client.query.ResourcePageQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
