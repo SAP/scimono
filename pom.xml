@@ -47,6 +47,7 @@
     <modules>
         <module>scimono-client</module>
         <module>scimono-server</module>
+        <module>scimono-examples</module>
     </modules>
 
     <properties>
