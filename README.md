@@ -9,7 +9,7 @@ Open source SCIM 2.0 client and server library.
 SCIMono provides drop-in support for serving a SCIM v2 API. Supported features:
 
   * Fully SCIM v2 compliant
-  * Suport for the following resources: Users, Groups, Schemas
+  * Support for the following resources: Users, Groups, Schemas
   * Resource paging (index-based as required by SCIM spec. & id-based for custom scenarios)
   * Filtering (full support for SCIM filtering syntax spec.)
   * Any auth method (OAuth, by default)
@@ -27,19 +27,19 @@ SCIMono provides drop-in support for serving a SCIM v2 API. Supported features:
 # Download and Installation
 ## Download
   Clone the repository to your local machine.
-  ```text
+  ```shell
   git clone https://github.com/SAP/scimono.git
   cd scimono
 ```
 
 ## Installation
-```text
+```shell
 mvn clean install
 ```
 ## Usage
 
   To use it, you need the following Maven dependency:
-  ```
+  ```xml
     <dependency>
         <groupId>com.sap.scimono</groupId>
         <artifactId>scimono-server</artifactId>
@@ -49,7 +49,7 @@ mvn clean install
     
   Exposing an API endpoint is then as easy as:
     
-  ```
+  ```java
     import com.sap.scimono.SCIMApplication;
     
     import javax.ws.rs.ApplicationPath;
@@ -77,7 +77,7 @@ The library provides 5 standard callbacks that plug into the default resources:
 
 They are instantiated on a per-request basis (multi-tenancy support is straightforward to achieve) and are cached for the lifetime of the request. To use them, override the corresponding methods exposed by SCIMApplication:
 
-```
+```java
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.groups.GroupsCallback;
@@ -117,7 +117,7 @@ public class MySCIMApi extends SCIMApplication {
 ```
 
 The library also provides an extension point for custom resources. Example snippet:
-```
+```java
 import com.sap.scimono.SCIMApplication;
 
 import javax.ws.rs.ApplicationPath;
