@@ -39,7 +39,7 @@ mvn clean install
 ## Usage
 
   To use it, you need the following Maven dependency:
-  ```
+  ```xml
     <dependency>
         <groupId>com.sap.scimono</groupId>
         <artifactId>scimono-server</artifactId>
@@ -49,7 +49,7 @@ mvn clean install
     
   Exposing an API endpoint is then as easy as:
     
-  ```
+  ```java
     import com.sap.scimono.SCIMApplication;
     
     import javax.ws.rs.ApplicationPath;
@@ -77,7 +77,7 @@ The library provides 5 standard callbacks that plug into the default resources:
 
 They are instantiated on a per-request basis (multi-tenancy support is straightforward to achieve) and are cached for the lifetime of the request. To use them, override the corresponding methods exposed by SCIMApplication:
 
-```
+```java
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.groups.GroupsCallback;
@@ -117,7 +117,7 @@ public class MySCIMApi extends SCIMApplication {
 ```
 
 The library also provides an extension point for custom resources. Example snippet:
-```
+```java
 import com.sap.scimono.SCIMApplication;
 
 import javax.ws.rs.ApplicationPath;
