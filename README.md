@@ -9,7 +9,7 @@ Open source SCIM 2.0 client and server library.
 SCIMono provides drop-in support for serving a SCIM v2 API. Supported features:
 
   * Fully SCIM v2 compliant
-  * Suport for the following resources: Users, Groups, Schemas
+  * Support for the following resources: Users, Groups, Schemas
   * Resource paging (index-based as required by SCIM spec. & id-based for custom scenarios)
   * Filtering (full support for SCIM filtering syntax spec.)
   * Any auth method (OAuth, by default)
@@ -27,13 +27,13 @@ SCIMono provides drop-in support for serving a SCIM v2 API. Supported features:
 # Download and Installation
 ## Download
   Clone the repository to your local machine.
-  ```text
+  ```shell
   git clone https://github.com/SAP/scimono.git
   cd scimono
 ```
 
 ## Installation
-```text
+```shell
 mvn clean install
 ```
 ## Usage
