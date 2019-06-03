@@ -32,6 +32,10 @@ public class SCIMResponse<T> {
     return new SCIMResponse<>(rs -> entity, response, responseStatusConfig);
   }
 
+  public int getStatusCode() {
+    return response.getStatus();
+  }
+
   public T get() {
     if(!isSuccess()) {
       throw new WebApplicationException("Request does not finished successfully");
