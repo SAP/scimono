@@ -87,7 +87,7 @@ public class UserRequestTest {
     SCIMResponse<PagedByIdentitySearchResult<User>> resp = SCIMClientService.builder(DEFAULT_URL)
         .build()
         .buildUserRequest()
-        .readMultipleUsers(identityPageQuery().withStartIdAndCount(startId, 100));
+        .readMultipleUsers(identityPageQuery().withStartId(startId).withCount(100));
     PagedByIdentitySearchResult<User>  receivedResponse = resp.get();
 
     assertAll(
@@ -113,7 +113,7 @@ public class UserRequestTest {
         dynamicTest("read multiple Users default index paging",
             getUsersIndexPagingExecutable("/Users?startIndex=1&count=100", UserRequest::readMultipleUsers)),
         dynamicTest("read multiple Users custom index paging", getUsersIndexPagingExecutable("/Users?startIndex=3&count=40",
-            scimUserRequest -> scimUserRequest.readMultipleUsers(indexPageQuery().withStartIndexAndCount(3, 40)))),
+            scimUserRequest -> scimUserRequest.readMultipleUsers(indexPageQuery().withStartIndex(3).withCount(40)))),
         dynamicTest("read multiple Users without adding page parameters", getUsersIndexPagingExecutable("/Users",
             UserRequest::readMultipleUsersWithoutPaging))
     );

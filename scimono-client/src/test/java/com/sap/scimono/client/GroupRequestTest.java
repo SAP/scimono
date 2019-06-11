@@ -83,7 +83,7 @@ public class GroupRequestTest {
     SCIMResponse<PagedByIdentitySearchResult<Group>> resp = SCIMClientService.builder(DEFAULT_URL)
         .build()
         .buildGroupRequest()
-        .readMultipleGroups(identityPageQuery().withStartIdAndCount(startId, 100));
+        .readMultipleGroups(identityPageQuery().withStartId(startId).withCount(100));
     PagedByIdentitySearchResult<Group>  receivedResponse = resp.get();
 
     assertAll(
@@ -105,7 +105,7 @@ public class GroupRequestTest {
         dynamicTest("read multiple Groups default index paging",
             getGroupsIndexPagingExecutable("/Groups?startIndex=1&count=100", GroupRequest::readMultipleGroups)),
         dynamicTest("read multiple Groups custom index paging", getGroupsIndexPagingExecutable("/Groups?startIndex=3&count=40",
-            scimGroupRequest -> scimGroupRequest.readMultipleGroups(indexPageQuery().withStartIndexAndCount(3, 40)))),
+            scimGroupRequest -> scimGroupRequest.readMultipleGroups(indexPageQuery().withStartIndex(3).withCount(40)))),
         dynamicTest("read multiple Groups without adding page parameters", getGroupsIndexPagingExecutable("/Groups",
             GroupRequest::readMultipleGroupsWithoutPaging))
     );

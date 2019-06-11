@@ -35,7 +35,7 @@ public class ResourcePageQueryTest {
     int startIndex = 1;
     int count = 50;
 
-    String resultRequestPath = ResourcePageQuery.indexPageQuery().withStartIndexAndCount(startIndex, count).apply(webTarget).getUri().toString();
+    String resultRequestPath = ResourcePageQuery.indexPageQuery().withStartIndex(startIndex).withCount(count).apply(webTarget).getUri().toString();
     assertEquals(String.format("%s?startIndex=%d&count=%d", DEFAULT_URL, startIndex, count), resultRequestPath);
   }
 
@@ -44,7 +44,7 @@ public class ResourcePageQueryTest {
     String startId = "00000000-0000-1000-9000-000000000000";
     int count = 50;
 
-    String resultRequestPath = ResourcePageQuery.identityPageQuery().withStartIdAndCount(startId, count).apply(webTarget).getUri().toString();
+    String resultRequestPath = ResourcePageQuery.identityPageQuery().withStartId(startId).withCount(count).apply(webTarget).getUri().toString();
     assertEquals(String.format("%s?startId=%s&count=%d", DEFAULT_URL, startId, count), resultRequestPath);
   }
 }

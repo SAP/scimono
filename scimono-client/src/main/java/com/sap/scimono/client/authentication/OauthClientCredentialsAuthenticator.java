@@ -39,7 +39,7 @@ public class OauthClientCredentialsAuthenticator implements TargetSystemAuthenti
   private OauthTokenProperties retrieveOauthToken() {
     // @formatter:off
     Response response = oauthTarget.request()
-        .header(AUTHORIZATION, new TargetSystemBasicAuthenticator(oauthCredentials.getClientId(), oauthCredentials.getSecret()).authenticate())
+        .header(AUTHORIZATION, TargetSystemBasicAuthenticator.create(oauthCredentials.getClientId(), oauthCredentials.getSecret()).build().authenticate())
         .post(null);
     // @formatter:on
 

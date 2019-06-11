@@ -233,7 +233,7 @@ public class SCIMResourceRequestInvocationTest {
       Collection<Executable> capturedAssertions = new ArrayList<>();
       assertThrows(ProcessingException.class,
           () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=4&count=50", capturedAssertions)
-              .readMultipleUsers(indexPageQuery().withStartIndexAndCount(4, 50))
+              .readMultipleUsers(indexPageQuery().withStartIndex(4).withCount(50))
       );
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
@@ -247,7 +247,7 @@ public class SCIMResourceRequestInvocationTest {
 
       assertThrows(ProcessingException.class,
           () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=4&count=50&filter=" + encode(filter, "UTF-8"), capturedAssertions)
-              .readMultipleUsers(indexPageQuery().withStartIndexAndCount(4, 50), filter)
+              .readMultipleUsers(indexPageQuery().withStartIndex(4).withCount(50), filter)
       );
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
@@ -259,7 +259,7 @@ public class SCIMResourceRequestInvocationTest {
       Collection<Executable> capturedAssertions = new ArrayList<>();
       assertThrows(ProcessingException.class,
           () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startId=something&count=50", capturedAssertions)
-              .readMultipleUsers(identityPageQuery().withStartIdAndCount("something", 50))
+              .readMultipleUsers(identityPageQuery().withStartId("something").withCount(50))
       );
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
@@ -273,7 +273,7 @@ public class SCIMResourceRequestInvocationTest {
 
       assertThrows(ProcessingException.class,
           () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startId=something&count=50&filter=" + encode(filter, "UTF-8"), capturedAssertions)
-              .readMultipleUsers(identityPageQuery().withStartIdAndCount("something", 50), filter)
+              .readMultipleUsers(identityPageQuery().withStartId("something").withCount(50), filter)
       );
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);

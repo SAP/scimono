@@ -140,7 +140,7 @@ class SCIMResourceRequest<T extends Resource<T>> {
 
     do {
       lastHttpResponse = scimRequest.get(new SCIMQuery.SCIMQueryBuilder(targetSystem)
-          .apply(indexPageQuery().withStartIndexAndCount(startIndex, count))
+          .apply(indexPageQuery().withStartIndex(startIndex).withCount(count))
           .apply(scimQuery)
           .get());
       lastResourcesPageResponse = readMultipleResourcesIndexed(lastHttpResponse, responseType);

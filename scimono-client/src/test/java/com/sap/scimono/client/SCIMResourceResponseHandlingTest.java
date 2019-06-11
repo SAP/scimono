@@ -153,7 +153,7 @@ public class SCIMResourceResponseHandlingTest {
 
     final SCIMResponse<PagedByIndexSearchResult<User>> usersResult = SCIMClientService.builder(DEFAULT_URL).build()
         .buildUserRequest()
-        .readMultipleUsers(indexPageQuery().withStartIndexAndCount(startIndex, returnedUsersCount));
+        .readMultipleUsers(indexPageQuery().withStartIndex(startIndex).withCount(returnedUsersCount));
 
     assertAll(() -> {
       assertTrue(usersResult.isSuccess());
@@ -183,7 +183,7 @@ public class SCIMResourceResponseHandlingTest {
 
     final SCIMResponse<PagedByIdentitySearchResult<User>> usersResult = SCIMClientService.builder(DEFAULT_URL).build()
         .buildUserRequest()
-        .readMultipleUsers(ResourcePageQuery.identityPageQuery().withStartIdAndCount(startId, returnedUsersCount));
+        .readMultipleUsers(ResourcePageQuery.identityPageQuery().withStartId(startId).withCount(returnedUsersCount));
 
     assertAll(() -> {
       assertTrue(usersResult.isSuccess());
