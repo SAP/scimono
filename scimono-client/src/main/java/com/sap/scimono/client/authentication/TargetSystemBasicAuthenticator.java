@@ -7,9 +7,18 @@ public class TargetSystemBasicAuthenticator implements TargetSystemAuthenticator
   private String userName;
   private String password;
 
-  public TargetSystemBasicAuthenticator(String userName, String password) {
+  private TargetSystemBasicAuthenticator(String userName, String password) {
     this.userName = userName;
     this.password = password;
+  }
+
+  public static TargetSystemAuthenticator.Builder<TargetSystemBasicAuthenticator> create(String userName, String password) {
+    return new Builder<TargetSystemBasicAuthenticator>() {
+      @Override
+      public TargetSystemBasicAuthenticator build() {
+        return new TargetSystemBasicAuthenticator(userName, password);
+      }
+    };
   }
 
   @Override

@@ -1,7 +1,29 @@
 package com.sap.scimono.client.query;
 
-public interface IdentityPageQuery extends SCIMQuery {
-  IdentityPageQuery withStartId(String startId);
+import javax.ws.rs.client.WebTarget;
 
-  IdentityPageQuery withStartIdAndCount(String startId, int count);
+import static com.sap.scimono.api.API.COUNT_PARAM;
+import static com.sap.scimono.api.API.START_ID_PARAM;
+
+public class IdentityPageQuery implements SCIMQuery {
+  private ResourcePageQuery resourcePageQuery;
+
+  IdentityPageQuery() {
+    resourcePageQuery = new ResourcePageQuery();
+  }
+
+  public IdentityPageQuery withStartId(String startId) {
+    resourcePageQuery.addQueryParam(START_ID_PARAM, startId);
+    return this;
+  }
+
+  public IdentityPageQuery withCount(int count) {
+    resourcePageQuery.addQueryParam(COUNT_PARAM, count);
+    return this;
+  }
+
+  @Override
+  public WebTarget apply(WebTarget target) {
+    return resourcePageQuery.apply(target);
+  }
 }
