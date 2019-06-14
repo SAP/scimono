@@ -5,7 +5,7 @@
     <parent>
         <artifactId>scimono-examples</artifactId>
         <groupId>com.sap.scimono.examples</groupId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>0.0.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -26,7 +26,7 @@
         <dependency>
             <groupId>com.sap.scimono</groupId>
             <artifactId>scimono-server</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
+            <version>0.0.1</version>
         </dependency>
 
         <dependency>
