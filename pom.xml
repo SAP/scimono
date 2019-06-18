@@ -48,7 +48,7 @@
         <module>scimono-client</module>
         <module>scimono-server</module>
         <module>scimono-examples</module>
-        <module>scim-system-compliant-tests</module>
+        <module>scimono-compliance-tests</module>
     </modules>
 
     <properties>

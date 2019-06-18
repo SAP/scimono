@@ -31,7 +31,6 @@ import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
@@ -64,7 +63,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class E2EUserIntegrationTest extends CompliantSCIMSystemIntegrationTest {
+public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   private static boolean setupDone;
   private static final int RESOURCES_PER_PAGE = 1000;

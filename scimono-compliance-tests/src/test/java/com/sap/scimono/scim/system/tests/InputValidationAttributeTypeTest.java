@@ -7,12 +7,10 @@ import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -20,7 +18,7 @@ import java.util.stream.Stream;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-public class InputValidationAttributeTypeTest extends CompliantSCIMSystemIntegrationTest {
+public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
 
   private static boolean isSetUpExecuted = false;
   private static String TEST_SCHEMA_ID = Schema.EXTENSION_SCHEMA_URN + "TestSchemaAllIds";

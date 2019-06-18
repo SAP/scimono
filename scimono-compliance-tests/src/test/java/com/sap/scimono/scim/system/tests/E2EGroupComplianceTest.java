@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class E2EGroupIntegrationTest extends CompliantSCIMSystemIntegrationTest {
+public class E2EGroupComplianceTest extends SCIMComplianceTest {
   private static final int RESOURCES_PER_PAGE = 1000;
 
   private static final int ASSIGNMENT_UPDATE_DELAY = 30;

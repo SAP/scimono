@@ -56,13 +56,13 @@ import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
 import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(TestReporter.class)
-public abstract class CompliantSCIMSystemIntegrationTest {
+public abstract class SCIMComplianceTest {
 
   protected final UserRequest userRequest;
   protected final GroupRequest groupRequest;
   protected final SchemaRequest schemaRequest;
 
-  protected CompliantSCIMSystemIntegrationTest() {
+  protected SCIMComplianceTest() {
     SCIMClientService scimClientService = configureScimClientService(SERVICE_URL);
     userRequest = scimClientService.buildUserRequest();
     groupRequest = scimClientService.buildGroupRequest();
@@ -86,7 +86,7 @@ public abstract class CompliantSCIMSystemIntegrationTest {
     return clientServiceBuilder.build();
   }
   private Client getOauthClient() {
-    Logger testLogger = Logger.getLogger(CompliantSCIMSystemIntegrationTest.class.getName());
+    Logger testLogger = Logger.getLogger(SCIMComplianceTest.class.getName());
     LoggingFeature loggingFeature = new LoggingFeature(testLogger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null);
 
     Client client = ClientBuilder.newClient();

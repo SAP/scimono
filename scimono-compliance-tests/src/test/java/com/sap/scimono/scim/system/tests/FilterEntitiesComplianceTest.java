@@ -9,7 +9,6 @@ import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -40,7 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class FilterEntitiesIntegrationTest extends CompliantSCIMSystemIntegrationTest {
+public class FilterEntitiesComplianceTest extends SCIMComplianceTest {
   private static final String CUSTOM_BOOLEAN_ATTRIBUTE_NAME = "booleanAttribute";
   private static final String CUSTOM_INTEGER_ATTRIBUTE_NAME = "integerAttribute";
   private static final String CUSTOM_STRING_ATTRIBUTE_NAME = "stringAttribute";

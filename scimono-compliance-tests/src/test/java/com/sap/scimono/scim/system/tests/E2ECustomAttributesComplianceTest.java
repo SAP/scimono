@@ -29,7 +29,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class E2ECustomAttributesIntegrationTest extends CompliantSCIMSystemIntegrationTest {
+public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
 
   private static boolean setupDone;
 

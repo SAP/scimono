@@ -35,7 +35,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @TestMethodOrder(MethodOrderer.Alphanumeric.class)
-public class E2ESchemaIntegrationTest extends CompliantSCIMSystemIntegrationTest {
+public class E2ESchemaComplianceTest extends SCIMComplianceTest {
   private static final String TEST_SCHEMA_ID = Schema.EXTENSION_SCHEMA_URN + "Test";
   private static final List<String> scimPredefinedCoreSchemaIds = Arrays.asList(User.SCHEMA, Group.SCHEMA, EnterpriseExtension.ENTERPRISE_URN,
       ServiceProviderConfig.SCHEMA, ResourceType.SCHEMA, Schema.SCHEMA);

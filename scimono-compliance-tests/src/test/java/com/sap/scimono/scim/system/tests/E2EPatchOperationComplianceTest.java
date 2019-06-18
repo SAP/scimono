@@ -32,7 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-public class E2EPatchOperationTest extends CompliantSCIMSystemIntegrationTest {
+public class E2EPatchOperationComplianceTest extends SCIMComplianceTest {
   private static final String USER_TYPE_DEVELOPER = "developer";
 
   private static Email workMail = TestData.buildWorkEmailWithDefaultAttrs();
