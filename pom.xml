@@ -48,6 +48,7 @@
         <module>scimono-client</module>
         <module>scimono-server</module>
         <module>scimono-examples</module>
+        <module>scim-system-compliant-tests</module>
     </modules>
 
     <properties>
@@ -63,6 +64,7 @@
         <org.mockito.version>2.27.0</org.mockito.version>
         <wiremock-version>2.22.0</wiremock-version>
         <junit-jupiter-version>5.4.1</junit-jupiter-version>
+        <maven-test-plugins-version>2.22.1</maven-test-plugins-version>
     </properties>
 
     <dependencyManagement>
