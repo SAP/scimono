@@ -5,7 +5,7 @@
     <parent>
         <artifactId>scimono-parent</artifactId>
         <groupId>com.sap.scimono</groupId>
-        <version>0.0.2-SNAPSHOT</version>
+        <version>0.0.3-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -25,9 +25,6 @@
                     </includes>
                 </configuration>
             </plugin>
-
-            <!-- Include only integration tests for maven-failsafe-plugin that is
-                run in integration-test phase -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-failsafe-plugin</artifactId>
@@ -90,7 +87,7 @@
             <artifactId>jersey-test-framework-core</artifactId>
             <version>${jersey-2-version}</version>
             <exclusions>
-                <exclusion>  <!-- declare the exclusion here -->
+                <exclusion>
                     <groupId>junit</groupId>
                     <artifactId>junit</artifactId>
                 </exclusion>
