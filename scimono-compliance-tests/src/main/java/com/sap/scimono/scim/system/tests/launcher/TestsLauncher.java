@@ -4,19 +4,11 @@ import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
-import org.junit.platform.launcher.listeners.LoggingListener;
-import org.junit.platform.launcher.listeners.SummaryGeneratingListener;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import java.io.PrintWriter;
-import java.util.logging.Level;
 import java.util.logging.LogManager;
 
 public class TestsLauncher {
-  private static final Logger logger = LoggerFactory.getLogger(TestsLauncher.class);
-
   static {
     LogManager.getLogManager().reset();
     SLF4JBridgeHandler.install();
