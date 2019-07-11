@@ -12,7 +12,6 @@ import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.logging.LoggingFeature;
-import org.glassfish.jersey.test.TestProperties;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -120,8 +119,8 @@ public class CustomTargetSystemRestClient {
         .register(new JacksonFeature())
         .register(JacksonResolver.class)
         .property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true)
-        .property(TestProperties.LOG_TRAFFIC, true)
-        .property(TestProperties.DUMP_ENTITY, true)
+        .property(org.glassfish.jersey.test.TestProperties.LOG_TRAFFIC, true)
+        .property(org.glassfish.jersey.test.TestProperties.DUMP_ENTITY, true)
         .property(LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT, LoggingFeature.Verbosity.PAYLOAD_ANY)
         .property(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT, "WARNING"))
         .target(serviceUrl);

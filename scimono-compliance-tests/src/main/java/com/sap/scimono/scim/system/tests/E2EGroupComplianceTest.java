@@ -13,8 +13,10 @@ import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
+import com.sap.scimono.scim.system.tests.util.TestReporter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -46,6 +48,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+@ExtendWith(TestReporter.class)
 public class E2EGroupComplianceTest extends SCIMComplianceTest {
   private static final int RESOURCES_PER_PAGE = 1000;
 
