@@ -32,12 +32,16 @@ import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.sap.scimono.api.API.COUNT_PARAM;
 import static com.sap.scimono.api.API.USERS;
@@ -57,6 +61,7 @@ import static java.util.Collections.singletonMap;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -64,6 +69,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class E2EUserComplianceTest extends SCIMComplianceTest {
+  private static final Logger logger = LoggerFactory.getLogger(E2EUserComplianceTest.class);
 
   private static boolean setupDone;
   private static final int RESOURCES_PER_PAGE = 1000;
@@ -108,6 +114,28 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   @Test
   public void testCreateUser() {
     User createdTestUser = createUser(buildTestUser("test2CreateUser"));
+
+    assertNotNull(createdTestUser);
+    assertTrue(createdTestUser.isActive());
+    assertEquals(36, createdTestUser.getId().length());
+
+    User fetchedUser = getUser(createdTestUser.getId());
+
+    assertEquals(createdTestUser.getUserName(), fetchedUser.getUserName());
+    assertEquals(createdTestUser.getName().getGivenName(), fetchedUser.getName().getGivenName());
+    assertEquals(createdTestUser.getName().getFamilyName(), fetchedUser.getName().getFamilyName());
+    assertEquals(createdTestUser.getName().getHonorificSuffix(), fetchedUser.getName().getHonorificSuffix());
+    assertNull(fetchedUser.getNickName());
+
+    assertNotNull(fetchedUser.getMeta());
+    assertEquals(User.RESOURCE_TYPE_USER, fetchedUser.getMeta().getResourceType());
+
+    assertTrue(fetchedUser.getMeta().getLocation().endsWith(constructResourceLocation(fetchedUser)));
+  }
+
+  @Test
+  public void testCreateUserOnlyRequiredAttributes() {
+    User createdTestUser = createUser(buildTestUser("testCreateUserOnlyRequiredAttributes"));
 
     assertNotNull(createdTestUser);
     assertTrue(createdTestUser.isActive());
@@ -202,22 +230,52 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   public void testUpdateUser() {
-    User emoNewNickname = new User.Builder(emo).setNickName("topalka").build();
-    User updatedEmo = updateUser(emo.getId(), emoNewNickname);
-    assertNotNull(updatedEmo);
+    User oldUser = createUser(TestData.setAllAttributesToTestUser("testUpdateUser", null).build());
+    User userToUpdate = new User.Builder(oldUser.getUserName())
+        .setId(oldUser.getId())
+        .setName(
+            new Name.Builder()
+                .setGivenName("updateGivenName")
+                .setMiddleName("updatedMiddleName")
+                .setFamilyName("updatedFamilyName")
+                .build())
+        .setNickName("topalka")
+        .build();
+
+    User updatedUser = updateUser(oldUser.getId(), userToUpdate);
+    assertNotNull(updatedUser);
     // check all previous data is intact
-    assertEquals(emo.isActive(), updatedEmo.isActive());
-    assertEquals(emo.getId(), updatedEmo.getId());
-    assertEquals(emo.getUserName(), updatedEmo.getUserName());
-    assertEquals(emo.getName().getGivenName(), updatedEmo.getName().getGivenName());
-    assertEquals(emo.getName().getFamilyName(), updatedEmo.getName().getFamilyName());
-    assertEquals(emo.getName().getHonorificSuffix(), updatedEmo.getName().getHonorificSuffix());
 
-    assertEquals("topalka", updatedEmo.getNickName());
+    assertAll("Check updated attributes exist in the response",
+        () -> assertEquals(oldUser.isActive(), updatedUser.isActive()),
+        () -> assertEquals(oldUser.getId(), updatedUser.getId()),
+        () -> assertEquals(userToUpdate.getUserName(), updatedUser.getUserName()),
+        () -> assertEquals(userToUpdate.getName().getGivenName(), updatedUser.getName().getGivenName()),
+        () -> assertEquals(userToUpdate.getName().getMiddleName(), updatedUser.getName().getMiddleName()),
+        () -> assertEquals(userToUpdate.getName().getFamilyName(), updatedUser.getName().getFamilyName()),
+        () -> assertEquals(userToUpdate.getNickName(), updatedUser.getNickName()),
+        () -> assertNotNull(updatedUser.getMeta()),
+        () -> assertEquals(User.RESOURCE_TYPE_USER, updatedUser.getMeta().getResourceType()),
+        () -> assertEquals(oldUser.getMeta().getLocation(), updatedUser.getMeta().getLocation())
+    );
 
-    assertNotNull(emo.getMeta());
-    assertEquals(User.RESOURCE_TYPE_USER, emo.getMeta().getResourceType());
-    assertEquals(emo.getMeta().getLocation(), updatedEmo.getMeta().getLocation());
+    assertAll("Check no old attributes left",
+        () -> assertNull(updatedUser.getProfileUrl()),
+        () -> assertNull(updatedUser.getTitle()),
+        () -> assertNull(updatedUser.getUserType()),
+        () -> assertNull(updatedUser.getPreferredLanguage()),
+        () -> assertNull(updatedUser.getLocale()),
+        () -> assertNull(updatedUser.getTimezone()),
+        () -> assertNull(updatedUser.getExternalId()),
+        () -> assertTrue(updatedUser.getEmails().isEmpty()),
+        () -> assertTrue(updatedUser.getPhotos().isEmpty()),
+        () -> assertTrue(updatedUser.getPhoneNumbers().isEmpty()),
+        () -> assertTrue(updatedUser.getRoles().isEmpty()),
+        () -> assertTrue(updatedUser.getAddresses().isEmpty()),
+        () -> assertTrue(updatedUser.getGroups().isEmpty()),
+        () -> assertTrue(updatedUser.getEntitlements().isEmpty()),
+        () -> assertTrue(updatedUser.getIms().isEmpty())
+    );
   }
 
   @Test
@@ -258,6 +316,16 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     SCIMResponse<User> getUserResponse = userRequest.readSingleUser(createdTestUser.getId());
     assertFalse(getUserResponse.isSuccess());
     assertEquals(SC_NOT_FOUND, getUserResponse.getStatusCode());
+  }
+
+  @Test
+  public void testCreateDeletedUser() {
+    User user = buildTestUser("testCreateDeletedUser");
+    User createdTestUser = createUser(user);
+    assertNotNull(createdTestUser);
+
+    deleteUser(createdTestUser.getId());
+    createUser(user);
   }
 
   @Test
@@ -366,6 +434,55 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertTrue(getPagedUsersSearchResult.getTotalResults() > 0);
 
     assertTrue(getPagedUsersSearchResult.getResources().isEmpty());
+  }
+
+  @Test
+  public void testGetUsersWithStarIndexEqualTotalResults() {
+    String displayName = "testGetUsersWithStarIndexEqualTotalResults-User";
+    int usersCount = 3;
+
+    List<User> createdUsers = createMultipleUsers(displayName, usersCount);
+
+    int readCount = 100;
+    int startIndex = usersCount;
+
+    logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, readCount);
+    PagedByIndexSearchResult<User> usersPage = getUsersPagedByIndex(startIndex, readCount);
+
+    // @formatter:off
+    assertAll("Verify Correct ListResponse values",
+        () -> assertEquals(startIndex, usersPage.getStartIndex(), "Verify 'startIndex"),
+        () -> assertEquals(usersCount, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
+        () -> assertEquals(1, usersPage.getItemsPerPage(), "Verify 'itemsPerPage' contains only one Resource"),
+        () -> assertEquals(1, usersPage.getResources().size(), "Verify 'Resources' list size is equal to 'ItemsPerPage'"),
+        () -> {
+          String firstUserIdFromGetResponse = usersPage.getResources().get(0).getId();
+          assertTrue(createdUsers.stream().map(User::getId).anyMatch(firstUserIdFromGetResponse::equals), "Verify fetched user is part of previously created Users");
+        });
+    // @formatter:on
+  }
+
+
+  @Test
+  public void testGetUsersWithStarIndexOutOfRange() {
+    String displayName = "testGetUsersWithStarIndexOutOfRange-User";
+    int usersCount = 3;
+
+    createMultipleUsers(displayName, usersCount);
+
+    int readCount = 100;
+    int startIndex = usersCount + 1;
+
+    logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, readCount);
+    PagedByIndexSearchResult<User> usersPage = getUsersPagedByIndex(startIndex, readCount);
+
+    // @formatter:off
+    assertAll("Verify Correct ListResponse values",
+        () -> assertEquals(startIndex, usersPage.getStartIndex(), "Verify 'startIndex"),
+        () -> assertEquals(usersCount, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
+        () -> assertEquals(0, usersPage.getItemsPerPage(), "Verify 'itemsPerPage' contains only one Resource"),
+        () -> assertTrue(usersPage.getResources().isEmpty(), "Verify 'Resources' list size is empty'"));
+    // @formatter:on
   }
 
   @Test
@@ -675,5 +792,14 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertEquals(expectedExtension.getDepartment(), actualExtension.getDepartment());
     assertEquals(expectedExtension.getEmployeeNumber(), actualExtension.getEmployeeNumber());
     assertEquals(expectedExtension.getManager().getValue(), actualExtension.getManager().getValue());
+  }
+
+  protected List<User> createMultipleUsers(String commonUserNamePart, int count) {
+    return IntStream.rangeClosed(1, count)
+        .mapToObj(number -> commonUserNamePart + number)
+        .peek(currentDisplayName -> logger.info("Creating User -{}-", currentDisplayName))
+        .map(TestData::buildTestUser)
+        .map(this::createUser)
+        .collect(Collectors.toList());
   }
 }

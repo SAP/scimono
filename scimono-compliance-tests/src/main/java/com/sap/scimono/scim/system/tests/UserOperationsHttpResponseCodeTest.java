@@ -15,6 +15,8 @@ import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.util.Collections;
@@ -23,17 +25,20 @@ import java.util.UUID;
 import static com.sap.scimono.api.API.USERS;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.DISPLAY_NAME;
 import static com.sap.scimono.scim.system.tests.util.TestData.JACKSON_NODE_FACTORY;
+import static com.sap.scimono.scim.system.tests.util.TestData.buildTestUser;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CONFLICT;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest {
+  private static final Logger logger = LoggerFactory.getLogger(UserOperationsHttpResponseCodeTest.class);
 
   @Test
   public void testGetUser200() {
@@ -215,6 +220,22 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
 
     assertFalse(scimResponse.isSuccess());
     assertEquals(NOT_FOUND.getStatusCode(), scimResponse.getStatusCode());
+  }
+
+  @Test
+  public void testDeleteUserTwice404() {
+    String userName = "testDeleteUserTwice404-User";
+    logger.info("Creating User -{}- that will be deleted after that", userName);
+    User user = createUser(buildTestUser(userName));
+
+    SCIMResponse<Void> firstDeleteAttemptResponse = userRequest.deleteUser(user.getId());
+    SCIMResponse<Void> secondDeleteAttemptResponse = userRequest.deleteUser(user.getId());
+
+    assertAll("Verify delete user attempts",
+        () -> assertTrue(firstDeleteAttemptResponse.isSuccess(), "Verify first delete attempt is successful"),
+        () -> assertEquals(NO_CONTENT.getStatusCode(), firstDeleteAttemptResponse.getStatusCode(), "Verify correct response code"),
+        () -> assertFalse(secondDeleteAttemptResponse.isSuccess(), "Verify second delete attempt is failure"),
+        () -> assertEquals(NOT_FOUND.getStatusCode(), secondDeleteAttemptResponse.getStatusCode(), "Verify correct response code"));
   }
 
   @Test

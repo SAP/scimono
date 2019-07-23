@@ -1,5 +1,7 @@
 package com.sap.scimono.scim.system.tests.launcher;
 
+import com.sap.scimono.scim.system.tests.E2EGroupComplianceTest;
+import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
@@ -28,7 +30,7 @@ public class TestsLauncher {
         TestMethodsSelectorsFactory.fromPropertiesFile(launcherProperties.getTestsFilePath().getValue());
 
     LauncherDiscoveryRequest launcherDiscoveryRequest = LauncherDiscoveryRequestBuilder.request()
-        .selectors(testMethodsSelectorsFactory.getDiscoverySelectors())
+        .selectors(DiscoverySelectors.selectClass(E2EGroupComplianceTest.class))
         .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "true")
         .build();
 

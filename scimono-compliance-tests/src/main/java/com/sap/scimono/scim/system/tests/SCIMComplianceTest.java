@@ -39,6 +39,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.sap.scimono.client.authentication.OauthAuthenticatorFactory.clientCredentialsGrantAuthenticator;
 import static com.sap.scimono.client.query.ResourcePageQuery.identityPageQuery;
@@ -293,18 +295,6 @@ public abstract class SCIMComplianceTest {
 
   protected void patchGroup(final String resourceId, final PatchBody patchBody) {
     verifyAndGetResponse(groupRequest.patchGroup(patchBody, resourceId));
-  }
-
-  protected boolean isGroupIdPresentInGroupResponse(final Group testGroup) {
-    List<Group> allGroups = getAllGroupsWithIndexPaging();
-    for (Group nextGroup : allGroups) {
-      if (testGroup.getId().equals(nextGroup.getId())) {
-
-        return true;
-      }
-    }
-
-    return false;
   }
 
   private  <T> T verifyAndGetResponse(SCIMResponse<T> scimResponse) {

@@ -10,6 +10,8 @@ import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -17,17 +19,21 @@ import java.util.UUID;
 
 import static com.sap.scimono.entity.definition.CoreGroupAttributes.DISPLAY_NAME;
 import static com.sap.scimono.scim.system.tests.util.TestData.JACKSON_NODE_FACTORY;
+import static com.sap.scimono.scim.system.tests.util.TestData.buildGroup;
+import static com.sap.scimono.scim.system.tests.util.TestData.buildTestUser;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest {
+  private static final Logger logger = LoggerFactory.getLogger(GroupOperationsHttpResponseCodeTest.class);
 
   @Test
   public void testGetGroup200() {
@@ -58,6 +64,17 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
 
     assertFalse(scimResponse.isSuccess());
     assertEquals(NOT_FOUND.getStatusCode(), scimResponse.getStatusCode());
+  }
+
+  @Test
+  public void testCreateGroupWithNonExistingMember() {
+    SCIMResponse<Group> response = groupRequest.createGroup(buildGroup("testCreateGroupWithNonExistingMember", UUID.randomUUID().toString()));
+
+    // @formatter:off
+    assertAll("Verify error response is received",
+        () -> assertFalse(response.isSuccess()),
+        () -> assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode()));
+    // @formatter:on
   }
 
   @Test
@@ -209,6 +226,45 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
 
     assertFalse(deleteScimGroupResponse.isSuccess());
     assertEquals(NOT_FOUND.getStatusCode(), deleteScimGroupResponse.getStatusCode());
+  }
+
+  @Test
+  public void testDeleteGroupTwice404() {
+    String displayName = "testDeleteGroupTwice-Group";
+    logger.info("Creating Group -{}- that will be deleted after that", displayName);
+    Group group = createGroup(buildGroup(displayName));
+
+    SCIMResponse<Void> firstDeleteAttemptResponse = groupRequest.deleteGroup(group.getId());
+    SCIMResponse<Void> secondDeleteAttemptResponse = groupRequest.deleteGroup(group.getId());
+
+    // @formatter:off
+    assertAll("Verify delete group attempts",
+        () -> assertTrue(firstDeleteAttemptResponse.isSuccess(), "Verify first delete attempt is successful"),
+        () -> assertEquals(NO_CONTENT.getStatusCode(), firstDeleteAttemptResponse.getStatusCode(), "Verify correct response code"),
+        () -> assertFalse(secondDeleteAttemptResponse.isSuccess(), "Verify second delete attempt is failure"),
+        () -> assertEquals(NOT_FOUND.getStatusCode(), secondDeleteAttemptResponse.getStatusCode(), "Verify correct response code"));
+    // @formatter:on
+  }
+
+  @Test
+  public void testDeleteGroupMembersStillExist() {
+    logger.info("Creating User -testDeleteGroupMembersStillExist-User- who will be used as a member");
+    User user = createUser(buildTestUser("testDeleteGroupMembersStillExist-User"));
+
+    String displayName = "testDeleteGroupMembersStillExist-Group";
+    logger.info("Creating Group -{}- that will be deleted after that", displayName);
+
+    Group group = createGroup(buildGroup(displayName, user.getId()));
+    SCIMResponse<Void> deleteGroupResponse = groupRequest.deleteGroup(group.getId());
+    SCIMResponse<User> getUserResponse = userRequest.readSingleUser(user.getId());
+
+    // @formatter:off
+    assertAll("Verify SCIM responses",
+        () -> assertTrue(deleteGroupResponse.isSuccess(), "Verify Group is successfully deleted"),
+        () -> assertEquals(NO_CONTENT.getStatusCode(), deleteGroupResponse.getStatusCode(), "Verify DELETE Group response code"),
+        () -> assertTrue(getUserResponse.isSuccess(), "Verify GET User response is successful"),
+        () -> assertEquals(CREATED.getStatusCode(), getUserResponse.getStatusCode(), "Verify GET User response code"));
+    // @formatter:on
   }
 
   @Test
