@@ -59,6 +59,7 @@ import static org.junit.jupiter.api.Assertions.fail;
 
 @ExtendWith(TestReporter.class)
 public abstract class SCIMComplianceTest {
+  private static final Logger logger = Logger.getLogger(SCIMComplianceTest.class.getName());
 
   protected final UserRequest userRequest;
   protected final GroupRequest groupRequest;
@@ -74,8 +75,8 @@ public abstract class SCIMComplianceTest {
   protected SCIMClientService configureScimClientService(String serviceUrl) {
     SCIMClientService.Builder clientServiceBuilder = SCIMClientService
         .builder(serviceUrl).addProperty(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true)
+        .addResolver(new LoggingFeature(logger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null))
         .addProperty(TestProperties.LOG_TRAFFIC, true).addProperty(TestProperties.DUMP_ENTITY, true)
-        .addProperty(LoggingFeature.LOGGING_FEATURE_VERBOSITY_CLIENT, LoggingFeature.Verbosity.PAYLOAD_ANY)
         .addProperty(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT, "WARNING");
 
     if("true".equalsIgnoreCase(BASIC_AUTH_ENABLED)) {
@@ -88,8 +89,7 @@ public abstract class SCIMComplianceTest {
     return clientServiceBuilder.build();
   }
   private Client getOauthClient() {
-    Logger testLogger = Logger.getLogger(SCIMComplianceTest.class.getName());
-    LoggingFeature loggingFeature = new LoggingFeature(testLogger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null);
+    LoggingFeature loggingFeature = new LoggingFeature(logger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null);
 
     Client client = ClientBuilder.newClient();
     client.register(loggingFeature);

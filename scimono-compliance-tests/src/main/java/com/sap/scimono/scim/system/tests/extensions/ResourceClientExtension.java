@@ -32,10 +32,15 @@ public class ResourceClientExtension<T extends Resource<T>> implements BeforeEac
     managedResources.remove(id);
   }
 
+  public void clearManagedResources() {
+    managedResources.keySet().forEach(resourceFailsSafeClientDelegate::delete);
+    managedResources.clear();
+  }
+
   @Override
   public void afterEach(ExtensionContext extensionContext) {
     logger.info("Deleting managed resources by test: {}", extensionContext.getDisplayName());
-    managedResources.keySet().forEach(resourceFailsSafeClientDelegate::delete);
+    clearManagedResources();
   }
 
   @Override

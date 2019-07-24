@@ -17,11 +17,11 @@ public class SCIMResponse<T> {
   }
 
   public static <T> SCIMResponse<T> newInstance(Class<T> responseClass, Response response, ActionResponseStatusConfig responseStatusConfig) {
-    return new SCIMResponse<>(rs -> rs.readEntity(responseClass), response, responseStatusConfig);
+    return new SCIMResponse<>(createResponseEntityReader(responseClass), response, responseStatusConfig);
   }
 
   public static <T> SCIMResponse<T> newInstance(GenericType<T> genericType, Response response, ActionResponseStatusConfig responseStatusConfig) {
-    return new SCIMResponse<>(rs -> rs.readEntity(genericType), response, responseStatusConfig);
+    return new SCIMResponse<>(createResponseEntityReader(genericType), response, responseStatusConfig);
   }
 
   public static SCIMResponse<Void> fromEmpty(Response response, ActionResponseStatusConfig responseStatusConfig) {
@@ -56,6 +56,35 @@ public class SCIMResponse<T> {
     return responseStatusConfig.isSuccess(response.getStatus());
   }
 
+  private static <T> ResponseEntityReader<T> createResponseEntityReader(Class<T> responseClass) {
+    return new ResponseEntityReader<T>() {
+      private T responseEntity;
+
+      @Override
+      public T read(Response response) {
+        if(responseEntity == null) {
+          responseEntity = response.readEntity(responseClass);
+        }
+
+        return responseEntity;
+      }
+    };
+  }
+
+  private static <T> ResponseEntityReader<T> createResponseEntityReader(GenericType<T> genericType) {
+    return new ResponseEntityReader<T>() {
+      private T responseEntity;
+
+      @Override
+      public T read(Response response) {
+        if(responseEntity == null) {
+          responseEntity = response.readEntity(genericType);
+        }
+
+        return responseEntity;
+      }
+    };
+  }
   @FunctionalInterface
   private interface ResponseEntityReader<T> {
     T read(Response response);

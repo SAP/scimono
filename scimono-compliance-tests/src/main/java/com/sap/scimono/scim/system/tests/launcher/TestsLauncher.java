@@ -1,13 +1,14 @@
 package com.sap.scimono.scim.system.tests.launcher;
 
-import com.sap.scimono.scim.system.tests.E2EGroupComplianceTest;
-import org.junit.platform.engine.discovery.DiscoverySelectors;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
 import org.junit.platform.launcher.core.LauncherFactory;
+import org.junit.platform.reporting.legacy.xml.LegacyXmlReportGeneratingListener;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import java.io.PrintWriter;
+import java.nio.file.FileSystems;
 import java.util.logging.LogManager;
 
 public class TestsLauncher {
@@ -30,14 +31,15 @@ public class TestsLauncher {
         TestMethodsSelectorsFactory.fromPropertiesFile(launcherProperties.getTestsFilePath().getValue());
 
     LauncherDiscoveryRequest launcherDiscoveryRequest = LauncherDiscoveryRequestBuilder.request()
-        .selectors(DiscoverySelectors.selectClass(E2EGroupComplianceTest.class))
+        .selectors(testMethodsSelectorsFactory.getDiscoverySelectors())
         .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "true")
         .build();
 
+    LegacyXmlReportGeneratingListener xmlReporter = new LegacyXmlReportGeneratingListener(FileSystems.getDefault().getPath("."), new PrintWriter(System.out));
     Launcher launcher = LauncherFactory.create();
     launcher.discover(launcherDiscoveryRequest);
 
-    launcher.registerTestExecutionListeners(new TestsExecutionReporter());
+    launcher.registerTestExecutionListeners(new TestsExecutionReporter(), xmlReporter);
     launcher.execute(launcherDiscoveryRequest);
   }
 
@@ -58,6 +60,9 @@ public class TestsLauncher {
   }
 
   public static void main(String[] args) {
+    LogManager.getLogManager().reset();
+    SLF4JBridgeHandler.install();
+
      new TestsLauncher(LauncherProperties.fromCommandLineArguments(args)).launch();
   }
 }
