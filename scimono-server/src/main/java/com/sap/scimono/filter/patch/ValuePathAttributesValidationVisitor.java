@@ -6,7 +6,7 @@ import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.entity.validation.patch.PatchValidationException;
-import com.sap.scimono.entity.validation.patch.PathAttributeExistanceValidator;
+import com.sap.scimono.entity.validation.patch.PathAttributeExistenceValidator;
 import com.sap.scimono.entity.validation.patch.PathMutabilityValidator;
 import com.sap.scimono.entity.validation.patch.PathSchemaExistenceValidator;
 import com.sap.scimono.entity.validation.patch.ValuePathAttributesValidator;
@@ -61,7 +61,7 @@ public class ValuePathAttributesValidationVisitor extends QueryFilterVisitor<Voi
     SchemasCallback schemaAPI = valuePathValidator.getSchemaAPI();
 
     syntaxValidators.add(new PathSchemaExistenceValidator(valuePathValidator.getRequiredSchemas()));
-    syntaxValidators.add(new PathAttributeExistanceValidator(schemaAPI));
+    syntaxValidators.add(new PathAttributeExistenceValidator(schemaAPI));
 
     if (schemaAPI.getSchema(currentAttributePath) != null) {
       syntaxValidators.add(new PathMutabilityValidator(schemaAPI));
