@@ -12,9 +12,15 @@ import com.sap.scimono.entity.definition.CoreUserAttributes;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
+import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
+import com.sap.scimono.scim.system.tests.extensions.UserFailsSafeClient;
 import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,217 +40,204 @@ import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest {
   private static final Logger logger = LoggerFactory.getLogger(UserOperationsHttpResponseCodeTest.class);
 
+  @RegisterExtension 
+  UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);
+  
+  private final UserFailsSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
+
   @Test
+  @DisplayName("Test Get user and verify Http status code: 200")
   public void testGetUser200() {
-    User testUser = TestData.buildTestUser("testGetUserHTTPResponse");
-    SCIMResponse<User> scimResponse = userRequest.createUser(testUser);
+    String testUserName = "testGetUserHTTPResponse";
+    SCIMResponse<User> createUserResponse = createUserAndVerifySuccessfulResponse(testUserName);
 
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
-    scimResponse = userRequest.readSingleUser(scimResponse.get().getId());
+    logger.info("Fetching user User: {}", testUserName);
+    SCIMResponse<User> readUserResponse = resourceAwareUserRequest.readSingleUser(createUserResponse.get().getId());
 
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(OK.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify GET Response", getResponseStatusAssertions(readUserResponse, true, OK));
+  }
+
+  @ParameterizedTest(name = "Test Get users with illegal id: {} and verify Http status code: 400")
+  @ValueSource(strings = {ILLEGAL_UUID, "@!$^&*()_+=-[].,<>\'\":", "e87ca7b1-5f4d-493d-96f2-5ba3cf43deb51"})
+  public void testGetUserIllegalId400(String illegalId) {
+    logger.info("Fetching User with illegal id");
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.readSingleUser(illegalId);
+
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
   }
 
   @Test
-  public void testGetUserIllegalId1400() {
-    SCIMResponse<User> scimResponse = userRequest.readSingleUser("e87ca7b1-5f4d-493d-96f2-5ba3cf43deb51");
-
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), scimResponse.getStatusCode());
-  }
-
-  @Test
-  public void testGetUserIllegalId2400() {
-    SCIMResponse<User> scimResponse = userRequest.readSingleUser(ILLEGAL_UUID);
-
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), scimResponse.getStatusCode());
-  }
-
-  @Test
-  public void testGetUserIllegalId3400() {
-    SCIMResponse<User> scimResponse = userRequest.readSingleUser("@!$^&*()_+=-[].,<>\'\":");
-
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), scimResponse.getStatusCode());
-  }
-
-  @Test
+  @DisplayName("Test Get users with non existing id and verify Http status code: 404")
   public void testGetUserNonExistingId404() {
-    SCIMResponse<User> scimResponse = userRequest.readSingleUser(UUID.randomUUID().toString());
+    logger.info("Fetching User with non existing id");
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.readSingleUser(UUID.randomUUID().toString());
 
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(NOT_FOUND.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
+  @DisplayName("Test Get all users and verify Http status code: 200")
   public void testGetAllUsers200() {
-    User testUser = TestData.buildTestUser("testGetAllUsersHTTPResponse");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
+    createUserAndVerifySuccessfulResponse("testGetAllUsersHTTPResponse");
 
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
+    logger.info("Fetching multiple Users");
+    SCIMResponse<PagedByIndexSearchResult<User>> readUsersResponse = resourceAwareUserRequest.readMultipleUsers();
 
-    SCIMResponse<PagedByIndexSearchResult<User>> readUsersResponse = userRequest.readMultipleUsers();
-
-    assertTrue(readUsersResponse.isSuccess());
-    assertEquals(OK.getStatusCode(), readUsersResponse.getStatusCode());
+    assertAll("Verify GET Response", getResponseStatusAssertions(readUsersResponse, true, OK));
   }
 
   @Test
+  @DisplayName("Test Get all users with # instead of id and verify Http status code: 400")
   public void testGetAllUsersHashTag400() {
-    SCIMResponse<User> scimResponse = userRequest.readSingleUser("#");
+    logger.info("Fetching User with #");
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.readSingleUser("#");
 
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Get user with email and verify Http status code: 201")
   public void testCreateUserWithEmail201() {
     Email testMail = TestData.buildPersonalEmailWithDefaultAttrs();
-    User testUser = TestData.setAttributesToATestUser("testCreateUserWithIllegalEmail400").addEmail(testMail).build();
-    SCIMResponse<User> scimResponse = userRequest.createUser(testUser);
+    String testUserName = "testCreateUserWithIllegalEmail400";
+    User testUser = TestData.setAttributesToATestUser(testUserName).addEmail(testMail).build();
 
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
+    logger.info("Creating User: {}, with emails", testUserName);
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(testUser);
 
-    User createdUser = getUser(scimResponse.get().getId());
-    assertEquals(1, createdUser.getEmails().size());
+    assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
+
+    logger.info("Fetching User: {}", testUserName);
+    User createdUser = userFailSafeClient.getSingle(scimResponse.get().getId());
+
+    assertEquals(1, createdUser.getEmails().size(), "Verify emails size");
   }
 
   @Test
+  @DisplayName("Test Create user with duplicate userName and verify Http status code: 409")
   public void testCreateUsersWithSameUserNames409() {
-    User testUser = TestData.setAttributesToATestUser("testCreateUsersWithSameUserNames409").build();
-    SCIMResponse<User> scimResponse = userRequest.createUser(testUser);
+    String testUserName = "testCreateUsersWithSameUserNames409";
+    User testUser = TestData.setAttributesToATestUser(testUserName).build();
 
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
+    logger.info("Creating User: {}", testUserName);
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(testUser);
+    assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
 
-    User testUserDuplicate = TestData.setAttributesToATestUser("testCreateUsersWithSameUserNames409").build();
-    SCIMResponse<User> scimResponseForDuplicate = userRequest.createUser(testUserDuplicate);
+    User testUserDuplicate = TestData.setAttributesToATestUser(testUserName).build();
+    logger.info("Creating User: {}, again", testUserName);
+    SCIMResponse<User> scimResponseForDuplicate = resourceAwareUserRequest.createUser(testUserDuplicate);
 
-    assertFalse(scimResponseForDuplicate.isSuccess());
-    assertEquals(CONFLICT.getStatusCode(), scimResponseForDuplicate.getStatusCode());
+    assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponseForDuplicate, false, CONFLICT));
   }
 
   @Test
+  @DisplayName("Test Update user with PUT and verify Http status code: 200")
   public void testUpdateUser200() {
-    User testUser = TestData.buildTestUser("testUpdateUserHTTPResponse");
-    SCIMResponse<User> scimResponse = userRequest.createUser(testUser);
-
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
-    User createdUser = scimResponse.get();
+    User createdUser = createUserAndVerifySuccessfulResponse("testUpdateUserHTTPResponse").get();
 
     User updatedUser = new User.Builder(createdUser).setDisplayName("testUpdateUserHTTPResponseUpdatedUser").setId(createdUser.getId()).build();
-    scimResponse = userRequest.updateUser(updatedUser);
+    logger.info("Creating User: {}, replacing displayName", createdUser.getUserName());
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.updateUser(updatedUser);
 
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(OK.getStatusCode(), scimResponse.getStatusCode());
-    assertEquals("testUpdateUserHTTPResponseUpdatedUser", scimResponse.get().getDisplayName());
+    assertAll("Verify Update User Response", getResponseStatusAssertions(scimResponse, true, OK));
+    assertEquals("testUpdateUserHTTPResponseUpdatedUser", scimResponse.get().getDisplayName(), "Verify 'displayName' is updated");
   }
 
   @Test
+  @DisplayName("Test Update user with PUT without id in body and verify Http status code: 200")
   public void testUpdateUserWithoutIdInBody200() {
-    User testUser = TestData.buildTestUser("testUpdateUserWithoutId200");
-    SCIMResponse<User> scimResponse = userRequest.createUser(testUser);
-
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
-    User createdUser = scimResponse.get();
+    User createdUser = createUserAndVerifySuccessfulResponse("testUpdateUserWithoutId200").get();
 
     User updatedUser = new User.Builder(createdUser).setDisplayName("testUpdateUserHTTPResponseUpdatedUser").build();
+    logger.info("Updating User: {}, replacing 'displayName'", createdUser.getUserName());
     Response httpResponse = CustomTargetSystemRestClient.INSTANCE.putEntityHttpResponse(USERS, createdUser.getId(), updatedUser);
 
-    assertEquals(OK.getStatusCode(), httpResponse.getStatus());
-    assertEquals("testUpdateUserHTTPResponseUpdatedUser", httpResponse.readEntity(User.class).getDisplayName());
+    assertEquals(httpResponse.getStatus(), OK.getStatusCode(), "Verify Update User Response");
+    assertEquals("testUpdateUserHTTPResponseUpdatedUser", httpResponse.readEntity(User.class).getDisplayName(), "Verify 'displayName' is updated");
   }
 
   @Test
+  @DisplayName("Test Update user with illegal Id with PUT and verify Http status code: 400")
   public void testUpdateUserWithIllegalId400() {
-    User testUser = TestData.buildTestUser("testUpdateUserWithIllegalId400");
-    SCIMResponse<User> scimResponse = userRequest.createUser(testUser);
+    User createdUser = createUserAndVerifySuccessfulResponse("testUpdateUserWithIllegalId400").get();
+    User updatedUser = new User.Builder(createdUser).setDisplayName("testUpdateUserHTTPResponseUpdatedUser").setId(ILLEGAL_UUID).build();
 
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
+    logger.info("Updating User: {}, with illegal id", createdUser.getUserName());
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.updateUser(updatedUser);
 
-    User updatedUser = new User.Builder(scimResponse.get()).setDisplayName("testUpdateUserHTTPResponseUpdatedUser").setId(ILLEGAL_UUID).build();
-    scimResponse = userRequest.updateUser(updatedUser);
-
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify Update User Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Update user with non existing Id with PUT and verify Http status code: 404")
   public void testUpdateUserWithNonExistingId404() {
     String nonExistingUserId = UUID.randomUUID().toString();
     User testUser = TestData.setAttributesToATestUser("testUpdateUserWithNonExistingId404").setId(nonExistingUserId).build();
 
-    SCIMResponse<User> scimResponse = userRequest.updateUser(testUser);
+    logger.info("Updating User with non existing id");
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.updateUser(testUser);
 
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(NOT_FOUND.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify Update User Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
+  @DisplayName("Test Delete user and verify Http status code: 204")
   public void testDeleteUser204() {
-    User testUser = TestData.buildTestUser("testDeleteUserHTTPResponse");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
+    SCIMResponse<User> createUserResponse = createUserAndVerifySuccessfulResponse("testDeleteUserHTTPResponse");
 
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
+    logger.info("Deleting User: testDeleteUserHTTPResponse");
+    SCIMResponse<Void> deleteUserResponse = resourceAwareUserRequest.deleteUser(createUserResponse.get().getId());
 
-    SCIMResponse<Void> deleteUserResponse = userRequest.deleteUser(createUserResponse.get().getId());
-
-    assertTrue(deleteUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), deleteUserResponse.getStatusCode());
+    assertAll("Verify Delete User Response", getResponseStatusAssertions(deleteUserResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Delete user with illegal id and verify Http status code: 400")
   public void testDeleteUserWithIllegalId400() {
-    SCIMResponse<Void> scimResponse = userRequest.deleteUser(ILLEGAL_UUID);
+    logger.info("Deleting User with illegal id");
+    SCIMResponse<Void> scimResponse = resourceAwareUserRequest.deleteUser(ILLEGAL_UUID);
 
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify Delete User Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Delete user with non existing id and verify Http status code: 404")
   public void testDeleteUserWithNonExistingId404() {
-    SCIMResponse<Void> scimResponse = userRequest.deleteUser(UUID.randomUUID().toString());
+    logger.info("Deleting User with non existing Id");
+    SCIMResponse<Void> scimResponse = resourceAwareUserRequest.deleteUser(UUID.randomUUID().toString());
 
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(NOT_FOUND.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify Delete User Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
+  @DisplayName("Test Delete user twice and verify Http status code: 404 on second attempt")
   public void testDeleteUserTwice404() {
     String userName = "testDeleteUserTwice404-User";
     logger.info("Creating User -{}- that will be deleted after that", userName);
-    User user = createUser(buildTestUser(userName));
+    User user = userFailSafeClient.create(buildTestUser(userName));
 
-    SCIMResponse<Void> firstDeleteAttemptResponse = userRequest.deleteUser(user.getId());
-    SCIMResponse<Void> secondDeleteAttemptResponse = userRequest.deleteUser(user.getId());
+    logger.info("Deleting User: {}", userName);
+    SCIMResponse<Void> firstDeleteAttemptResponse = resourceAwareUserRequest.deleteUser(user.getId());
 
-    assertAll("Verify delete user attempts",
-        () -> assertTrue(firstDeleteAttemptResponse.isSuccess(), "Verify first delete attempt is successful"),
-        () -> assertEquals(NO_CONTENT.getStatusCode(), firstDeleteAttemptResponse.getStatusCode(), "Verify correct response code"),
-        () -> assertFalse(secondDeleteAttemptResponse.isSuccess(), "Verify second delete attempt is failure"),
-        () -> assertEquals(NOT_FOUND.getStatusCode(), secondDeleteAttemptResponse.getStatusCode(), "Verify correct response code"));
+    logger.info("Deleting User: {}, again", userName);
+    SCIMResponse<Void> secondDeleteAttemptResponse = resourceAwareUserRequest.deleteUser(user.getId());
+
+    // @formatter:off
+    assertAll("Verify delete group attempts",
+        () -> assertAll("Verify Delete first User Response", getResponseStatusAssertions(firstDeleteAttemptResponse, true, NO_CONTENT)),
+        () -> assertAll("Verify Delete second User Response", getResponseStatusAssertions(secondDeleteAttemptResponse, false, NOT_FOUND))
+    );
+    // @formatter:on
   }
 
   @Test
+  @DisplayName("Test Patch User with Add operation for simple attribute and verify Http status code: 204")
   public void testPatchUserAddOperationForSimpleAttributeWithCorrectAttributes204() {
-    User testUser = TestData.buildTestUser("testPatchUserAddOperationForSimpleAttributeWithCorrectAttributes204");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
-
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
+    User createdUser = createUserAndVerifySuccessfulResponse("testPatchUserAddOperationForSimpleAttributeWithCorrectAttributes204").get();
 
  // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -258,19 +251,16 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .build();
  // @formatter:on
 
-    SCIMResponse<?> patchUserResponse = userRequest.patchUser(patchBody, createUserResponse.get().getId());
+    logger.info("Patching User: {}, adding 'displayName'", createdUser.getUserName());
+    SCIMResponse<?> patchUserResponse = resourceAwareUserRequest.patchUser(patchBody, createdUser.getId());
 
-    assertTrue(patchUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchUserResponse.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(patchUserResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Patch User with Replace operation for simple attribute and verify Http status code: 204")
   public void testPatchUserReplaceOperationForSimpleAttributeWithCorrectAttributes204() {
-    User testUser = TestData.buildTestUser("testPatchUserReplaceOperationForSimpleAttributeWithCorrectAttributes204");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
-
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
+    User createdUser = createUserAndVerifySuccessfulResponse("testPatchUserReplaceOperationForSimpleAttributeWithCorrectAttributes204").get();
 
  // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -284,19 +274,16 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .build();
  // @formatter:on
 
-    SCIMResponse<?> patchUserResponse = userRequest.patchUser(patchBody, createUserResponse.get().getId());
+    logger.info("Patching User: {}, replacing 'displayName'", createdUser.getUserName());
+    SCIMResponse<?> patchUserResponse = resourceAwareUserRequest.patchUser(patchBody, createdUser.getId());
 
-    assertTrue(patchUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchUserResponse.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(patchUserResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Patch User with Remove operation for simple attribute and verify Http status code: 204")
   public void testPatchUserRemoveOperationForSimpleAttributeWithCorrectAttributes204() {
-    User testUser = TestData.buildTestUser("testPatchUserRemoveOperationForSimpleAttributeWithCorrectAttributes204");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
-
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
+    User createdUser = createUserAndVerifySuccessfulResponse("testPatchUserRemoveOperationForSimpleAttributeWithCorrectAttributes204").get();
 
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -309,12 +296,14 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .build();
     // @formatter:on
 
-    SCIMResponse<?> patchUserResponse = userRequest.patchUser(patchBody, createUserResponse.get().getId());
-    assertTrue(patchUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchUserResponse.getStatusCode());
+    logger.info("Patching User: {}, removing 'displayName'", createdUser.getUserName());
+    SCIMResponse<?> patchUserResponse = resourceAwareUserRequest.patchUser(patchBody, createdUser.getId());
+
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(patchUserResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Patch User with missing Patch schema in body and verify Http status code: 400")
   public void testPatchUserRequestDoesNotContainPatchSchema400() {
  // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -322,65 +311,68 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .setPath(DISPLAY_NAME.scimName())
         .setValue(JACKSON_NODE_FACTORY.textNode("AdoDisplayName"))
         .build();
-    // @formatter:on
-    PatchBody patchBody = new PatchBody.Builder().addOperation(operation).setSchemas(Collections.emptySet()).build();
+    PatchBody patchBody = new PatchBody.Builder()
+        .addOperation(operation)
+        .setSchemas(Collections.emptySet())
+        .build();
+// @formatter:on
 
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, VALID_UUID);
+    logger.info("Patching User without patch schema");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch User with empty Patch operation list and verify Http status code: 400")
   public void testPatchUserRequestWithNoOperations400() {
     PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().build();
 
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, VALID_UUID);
+    logger.info("Patching User with no operations");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch User with no operation type and verify Http status code: 400")
   public void testPatchUserRequestWithNoOperationType400() {
     PatchBody patchBody = TestData.preparePatchBodyWithCustomOperationAndSchema(null, "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
 
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, VALID_UUID);
+    logger.info("Patching User with no operation type");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch User with empty operation type and verify Http status code: 400")
   public void testPatchUserRequestWithEmptyOperationType400() {
     PatchBody patchBody = TestData.preparePatchBodyWithCustomOperationAndSchema(new PatchOperation.Type(""),
         "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
 
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, VALID_UUID);
+    logger.info("Patching User with empty operation type");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch User with illegal operation type and verify Http status code: 400")
   public void testPatchUserRequestWithIllegalOperationType400() {
     PatchBody patchBody = TestData.preparePatchBodyWithCustomOperationAndSchema(new PatchOperation.Type("merge"),
         "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User");
 
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, VALID_UUID);
+    logger.info("Patching User with illegal operation type");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
-  // ignore until the patch implementation is ready
   @Test
+  @DisplayName("Test Patch User with missing path on Add operation and verify Http status code: 204")
   public void testPatchUserRequestWithMissingPathOnAddOp204() {
-    User testUser = TestData.buildTestUser("testPatchUserRequestWithMissingPathOnAddOp200");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
-
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
+    User createdUser = createUserAndVerifySuccessfulResponse("testPatchUserRequestWithMissingPathOnAddOp200").get();
 
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -393,20 +385,16 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .build();
     // @formatter:on
 
-    SCIMResponse<?> patchUserResponse = userRequest.patchUser(patchBody, createUserResponse.get().getId());
+    logger.info("Patching User: {}, adding new 'displayName'", createdUser.getDisplayName());
+    SCIMResponse<?> patchUserResponse = resourceAwareUserRequest.patchUser(patchBody, createdUser.getId());
 
-    assertTrue(patchUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchUserResponse.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(patchUserResponse, true, NO_CONTENT));
   }
 
-  // ignore until the patch implementation is ready
   @Test
+  @DisplayName("Test Patch User with missing path on Replace operation and verify Http status code: 204")
   public void testPatchUserRequestWithMissingPathOnReplaceOp204() {
-    User testUser = TestData.buildTestUser("testPatchUserRequestWithMissingPathOnReplaceOp204");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
-
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
+    User createdUser = createUserAndVerifySuccessfulResponse("testPatchUserRequestWithMissingPathOnReplaceOp204").get();
 
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -419,13 +407,14 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .build();
     // @formatter:on
 
-    SCIMResponse<?> patchUserResponse = userRequest.patchUser(patchBody, createUserResponse.get().getId());
+    logger.info("Patching User: {}, replacing 'displayName'", createdUser.getUserName());
+    SCIMResponse<?> patchUserResponse = resourceAwareUserRequest.patchUser(patchBody, createdUser.getId());
 
-    assertTrue(patchUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchUserResponse.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(patchUserResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Patch User with missing path when it is required (on Remove operation) operation and verify Http status code: 400")
   public void testPatchUserRequestWithMissingPathWhenItIsRequired400() {
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -437,79 +426,57 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .addOperation(operation)
         .build();
     // @formatter:on
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching User without operation path on REMOVE operation");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, VALID_UUID);
+
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
-  // ignore until the patch implementation is ready
   @Test
+  @DisplayName("Test Patch User with Add Operation and verify Http status code: 204")
   public void testPatchUserRequestWithAddOp204() {
-    User testUser = TestData.buildTestUser("testPatchUserRequestWithAddOp204");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
+    User createdUser = createUserAndVerifySuccessfulResponse("testPatchUserRequestWithAddOp204").get();
 
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
-
-    // @formatter:off
     PatchOperation operation = TestData.setDefaultPatchOperationAttributes(PatchOperation.Type.ADD);
+    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
 
-    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes()
-        .addOperation(operation)
-        .build();
-    // @formatter:on
-    SCIMResponse<?> patchUserResponse = userRequest.patchUser(patchBody, createUserResponse.get().getId());
+    logger.info("Patching User: {}, adding new displayName", createdUser.getUserName());
+    SCIMResponse<?> patchUserResponse = resourceAwareUserRequest.patchUser(patchBody, createdUser.getId());
 
-    assertTrue(patchUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchUserResponse.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(patchUserResponse, true, NO_CONTENT));
   }
 
-  // ignore until the patch implementation is ready
   @Test
+  @DisplayName("Test Patch User with Replace Operation and verify Http status code: 204")
   public void testPatchUserRequestWithReplaceOp204() {
-    User testUser = TestData.buildTestUser("testPatchUserRequestWithReplaceOp204");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
+    User createdUser = createUserAndVerifySuccessfulResponse("testPatchUserRequestWithReplaceOp204").get();
 
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
-
-    // @formatter:off
     PatchOperation operation = TestData.setDefaultPatchOperationAttributes(PatchOperation.Type.REPLACE);
+    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
 
-    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes()
-        .addOperation(operation)
-        .build();
-    // @formatter:on
-    SCIMResponse<?> patchUserResponse = userRequest.patchUser(patchBody, createUserResponse.get().getId());
+    logger.info("Patching User: {}, replacing displayName", createdUser.getUserName());
+    SCIMResponse<?> patchUserResponse = resourceAwareUserRequest.patchUser(patchBody, createdUser.getId());
 
-    assertTrue(patchUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchUserResponse.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(patchUserResponse, true, NO_CONTENT));
   }
 
-  // ignore until the patch implementation is ready
   @Test
-  public void testPatchUserWithInvalidId404() {
-    // @formatter:off
+  @DisplayName("Test Patch User with non existing Id and verify Http status code: 404")
+  public void testPatchUserWithNonExistingId404() {
     PatchOperation operation = TestData.setDefaultPatchOperationAttributes(PatchOperation.Type.REMOVE);
+    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
 
-    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes()
-        .addOperation(operation)
-        .build();
-    // @formatter:on
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, UUID.randomUUID().toString());
+    logger.info("Patching User with non existing id");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, UUID.randomUUID().toString());
 
-    assertFalse(response.isSuccess());
-    assertEquals(NOT_FOUND.getStatusCode(), response.getStatusCode());
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, NOT_FOUND));
   }
 
   @Test
+  @DisplayName("Test Patch User with Remove Operation and verify Http status code: 204")
   public void testPatchUserRequestWithRemoveOp204() {
-    User testUser = TestData.buildTestUser("testPatchUserRequestWithRemoveOp204");
-    SCIMResponse<User> createUserResponse = userRequest.createUser(testUser);
-
-    assertTrue(createUserResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createUserResponse.getStatusCode());
+    User createdUser = createUserAndVerifySuccessfulResponse("testPatchUserRequestWithRemoveOp204").get();
 
     // @formatter:off
      PatchOperation operation = new PatchOperation.Builder()
@@ -521,13 +488,15 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .addOperation(operation)
         .build();
     // @formatter:on
-    SCIMResponse<?> patchUserResponse = userRequest.patchUser(patchBody, createUserResponse.get().getId());
 
-    assertTrue(patchUserResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchUserResponse.getStatusCode());
+    logger.info("Patching User: {}, removing displayName", createdUser.getUserName());
+    SCIMResponse<?> patchUserResponse = resourceAwareUserRequest.patchUser(patchBody, createdUser.getId());
+
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(patchUserResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Patch User with missing value on Add operation and verify Http status code: 400")
   public void testPatchUserRequestWithMissingValueInAddOperation400() {
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -539,13 +508,15 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .addOperation(operation)
         .build();
     // @formatter:on
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching User without operation value");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, VALID_UUID);
+
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch User with missing value on Replace operation and verify Http status code: 400")
   public void testPatchUserRequestWithMissingValueInReplaceOperation400() {
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -557,16 +528,19 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         .addOperation(operation)
         .build();
     // @formatter:on
-    SCIMResponse<?> response = userRequest.patchUser(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching User without operation value");
+    SCIMResponse<?> response = resourceAwareUserRequest.patchUser(patchBody, VALID_UUID);
+
+    assertAll("Verify Patch User Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Create user with missing extension schema in schemas attribute and verify Http status code: 400")
   public void testCreateUserWithMissingExtensionSchemaInSchemasAttribute400() {
     EnterpriseExtension extension = new EnterpriseExtension.Builder().setCostCenter("something").build();
-    User user = TestData.setAttributesToATestUser("testCreateUserWithMissingExtensionSchemaInSchemasAttribute400").addExtension(extension).build();
+    String testUserName = "testCreateUserWithMissingExtensionSchemaInSchemasAttribute400";
+    User user = TestData.setAttributesToATestUser(testUserName).addExtension(extension).build();
 
     ObjectMapper objectMapper = new ObjectMapper();
 
@@ -578,8 +552,20 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
         schemasNode.remove(i);
       }
     }
+
+    logger.info("Creating User: {}, with missing extension schema in 'schemas' attribute", testUserName);
     Response response = CustomTargetSystemRestClient.INSTANCE.postEntityHttpResponse(USERS, userNode);
 
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatus());
+    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatus(), "Verify status code");
+  }
+
+  private SCIMResponse<User> createUserAndVerifySuccessfulResponse(String userName) {
+    User userToCreate = TestData.buildTestUser(userName);
+
+    logger.info("Creating User: {}", userName);
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(userToCreate);
+    assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
+
+    return scimResponse;
   }
 }

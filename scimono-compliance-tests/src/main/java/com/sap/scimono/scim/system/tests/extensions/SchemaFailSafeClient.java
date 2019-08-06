@@ -1,6 +1,5 @@
 package com.sap.scimono.scim.system.tests.extensions;
 
-import com.sap.scimono.client.SchemaRequest;
 import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
@@ -9,9 +8,9 @@ import com.sap.scimono.entity.schema.Schema;
 import java.util.List;
 
 public class SchemaFailSafeClient implements ResourceFailSafeClient<Schema>{
-  private final SchemaRequest schemaRequest;
+  private final SchemaClientScimResponseExtension schemaRequest;
 
-  public SchemaFailSafeClient(SchemaRequest schemaRequest) {
+  public SchemaFailSafeClient(SchemaClientScimResponseExtension schemaRequest) {
     this.schemaRequest = schemaRequest;
   }
 
@@ -49,6 +48,11 @@ public class SchemaFailSafeClient implements ResourceFailSafeClient<Schema>{
   @Override
   public List<Schema> getAllWithIndexPaging() {
     return verifyAndGetResponse(schemaRequest.readAllSchemas()).getResources();
+  }
+
+  @Override
+  public PagedByIndexSearchResult<Schema> getAllWithoutPaging() {
+    return verifyAndGetResponse(schemaRequest.readAllSchemas());
   }
 
   @Override

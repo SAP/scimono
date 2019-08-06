@@ -60,9 +60,6 @@ public class TestsLauncher {
   }
 
   public static void main(String[] args) {
-    LogManager.getLogManager().reset();
-    SLF4JBridgeHandler.install();
-
      new TestsLauncher(LauncherProperties.fromCommandLineArguments(args)).launch();
   }
 }

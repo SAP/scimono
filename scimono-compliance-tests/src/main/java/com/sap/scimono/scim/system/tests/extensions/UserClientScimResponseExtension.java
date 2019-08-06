@@ -8,36 +8,53 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
+import org.junit.jupiter.api.extension.AfterAllCallback;
 import org.junit.jupiter.api.extension.AfterEachCallback;
+import org.junit.jupiter.api.extension.BeforeAllCallback;
 import org.junit.jupiter.api.extension.BeforeEachCallback;
 import org.junit.jupiter.api.extension.ExtensionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
-public class UserClientScimResponseExtension implements BeforeEachCallback, AfterEachCallback {
-  private final Map<String, User> managedResourceIds = new HashMap<>();
+public abstract class UserClientScimResponseExtension implements BeforeEachCallback, AfterEachCallback, BeforeAllCallback, AfterAllCallback  {
+  private static final Logger logger = LoggerFactory.getLogger(UserClientScimResponseExtension.class);
+
+  private final Map<String, User> managedResources = new HashMap<>();
   private final UserRequest userRequest;
+  private final UserFailsSafeClient userFailsSafeClient;
 
   public UserClientScimResponseExtension(UserRequest userRequest) {
     this.userRequest = userRequest;
+    this.userFailsSafeClient = new UserFailsSafeClient(this);
   }
 
-  @Override
-  public void afterEach(ExtensionContext extensionContext) throws Exception {
+  public void after(ExtensionContext extensionContext) {
+    logger.info("Deleting managed resources by test: {}", extensionContext.getDisplayName());
+    clearManagedResources();
+  }
+
+  public void before(ExtensionContext extensionContext) {
 
   }
 
-  @Override
-  public void beforeEach(ExtensionContext extensionContext) throws Exception {
+  public void clearManagedResources() {
+    new HashSet<>(managedResources.keySet()).forEach(userFailsSafeClient::delete);
+    managedResources.clear();
+  }
 
+  public UserFailsSafeClient getFailSafeClient() {
+    return userFailsSafeClient;
   }
 
   public SCIMResponse<User> createUser(User user) {
     SCIMResponse<User> createUserResponse = userRequest.createUser(user);
     if (createUserResponse.isSuccess()) {
       User createdUser = createUserResponse.get();
-      managedResourceIds.put(createdUser.getId(), createdUser);
+      managedResources.put(createdUser.getId(), createdUser);
     }
     return createUserResponse;
   }
@@ -97,8 +114,67 @@ public class UserClientScimResponseExtension implements BeforeEachCallback, Afte
   public SCIMResponse<Void> deleteUser(String userId) {
     SCIMResponse<Void> scimResponse = userRequest.deleteUser(userId);
     if(scimResponse.isSuccess()) {
-      managedResourceIds.remove(userId);
+      managedResources.remove(userId);
     }
     return scimResponse;
+  }
+
+  public static UserClientScimResponseExtension forClearingAfterAllExecutions(UserRequest userRequest) {
+    return new UserClientScimResponseExtensionAroundAll(userRequest);
+  }
+
+  public static UserClientScimResponseExtension forClearingAfterEachExecutions(UserRequest userRequest) {
+    return new UserClientScimResponseExtensionAroundEach(userRequest);
+  }
+
+  public static  class UserClientScimResponseExtensionAroundEach extends UserClientScimResponseExtension {
+    private UserClientScimResponseExtensionAroundEach(UserRequest userRequest) {
+      super(userRequest);
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+      // Not implemented
+    }
+
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+      // Not implemented
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) {
+      super.before(extensionContext);
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) {
+      super.after(extensionContext);
+    }
+  }
+
+  public static  class UserClientScimResponseExtensionAroundAll extends UserClientScimResponseExtension {
+    private UserClientScimResponseExtensionAroundAll(UserRequest userRequest) {
+      super(userRequest);
+    }
+
+    @Override
+    public void beforeAll(ExtensionContext extensionContext) {
+      super.before(extensionContext);
+    }
+    @Override
+    public void afterAll(ExtensionContext extensionContext) {
+      super.after(extensionContext);
+    }
+
+    @Override
+    public void beforeEach(ExtensionContext extensionContext) {
+      // Not implemented
+    }
+
+    @Override
+    public void afterEach(ExtensionContext extensionContext) {
+      // Not implemented
+    }
   }
 }

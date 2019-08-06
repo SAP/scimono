@@ -1,6 +1,5 @@
 package com.sap.scimono.scim.system.tests.extensions;
 
-import com.sap.scimono.client.GroupRequest;
 import com.sap.scimono.client.SCIMResponse;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
@@ -18,9 +17,9 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COU
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class GroupFailSafeClient implements ResourceFailSafeClient<Group> {
-  private final GroupRequest groupRequest;
+  private final GroupClientScimResponseExtension groupRequest;
 
-  public GroupFailSafeClient(GroupRequest groupRequest) {
+  public GroupFailSafeClient(GroupClientScimResponseExtension groupRequest) {
     this.groupRequest = groupRequest;
   }
 
@@ -110,6 +109,11 @@ public class GroupFailSafeClient implements ResourceFailSafeClient<Group> {
   @Override
   public PagedByIndexSearchResult<Group> getPagedByIndex(int startIndex, int count) {
     return verifyAndGetResponse(groupRequest.readMultipleGroups(indexPageQuery().withStartIndex(startIndex).withCount(count)));
+  }
+
+  @Override
+  public PagedByIndexSearchResult<Group> getAllWithoutPaging() {
+    return verifyAndGetResponse(groupRequest.readMultipleGroupsWithoutPaging());
   }
 
   @Override

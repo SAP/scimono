@@ -29,6 +29,8 @@ public interface ResourceFailSafeClient<T extends Resource<T>> {
 
   PagedByIndexSearchResult<T> getPagedByIndex(final int startIndex, final int count);
 
+  PagedByIndexSearchResult<T> getAllWithoutPaging();
+
   PagedByIdentitySearchResult<T> getPagedById(final String startId, final int count);
 
   PagedByIndexSearchResult<T> getByFilteredAndPagedByIndex(final int startIndex, final int count, final String filter);

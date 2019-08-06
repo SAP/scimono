@@ -18,36 +18,27 @@ import com.sap.scimono.client.UserRequest;
 import com.sap.scimono.client.authentication.OauthCredentials;
 import com.sap.scimono.client.authentication.TargetSystemBasicAuthenticator;
 import com.sap.scimono.entity.Group;
+import com.sap.scimono.entity.Meta;
+import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.User;
-import com.sap.scimono.entity.base.ExtensionFieldType;
-import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
-import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
-import com.sap.scimono.entity.patch.PatchBody;
-import com.sap.scimono.entity.schema.Schema;
-import com.sap.scimono.scim.system.tests.util.TestData;
+import com.sap.scimono.scim.system.tests.util.ClientJacksonResolver;
 import com.sap.scimono.scim.system.tests.util.TestReporter;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.test.TestProperties;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
-import java.util.HashMap;
-import java.util.LinkedList;
+import javax.ws.rs.core.Response;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 import static com.sap.scimono.client.authentication.OauthAuthenticatorFactory.clientCredentialsGrantAuthenticator;
-import static com.sap.scimono.client.query.ResourcePageQuery.identityPageQuery;
-import static com.sap.scimono.client.query.ResourcePageQuery.indexPageQuery;
-import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
-import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_START_PARAM;
-import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_ENABLED;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_PASSWORD;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_USER;
@@ -55,7 +46,12 @@ import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_CLIENT
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SECRET;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SERVICE_URL;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
-import static org.junit.jupiter.api.Assertions.fail;
+import static com.sap.scimono.scim.system.tests.util.TestUtil.constructResourceLocation;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @ExtendWith(TestReporter.class)
 public abstract class SCIMComplianceTest {
@@ -72,23 +68,28 @@ public abstract class SCIMComplianceTest {
     schemaRequest = scimClientService.buildSchemaRequest();
   }
 
-  protected SCIMClientService configureScimClientService(String serviceUrl) {
+  public static SCIMClientService configureScimClientService(String serviceUrl) {
+    // @formatter:off
     SCIMClientService.Builder clientServiceBuilder = SCIMClientService
-        .builder(serviceUrl).addProperty(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true)
+        .builder(serviceUrl)
+        .addResolver(new ClientJacksonResolver())
         .addResolver(new LoggingFeature(logger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null))
-        .addProperty(TestProperties.LOG_TRAFFIC, true).addProperty(TestProperties.DUMP_ENTITY, true)
-        .addProperty(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT, "WARNING");
+        .addProperty(TestProperties.LOG_TRAFFIC, true)
+        .addProperty(TestProperties.DUMP_ENTITY, true)
+        .addProperty(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT, "WARNING")
+        .addProperty(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true);
+    // @formatter:on
 
     if("true".equalsIgnoreCase(BASIC_AUTH_ENABLED)) {
       clientServiceBuilder.addAuthenticator(TargetSystemBasicAuthenticator.create(BASIC_AUTH_USER, BASIC_AUTH_PASSWORD));
-    } else {
+    } else if (OAUTH_CLIENT_ID != null) {
       clientServiceBuilder.addAuthenticator(clientCredentialsGrantAuthenticator(getOauthClient(), OAUTH_SERVICE_URL, new OauthCredentials(
           OAUTH_CLIENT_ID, OAUTH_SECRET)));
     }
 
     return clientServiceBuilder.build();
   }
-  private Client getOauthClient() {
+  private static Client getOauthClient() {
     LoggingFeature loggingFeature = new LoggingFeature(logger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null);
 
     Client client = ClientBuilder.newClient();
@@ -96,220 +97,36 @@ public abstract class SCIMComplianceTest {
     return client;
   }
 
-  protected User getUser(final String userId) {
-    return verifyAndGetResponse(userRequest.readSingleUser(userId));
-  }
-
-  protected List<User> getAllUsersWithIdPaging() {
-    String startId = PAGINATION_BY_ID_START_PARAM;
-    int count = Integer.parseInt(DEFAULT_COUNT);
-    PagedByIdentitySearchResult<User> pagedUsers;
-    List<User> allUsers = new LinkedList<>();
-    do {
-      SCIMResponse<PagedByIdentitySearchResult<User>> scimResponse = userRequest
-          .readMultipleUsers(identityPageQuery().withStartId(startId).withCount(count));
-
-      if(!scimResponse.isSuccess()) {
-        fail("Request to Idds Service does not finished successfully");
-      }
-      pagedUsers = scimResponse.get();
-
-      List<User> usersPerPage = pagedUsers.getResources();
-      allUsers.addAll(usersPerPage);
-
-      startId = pagedUsers.getNextId();
-    } while (!startId.equals(PAGINATION_BY_ID_END_PARAM));
-
-    return allUsers;
-  }
-
-  protected List<User> getAllUsersWithIndexPaging() {
-    int startIndex = 1;
-    int count = Integer.parseInt(DEFAULT_COUNT);
-    long totalResults = 0;
-    PagedByIndexSearchResult<User> getPagedUsersSearchResult;
-    List<User> allUsers = new LinkedList<>();
-    do {
-      SCIMResponse<PagedByIndexSearchResult<User>> scimResponse = userRequest
-          .readMultipleUsers(indexPageQuery().withStartIndex(startIndex).withCount(count));
-
-      if(!scimResponse.isSuccess()) {
-        fail("Request to Idds Service does not finished successfully");
-      }
-      getPagedUsersSearchResult = scimResponse.get();
-
-      totalResults = getPagedUsersSearchResult.getTotalResults();
-
-      List<User> usersPerPage = getPagedUsersSearchResult.getResources();
-      allUsers.addAll(usersPerPage);
-
-      startIndex = startIndex + count;
-    } while (startIndex <= totalResults);
-
-    return allUsers;
-  }
-
-  protected List<User> getUsersFiltered(final String filterExpression) {
-    return verifyAndGetResponse(userRequest.readMultipleUsers(filterExpression)).getResources();
-  }
-
-  protected PagedByIndexSearchResult<User> getUsersPagedByIndex(final int startIndex, final int count) {
-    return verifyAndGetResponse(userRequest.readMultipleUsers(indexPageQuery().withStartIndex(startIndex).withCount(count)));
-  }
-
-  protected PagedByIdentitySearchResult<User> getUsersPagedById(final String startId, final int count) {
-    return verifyAndGetResponse(userRequest.readMultipleUsers(identityPageQuery().withStartId(startId).withCount(count)));
-  }
-
-  protected PagedByIndexSearchResult<User> getUsersFilteredAndPagedByIndex(final int startIndex, final int count, final String filter) {
-    return verifyAndGetResponse(userRequest.readMultipleUsers(indexPageQuery().withStartIndex(startIndex).withCount(count), filter));
-  }
-
-  protected PagedByIdentitySearchResult<User> getUsersFilteredAndPagedById(final String startId, final int count, final String filter) {
-    return verifyAndGetResponse(userRequest.readMultipleUsers(identityPageQuery().withStartId(startId).withCount(count), filter));
-  }
-
-  protected User createUser(final User user) {
-    return verifyAndGetResponse(userRequest.createUser(user));
-  }
-
-  protected User updateUser(final String userId, final User updatedUser) {
-    return verifyAndGetResponse(userRequest.updateUser(updatedUser));
-  }
-
-  protected void deleteUser(final String userId) {
-    verifyAndGetResponse(userRequest.deleteUser(userId));
-  }
-
-  protected List<Schema> getAllSchemas() {
-    return verifyAndGetResponse(schemaRequest.readAllSchemas()).getResources();
-  }
-
-  protected Schema getSchema(final String schemaId) {
-    return verifyAndGetResponse(schemaRequest.readSingleSchema(schemaId));
-  }
-
-  protected Schema createSchema(final Schema schema) {
-    return verifyAndGetResponse(schemaRequest.createSchema(schema));
-  }
-
-  protected void deleteSchema(final String schemaId) {
-    verifyAndGetResponse(schemaRequest.deleteSchema(schemaId));
-  }
-
-  protected Group getGroup(final String groupId) {
-    return verifyAndGetResponse(groupRequest.readSingleGroup(groupId));
-  }
-
-  protected List<Group> getAllGroupsWithIdPaging() {
-    String startId = PAGINATION_BY_ID_START_PARAM;
-    int count = Integer.parseInt(DEFAULT_COUNT);
-    PagedByIdentitySearchResult<Group> pagedGroups;
-    List<Group> allGroups = new LinkedList<>();
-
-    do {
-      SCIMResponse<PagedByIdentitySearchResult<Group>> scimResponse = groupRequest
-          .readMultipleGroups(identityPageQuery().withStartId(startId).withCount(count));
-
-      if(!scimResponse.isSuccess()) {
-        fail("Request to Idds Service does not finished successfully");
-      }
-      pagedGroups = scimResponse.get();
-
-      List<Group> groupsPerPage = pagedGroups.getResources();
-      allGroups.addAll(groupsPerPage);
-
-      startId = pagedGroups.getNextId();
-    } while (!startId.equals(PAGINATION_BY_ID_END_PARAM));
-
-    return allGroups;
-  }
-
-  protected List<Group> getAllGroupsWithIndexPaging() {
-    int startIndex = 1;
-    int count = Integer.parseInt(DEFAULT_COUNT);
-    long totalResults = 0;
-    PagedByIndexSearchResult<Group> getPagedGroupsResult;
-    List<Group> allGroups = new LinkedList<>();
-
-    do {
-      SCIMResponse<PagedByIndexSearchResult<Group>> scimResponse = groupRequest
-          .readMultipleGroups(indexPageQuery().withStartIndex(startIndex).withCount(count));
-
-      if(!scimResponse.isSuccess()) {
-        fail("Request to Idds Service does not finished successfully");
-      }
-
-      getPagedGroupsResult = scimResponse.get();
-      totalResults = getPagedGroupsResult.getTotalResults();
-
-      List<Group> groupsPerPage = getPagedGroupsResult.getResources();
-      allGroups.addAll(groupsPerPage);
-
-      startIndex = startIndex + count;
-    } while (startIndex <= totalResults);
-
-    return allGroups;
-  }
-
-  protected PagedByIdentitySearchResult<Group> getGroupsPagedById(final String startId, final int count) {
-    return verifyAndGetResponse(groupRequest.readMultipleGroups(identityPageQuery().withStartId(startId).withCount(count)));
-  }
-
-  protected PagedByIndexSearchResult<Group> getGroupsPagedByIndex(final int startIndex, final int count) {
-    return verifyAndGetResponse(groupRequest.readMultipleGroups(indexPageQuery().withStartIndex(startIndex).withCount(count)));
-  }
-
-  protected List<Group> getGroupsFiltered(final String filterExpression) {
-    return verifyAndGetResponse(groupRequest.readMultipleGroups(filterExpression)).getResources();
-  }
-
-  protected PagedByIndexSearchResult<Group> getGroupsFilteredAndPagedByIndex(final int startIndex, final int count, final String filter) {
-    return verifyAndGetResponse(groupRequest.readMultipleGroups(indexPageQuery().withStartIndex(startIndex).withCount(count), filter));
-  }
-
-  protected PagedByIdentitySearchResult<Group> getGroupsFilteredAndPagedById(final String startId, final int count, final String filter) {
-    return verifyAndGetResponse(groupRequest.readMultipleGroups(identityPageQuery().withStartId(startId).withCount(count), filter));
-  }
-
-  protected Group createGroup(final Group group) {
-    return verifyAndGetResponse(groupRequest.createGroup(group));
-  }
-
-  protected Group updateGroup(final String groupId, final Group updatedGroup) {
-    return verifyAndGetResponse(groupRequest.updateGroup(updatedGroup));
-  }
-
-  protected Schema createCustomTestSchema(final String schemaId, final String custAttr1, final String custAttr2) {
-    Map<String, ExtensionFieldType<?>> customAttrsNameToType = new HashMap<>();
-    customAttrsNameToType.put(custAttr1, ExtensionFieldType.STRING);
-    customAttrsNameToType.put(custAttr2, ExtensionFieldType.STRING);
-    Schema testSchema = TestData.buildCustomSchemaWithAttrs(schemaId, customAttrsNameToType);
-
-    return createSchema(testSchema);
-  }
-
-  protected void patchUser(final String resourceId, final PatchBody patchBody) {
-    verifyAndGetResponse(userRequest.patchUser(patchBody, resourceId));
-  }
-
-  protected void patchGroup(final String resourceId, final PatchBody patchBody) {
-    verifyAndGetResponse(groupRequest.patchGroup(patchBody, resourceId));
-  }
-
-  private  <T> T verifyAndGetResponse(SCIMResponse<T> scimResponse) {
-    if(!scimResponse.isSuccess()) {
-      fail("Scim request executed and unexpected response received: " + scimResponse.getError().asUnknownException());
-    }
-
-    return scimResponse.get();
-  }
   protected boolean isUserFetchedInResponse(final String userId, final List<User> fetchedUsers) {
     return fetchedUsers.stream().anyMatch(user -> user.getId().equals(userId));
   }
 
   protected boolean isGroupFetchedInResponse(final String groupId, final List<Group> fetchedGroups) {
     return fetchedGroups.stream().anyMatch(group -> group.getId().equals(groupId));
+  }
+
+  protected Executable getMetaAssertions(Resource<?> resource, String resourceType) {
+    // @formatter:off
+    Meta meta = resource.getMeta();
+
+    return () ->  assertAll( "Verify 'meta' attributes",
+        () -> assertNotNull(meta, "Verify meta existence"),
+        () -> assertEquals(resourceType.toLowerCase(), meta.getResourceType().toLowerCase(), "verify 'resourceType'"),
+        () -> assertNotNull(meta.getLocation(), "verify location 'location' is not empty"),
+        () -> assertTrue(meta.getLocation().endsWith(constructResourceLocation(resource)), "verify location is correct"),
+        () -> assertNotNull(meta.getCreated(), "verify location 'created' is not empty"),
+        () -> assertNotNull(meta.getLastModified(), "verify location 'lastModified' is not empty"),
+        () -> assertNotNull(meta.getVersion(), "verify location 'version' is not empty")
+    );
+  }
+
+  protected Collection<Executable> getResponseStatusAssertions(SCIMResponse<?> scimResponse, boolean expectedToBeSuccess, Response.Status expectedStatus) {
+    Executable responseExecutionAssertion = expectedToBeSuccess ?
+        () -> assertTrue(scimResponse.isSuccess(), "Verify response is successful"):
+        () -> assertFalse(scimResponse.isSuccess(), "Verify response is failure");
+
+    Executable statusCodeAssertion = () -> assertEquals(expectedStatus.getStatusCode(), scimResponse.getStatusCode(), "Verify status code");
+    return Arrays.asList(responseExecutionAssertion, statusCodeAssertion);
   }
 
 }

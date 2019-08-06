@@ -1,43 +1,6 @@
 
 package com.sap.scimono.api;
 
-import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
-import static com.sap.scimono.api.API.COUNT_PARAM;
-import static com.sap.scimono.api.API.FILTER_PARAM;
-import static com.sap.scimono.api.API.START_ID_PARAM;
-import static com.sap.scimono.api.API.START_INDEX_PARAM;
-import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
-import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
-import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
-import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
-import static com.sap.scimono.helper.Resources.addLocation;
-import static com.sap.scimono.helper.Resources.addMembersLocation;
-import static com.sap.scimono.helper.Strings.isNotNullOrEmpty;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
@@ -55,6 +18,41 @@ import com.sap.scimono.entity.schema.validation.ValidStartId;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+import static com.sap.scimono.api.API.COUNT_PARAM;
+import static com.sap.scimono.api.API.FILTER_PARAM;
+import static com.sap.scimono.api.API.START_ID_PARAM;
+import static com.sap.scimono.api.API.START_INDEX_PARAM;
+import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
+import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
+import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
+import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
+import static com.sap.scimono.helper.Resources.addLocation;
+import static com.sap.scimono.helper.Resources.addMembersLocation;
+import static com.sap.scimono.helper.Strings.isNotNullOrEmpty;
 
 @Path(API.GROUPS)
 @Produces(APPLICATION_JSON_SCIM)

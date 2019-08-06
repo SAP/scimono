@@ -2,6 +2,7 @@
 package com.sap.scimono.scim.system.tests;
 
 import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import javax.ws.rs.core.Response;
@@ -15,10 +16,11 @@ public class SCIMHttpResponseCodeTest extends SCIMComplianceTest {
   public static final String VALID_UUID = "aff7a7d5-42ed-4854-9e68-d51780cea401";
 
   @Test
+  @DisplayName("Test Get non existing resource type")
   public void testGetMissingResource404() {
    Response httpResponse = CustomTargetSystemRestClient.INSTANCE.getEntitiesHttpResponse("wrongEndpoint");
 
-    assertEquals(NOT_FOUND.getStatusCode(), httpResponse.getStatus());
+   assertEquals(NOT_FOUND.getStatusCode(), httpResponse.getStatus(), "Verify response status");
   }
 
 }

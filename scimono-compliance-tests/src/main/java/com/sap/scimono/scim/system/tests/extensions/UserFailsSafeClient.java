@@ -1,7 +1,6 @@
 package com.sap.scimono.scim.system.tests.extensions;
 
 import com.sap.scimono.client.SCIMResponse;
-import com.sap.scimono.client.UserRequest;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
@@ -18,9 +17,9 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COU
 import static org.junit.jupiter.api.Assertions.fail;
 
 public class UserFailsSafeClient implements ResourceFailSafeClient<User>{
-  private final UserRequest userRequest;
+  private final UserClientScimResponseExtension userRequest;
 
-  public UserFailsSafeClient(UserRequest userRequest) {
+  public UserFailsSafeClient(UserClientScimResponseExtension userRequest) {
     this.userRequest = userRequest;
   }
 
@@ -108,6 +107,11 @@ public class UserFailsSafeClient implements ResourceFailSafeClient<User>{
   @Override
   public PagedByIndexSearchResult<User> getPagedByIndex(int startIndex, int count) {
     return verifyAndGetResponse(userRequest.readMultipleUsers(indexPageQuery().withStartIndex(startIndex).withCount(count)));
+  }
+
+  @Override
+  public PagedByIndexSearchResult<User> getAllWithoutPaging() {
+    return verifyAndGetResponse(userRequest.readMultipleUsersWithoutPaging());
   }
 
   @Override
