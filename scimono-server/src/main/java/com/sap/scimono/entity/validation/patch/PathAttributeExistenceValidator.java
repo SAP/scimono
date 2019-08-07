@@ -8,12 +8,12 @@ import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.exception.SCIMException;
 
-public class PathAttributeExistanceValidator implements Validator<PatchOperation> {
+public class PathAttributeExistenceValidator implements Validator<PatchOperation> {
 
 
   private SchemasCallback schemaAPI;
 
-  public PathAttributeExistanceValidator(final SchemasCallback schemaAPI) {
+  public PathAttributeExistenceValidator(final SchemasCallback schemaAPI) {
     this.schemaAPI = schemaAPI;
   }
 

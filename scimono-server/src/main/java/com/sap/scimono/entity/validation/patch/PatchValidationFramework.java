@@ -1,7 +1,13 @@
 
 package com.sap.scimono.entity.validation.patch;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -32,10 +38,21 @@ public class PatchValidationFramework {
     List<Validator<PatchBody>> validators = Arrays.asList(new PatchSchemaPresenceValidator(), new AnyOperationPresenceValidator());
 
     validators.forEach(v -> v.validate(body));
+    
+    // @formatter:off
     body.getOperations().forEach(operation -> {
-      String fullPath = addSchemaToPathIfNotExist(operation.getPath(), coreSchemaId);
+      List<String> matchingPaths = schemaAPI.getSchema(coreSchemaId)
+    		  .getAttributes()
+    		  .stream()
+    		  .map(attribute -> attribute.getName())
+    		  .filter(attributeName -> attributeName.equalsIgnoreCase(operation.getPath()))
+    		  .collect(Collectors.toList());
+      
+      String caseExactPath = matchingPaths.isEmpty() ? operation.getPath() : matchingPaths.get(0);
+      String fullPath = addSchemaToPathIfNotExist(caseExactPath, coreSchemaId);
       validateOperation(new PatchOperation.Builder(operation).setPath(fullPath).build());
     });
+    // @formatter:on
   }
   //TODO check utils that contain this method
   private static String addSchemaToPathIfNotExist(String path, String defaultSchema) {
@@ -72,7 +89,7 @@ public class PatchValidationFramework {
       validators.add(new ValuePathRestrictionsValidator());
     } else {
       validators.add(new PathSchemaExistenceValidator(requiredSchemas));
-      validators.add(new PathAttributeExistanceValidator(schemaAPI));
+      validators.add(new PathAttributeExistenceValidator(schemaAPI));
       validators.add(new PathMutabilityValidator(schemaAPI));
     }
 
