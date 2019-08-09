@@ -44,23 +44,23 @@ public class PagedByIndexSearchResult<T extends Resource<T>> {
   private static final String SCHEMA = "urn:ietf:params:scim:api:messages:2.0:ListResponse";
   public static final String DEFAULT_START_INDEX = "1";
   public static final String DEFAULT_COUNT = "100";
-  private final long totalResults;
-  private final long itemsPerPage;
-  private final Long startIndex;
+  private final int totalResults;
+  private final int itemsPerPage;
+  private final Integer startIndex;
   private final Set<String> schemas = Collections.singleton(SCHEMA);
 
   private final List<T> resources;
 
   @JsonCreator
-  public PagedByIndexSearchResult(@JsonProperty("Resources") final List<T> resources, @JsonProperty("totalResults") final long totalResults,
-                                  @JsonProperty("itemsPerPage") final long itemsPerPage, @JsonProperty("startIndex") final Long startIndex) {
+  public PagedByIndexSearchResult(@JsonProperty("Resources") final List<T> resources, @JsonProperty("totalResults") final int totalResults,
+                                  @JsonProperty("itemsPerPage") final int itemsPerPage, @JsonProperty("startIndex") final Integer startIndex) {
     this.resources = sameOrEmpty(resources);
     this.totalResults = totalResults;
     this.itemsPerPage = itemsPerPage;
     this.startIndex = startIndex;
   }
 
-  public PagedByIndexSearchResult(PagedResult<T> resources, final Long startIndex) {
+  public PagedByIndexSearchResult(PagedResult<T> resources, final Integer startIndex) {
     this(resources.getResources(), resources.getTotalResourceCount(), resources.getResourcesCount(), startIndex);
   }
 
@@ -80,7 +80,7 @@ public class PagedByIndexSearchResult<T extends Resource<T>> {
    *
    * @return the total result
    */
-  public long getTotalResults() {
+  public int getTotalResults() {
     return totalResults;
   }
 
@@ -98,7 +98,7 @@ public class PagedByIndexSearchResult<T extends Resource<T>> {
    *
    * @return items per page
    */
-  public long getItemsPerPage() {
+  public int getItemsPerPage() {
     return itemsPerPage;
   }
 
@@ -107,7 +107,7 @@ public class PagedByIndexSearchResult<T extends Resource<T>> {
    *
    * @return the start index of the actual page
    */
-  public Long getStartIndex() {
+  public Integer getStartIndex() {
     return startIndex;
   }
 }

@@ -1,15 +1,12 @@
 package com.sap.scimono.client.query;
 
-import javax.ws.rs.client.WebTarget;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.sap.scimono.api.API.COUNT_PARAM;
-import static com.sap.scimono.api.API.START_ID_PARAM;
-import static com.sap.scimono.api.API.START_INDEX_PARAM;
+import javax.ws.rs.client.WebTarget;
 
 public class ResourcePageQuery implements SCIMQuery {
-  private static final int DEFAULT_COUNT = 100;
+  public static final int DEFAULT_COUNT = 100;
   private static final long DEFAULT_START_INDEX = 1;
   private static final String DEFAULT_START_ID = "00000000-0000-1000-9000-000000000000";
 

@@ -99,7 +99,7 @@ public class ResourceTypes {
 
     resources.addAll(customResourceTypes.getResources());
 
-    return new PagedByIndexSearchResult<>(resources, resources.size(), scimConfig.getMaxResourcesPerPage(), new Long(1));
+    return new PagedByIndexSearchResult<>(resources, resources.size(), scimConfig.getMaxResourcesPerPage(), 1);
   }
 
   @GET

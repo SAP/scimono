@@ -17,8 +17,8 @@ public class PagedByIdentitySearchResult<T extends Resource<T>> extends PagedByI
   private final String nextId;
 
   @JsonCreator
-  public PagedByIdentitySearchResult(@JsonProperty("Resources") final List<T> resources, @JsonProperty("totalResults") final long totalResults,
-                                      @JsonProperty("itemsPerPage") final long itemsPerPage, @JsonProperty("startId") final String startId,
+  public PagedByIdentitySearchResult(@JsonProperty("Resources") final List<T> resources, @JsonProperty("totalResults") final int totalResults,
+                                      @JsonProperty("itemsPerPage") final int itemsPerPage, @JsonProperty("startId") final String startId,
                                       @JsonProperty("nextId") final String nextId) {
     super(resources, totalResults, itemsPerPage, null);
 
@@ -26,9 +26,9 @@ public class PagedByIdentitySearchResult<T extends Resource<T>> extends PagedByI
     this.nextId = nextId;
   }
 
-  public PagedByIdentitySearchResult(PagedResult<T> resources, final String startId,
+  public PagedByIdentitySearchResult(PagedResult<T> resources, final int itemsPerPage, final String startId,
                                      final String nextId) {
-    this(resources.getResources(), resources.getTotalResourceCount(), resources.getResourcesCount(), startId, nextId);
+    this(resources.getResources(), resources.getTotalResourceCount(), itemsPerPage, startId, nextId);
   }
 
   public String getStartId() {

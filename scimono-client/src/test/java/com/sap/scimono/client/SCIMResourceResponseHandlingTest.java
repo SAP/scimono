@@ -85,9 +85,9 @@ public class SCIMResourceResponseHandlingTest {
 
     // @formatter:off
     PagedByIndexSearchResult<User> firstPageResponseEntity =
-        new PagedByIndexSearchResult<>(new PagedResult<>(200, users.stream().limit(100).collect(Collectors.toList())), 1L);
+        new PagedByIndexSearchResult<>(new PagedResult<>(200, users.stream().limit(100).collect(Collectors.toList())), 1);
     PagedByIndexSearchResult<User> secondPageResponseEntity =
-        new PagedByIndexSearchResult<>(new PagedResult<>(200, users.stream().skip(100).limit(100).collect(Collectors.toList())), 1L);
+        new PagedByIndexSearchResult<>(new PagedResult<>(200, users.stream().skip(100).limit(100).collect(Collectors.toList())), 1);
 
     wireMockServer.stubFor(get(urlEqualTo("/Users?startIndex=1&count=100"))
         .willReturn(configureMockedResponse(OK, APPLICATION_JSON_SCIM, firstPageResponseEntity)));
@@ -120,7 +120,7 @@ public class SCIMResourceResponseHandlingTest {
 
     wireMockServer.stubFor(get(urlEqualTo("/Users?startIndex=1&count=100"))
             .willReturn(configureMockedResponse(OK, APPLICATION_JSON_SCIM,
-                new PagedByIndexSearchResult<>(new PagedResult<>(totalUsersCount, generateUsers(returnedUsersCount)), 1L))));
+                new PagedByIndexSearchResult<>(new PagedResult<>(totalUsersCount, generateUsers(returnedUsersCount)), 1))));
 
     final SCIMResponse<PagedByIndexSearchResult<User>> usersResult = SCIMClientService.builder(DEFAULT_URL).build()
         .buildUserRequest()
@@ -149,7 +149,7 @@ public class SCIMResourceResponseHandlingTest {
     // @formatter:off
     wireMockServer.stubFor(get(urlEqualTo(String.format("/Users?startIndex=%d&count=%d", startIndex, returnedUsersCount)))
             .willReturn(configureMockedResponse(OK, APPLICATION_JSON_SCIM,
-                new PagedByIndexSearchResult<>(new PagedResult<>(totalUsersCount, generateUsers(returnedUsersCount)), (long) startIndex))));
+                new PagedByIndexSearchResult<>(new PagedResult<>(totalUsersCount, generateUsers(returnedUsersCount)), startIndex))));
 
     final SCIMResponse<PagedByIndexSearchResult<User>> usersResult = SCIMClientService.builder(DEFAULT_URL).build()
         .buildUserRequest()
@@ -179,7 +179,7 @@ public class SCIMResourceResponseHandlingTest {
     // @formatter:off
      wireMockServer.stubFor(get(urlEqualTo(String.format("/Users?startId=%s&count=%d", startId, returnedUsersCount)))
             .willReturn(configureMockedResponse(OK, APPLICATION_JSON_SCIM,
-                new PagedByIdentitySearchResult<>(new PagedResult<>(totalUsersCount, generateUsers(returnedUsersCount)), startId, nextId))));
+                new PagedByIdentitySearchResult<>(new PagedResult<>(totalUsersCount, generateUsers(returnedUsersCount)), returnedUsersCount, startId, nextId))));
 
     final SCIMResponse<PagedByIdentitySearchResult<User>> usersResult = SCIMClientService.builder(DEFAULT_URL).build()
         .buildUserRequest()

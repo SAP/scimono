@@ -125,16 +125,16 @@ public class Groups {
 
     if (isNotNullOrEmpty(startId)) {
       if (groupsToReturn.size() <= count) {
-        return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), groups.getResourcesCount(), startId, PAGINATION_BY_ID_END_PARAM)).build();
+        return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
       }
-
+    	
       int indexOfLastGroup = groupsToReturn.size() - 1;
       Group nextGroup = groupsToReturn.remove(indexOfLastGroup);
 
-      return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), groupsToReturn.size(), startId, nextGroup.getId())).build();
+      return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, nextGroup.getId())).build();
     }
 
-    return Response.ok(new PagedByIndexSearchResult<>(groupsToReturn, groups.getTotalResourceCount(), groupsToReturn.size(), new Long(startIndex))).build();
+    return Response.ok(new PagedByIndexSearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startIndex)).build();
   }
 
   @POST

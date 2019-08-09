@@ -155,16 +155,16 @@ public class Users {
     // TODO maybe move this paging logic inside the PagedByX classes, what will remain here is whether to return paged by id or paged by index results
     if (startId != null) {
       if (usersToReturn.size() <= count) {
-        return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), users.getResourcesCount(), startId, PAGINATION_BY_ID_END_PARAM)).build();
+        return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
       }
 
       int indexOfLastUser = usersToReturn.size() - 1;
       User nextUser = usersToReturn.remove(indexOfLastUser);
 
-      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), usersToReturn.size(), startId, nextUser.getId())).build();
+      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, nextUser.getId())).build();
     }
 
-    return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), usersToReturn.size(), new Long(startIndex))).build();
+    return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startIndex)).build();
   }
 
   @POST
