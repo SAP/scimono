@@ -1,22 +1,6 @@
 
 package com.sap.scimono.api;
 
-import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
-import static com.sap.scimono.helper.Resources.addLocation;
-
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
-
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
@@ -26,9 +10,24 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.schema.ResourceType;
-import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.entity.schema.ResourceType.Builder;
+import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.exception.ResourceNotFoundException;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+
+import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+import static com.sap.scimono.helper.Resources.addLocation;
 
 @Path(API.RESOURCE_TYPES)
 @Produces(APPLICATION_JSON_SCIM)

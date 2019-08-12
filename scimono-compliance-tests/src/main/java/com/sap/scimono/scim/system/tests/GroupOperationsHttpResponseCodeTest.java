@@ -8,8 +8,16 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
+import com.sap.scimono.scim.system.tests.extensions.GroupClientScimResponseExtension;
+import com.sap.scimono.scim.system.tests.extensions.GroupFailSafeClient;
+import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
+import com.sap.scimono.scim.system.tests.extensions.UserFailsSafeClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -17,208 +25,252 @@ import java.util.UUID;
 
 import static com.sap.scimono.entity.definition.CoreGroupAttributes.DISPLAY_NAME;
 import static com.sap.scimono.scim.system.tests.util.TestData.JACKSON_NODE_FACTORY;
+import static com.sap.scimono.scim.system.tests.util.TestData.buildGroup;
+import static com.sap.scimono.scim.system.tests.util.TestData.buildTestUser;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest {
+  private static final Logger logger = LoggerFactory.getLogger(GroupOperationsHttpResponseCodeTest.class);
+
+  @RegisterExtension 
+  UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);
+
+  @RegisterExtension 
+  GroupClientScimResponseExtension resourceAwareGroupRequest = GroupClientScimResponseExtension.forClearingAfterEachExecutions(groupRequest);
+  
+  private final GroupFailSafeClient groupFailSafeClient = resourceAwareGroupRequest.getFailSafeClient();
+  private final UserFailsSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
 
   @Test
+  @DisplayName("Test Get group and verify Http status code: 200")
   public void testGetGroup200() {
-    Group groupWithoutMembers = TestData.buildGroup("testGetGroupHTTPResponse");
+    SCIMResponse<Group> scimResponse = createGroupAndVerifySuccessfulResponse("testGetGroupHTTPResponse");
 
-    SCIMResponse<Group> scimResponse = groupRequest.createGroup(groupWithoutMembers);
-
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
-
-    scimResponse = groupRequest.readSingleGroup(scimResponse.get().getId());
+    logger.info("Fetching Group: testGetGroupHTTPResponse");
+    scimResponse = resourceAwareGroupRequest.readSingleGroup(scimResponse.get().getId());
     assertTrue(scimResponse.isSuccess());
 
-    assertEquals(OK.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, true, OK));
   }
 
   @Test
+  @DisplayName("Test Get group with illegal id and verify Http status code: 400")
   public void testGetGroupWithIllegalId400() {
-    SCIMResponse<Group> scimResponse = groupRequest.readSingleGroup(ILLEGAL_UUID);
+    logger.info("Fetching Group with illegal id");
+    SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.readSingleGroup(ILLEGAL_UUID);
 
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Get group with non existing id and verify Http status code: 404")
   public void testGetGroupWithNonExistingId400() {
-    SCIMResponse<Group> scimResponse = groupRequest.readSingleGroup(UUID.randomUUID().toString());
+    logger.info("Fetching Group with non existing id");
+    SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.readSingleGroup(UUID.randomUUID().toString());
 
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(NOT_FOUND.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
+  @DisplayName("Test Create group with non existing member and verify Http status code: 404")
+  public void testCreateGroupWithNonExistingMember404() {
+    logger.info("Fetching Group with non existing member");
+    SCIMResponse<Group> response = resourceAwareGroupRequest.createGroup(buildGroup("testCreateGroupWithNonExistingMember", UUID.randomUUID().toString()));
+
+    assertAll("Verify GET Response", getResponseStatusAssertions(response, false, NOT_FOUND));
+  }
+
+  @Test
+  @DisplayName("Test Get multiple groups and verify Http status code: 200")
   public void testGetAllGroups200() {
-    Group groupWithoutMembers = TestData.buildGroup("testGetAllGroupsHTTPResponse");
+    createGroupAndVerifySuccessfulResponse("testGetAllGroupsHTTPResponse");
 
-    SCIMResponse<Group> scimResponse = groupRequest.createGroup(groupWithoutMembers);
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
-
-    SCIMResponse<PagedByIndexSearchResult<Group>> getGroupsResponse = groupRequest.readMultipleGroups();
-    assertTrue(getGroupsResponse.isSuccess());
-    assertEquals(OK.getStatusCode(), getGroupsResponse.getStatusCode());
+    logger.info("Fetching multiple Groups");
+    SCIMResponse<PagedByIndexSearchResult<Group>> getGroupsResponse = resourceAwareGroupRequest.readMultipleGroups();
+    assertAll("Verify GET Response", getResponseStatusAssertions(getGroupsResponse, true, OK));
   }
 
   @Test
+  @DisplayName("Test Get group with # instead of id and verify Http status code: 400")
   public void testGetAllGroupsWithIllegalId400() {
-    SCIMResponse<Group> scimResponse = groupRequest.readSingleGroup("#");
+    logger.info("Fetching Group with #");
+    SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.readSingleGroup("#");
 
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), scimResponse.getStatusCode());
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Create group and verify Http status code: 201")
   public void testCreateGroup201() {
-    Group groupWithoutMembers = TestData.buildGroup("testCreateGroupHTTPResponse");
-    SCIMResponse<Group> scimResponse = groupRequest.createGroup(groupWithoutMembers);
-
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
+    createGroupAndVerifySuccessfulResponse("testCreateGroupHTTPResponse");
   }
 
   @Test
-  public void testUpdateGroup200() {
-    Group parentGroup = TestData.buildGroup("testUpdateGroupHTTPResponse");
-    SCIMResponse<Group> groupScimResponse = groupRequest.createGroup(parentGroup);
+  @DisplayName("Test Update group displayName with PUT and verify Http status code: 400")
+  public void testUpdateGroupDisplayName200() {
+    String displayName = "testUpdateGroupDsiplayNameHTTPResponse";
+    SCIMResponse<Group> scimResponse = createGroupAndVerifySuccessfulResponse(displayName);
 
-    assertTrue(groupScimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), groupScimResponse.getStatusCode());
+    logger.info("Updating Group: {}", displayName);
+    scimResponse = resourceAwareGroupRequest.updateGroup(new Group.Builder(scimResponse.get()).setDisplayName(displayName + "-new").build());
+
+    assertAll("Verify Update Group Response", getResponseStatusAssertions(scimResponse, true, OK));
+  }
+
+  @Test
+  @DisplayName("Test Update group with PUT and verify Http status code: 200")
+  public void testUpdateGroup200() {
+    String displayName = "testUpdateGroupHTTPResponse";
+    SCIMResponse<Group> groupScimResponse = createGroupAndVerifySuccessfulResponse(displayName);
 
     Group createdParentGroup = groupScimResponse.get();
 
-    User testUser = TestData.buildTestUser("testUpdateGroupHTTPResponse");
-    SCIMResponse<User> userScimResponse = userRequest.createUser(testUser);
+    String testUserName = "testUpdateGroupHTTPResponse-User";
+    User testUser = TestData.buildTestUser(testUserName);
 
-    assertTrue(userScimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), userScimResponse.getStatusCode());
+    logger.info("Creating User: {}", testUserName);
+    SCIMResponse<User> userScimResponse = resourceAwareUserRequest.createUser(testUser);
+    assertAll("Verify Create User Response", getResponseStatusAssertions(userScimResponse, true, CREATED));
 
-    User createdGroupMember = userScimResponse.get();
-    assertNotNull(createdGroupMember);
-    assertNotNull(createdParentGroup);
-    assertNotNull(testUser);
-    assertEquals(36, createdGroupMember.getId().length());
-
-    MemberRef groupMember = TestData.buildGroupMemberResourceWithId(createdGroupMember.getId());
+    MemberRef groupMember = TestData.buildGroupMemberResourceWithId(userScimResponse.get().getId());
     Group updatedGroupWithMember = new Group.Builder(createdParentGroup).setId(createdParentGroup.getId()).addMember(groupMember).build();
 
-    groupScimResponse = groupRequest.updateGroup(updatedGroupWithMember);
-    assertTrue(userScimResponse.isSuccess());
-    assertEquals(OK.getStatusCode(), groupScimResponse.getStatusCode());
+    logger.info("Updating Group: {}, adding new member", displayName);
+    groupScimResponse = resourceAwareGroupRequest.updateGroup(updatedGroupWithMember);
+
+    assertAll("Verify Update Group Response", getResponseStatusAssertions(groupScimResponse, true, OK));
   }
 
   @Test
+  @DisplayName("Test Get group with # instead of id and verify Http status code: 400")
   public void testUpdateGroupWithoutIdInBody200() {
-    Group groupToCreate = TestData.buildGroup("testUpdateGroupWithoutIdInBody200");
-    SCIMResponse<Group> scimResponse = groupRequest.createGroup(groupToCreate);
-
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
-    Group createdGroup = scimResponse.get();
+    Group createdGroup = createGroupAndVerifySuccessfulResponse("testUpdateGroupWithoutIdInBody200").get();
 
     String newDisplayName = "testUpdateGroupWithoutIdInBody200-updated";
     Group updatedGroup = new Group.Builder(createdGroup).setId(null).setDisplayName(newDisplayName).setId(createdGroup.getId()).build();
 
-    scimResponse = groupRequest.updateGroup(updatedGroup);
+    logger.info("Updating Group: {}", createdGroup.getDisplayName());
+    SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.updateGroup(updatedGroup);
 
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(OK.getStatusCode(), scimResponse.getStatusCode());
-    assertEquals(newDisplayName, scimResponse.get().getDisplayName());
+    assertAll("Verify Update Group Response", getResponseStatusAssertions(scimResponse, true, OK));
+    assertEquals(newDisplayName, scimResponse.get().getDisplayName(), "Verify 'displayName'");
   }
 
   @Test
+  @DisplayName("Test Update Group without id in body and verify Http status code: 400")
   public void testUpdateGroupWithIllegalId400() {
-    Group parentGroup = TestData.buildGroup("testUpdateGroupWithIllegalId400");
-    SCIMResponse<Group> groupScimResponse = groupRequest.createGroup(parentGroup);
+    Group createdParentGroup = createGroupAndVerifySuccessfulResponse("testUpdateGroupWithIllegalId400").get();
 
-    assertTrue(groupScimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), groupScimResponse.getStatusCode());
+    String testUserName = "testUpdateGroupWithIllegalId400-User";
+    User testUser = TestData.buildTestUser(testUserName);
 
-    Group createdParentGroup = groupScimResponse.get();
+    logger.info("Creating User: {}", testUserName);
+    SCIMResponse<User> userScimResponse = resourceAwareUserRequest.createUser(testUser);
+    assertAll("Verify Create User Response", getResponseStatusAssertions(userScimResponse, true, CREATED));
 
-    User testUser = TestData.buildTestUser("testUpdateGroupWithIllegalId400");
-    SCIMResponse<User> userScimResponse = userRequest.createUser(testUser);
-    assertTrue(userScimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), userScimResponse.getStatusCode());
-
-    User createdGroupMember = userScimResponse.get();
-
-    assertNotNull(createdGroupMember);
-    assertNotNull(createdParentGroup);
-    assertNotNull(testUser);
-    assertEquals(36, createdGroupMember.getId().length());
-
-    MemberRef groupMember = TestData.buildGroupMemberResourceWithId(createdGroupMember.getId());
+    MemberRef groupMember = TestData.buildGroupMemberResourceWithId(userScimResponse.get().getId());
     Group updatedGroupWithMember = new Group.Builder(createdParentGroup).addMember(groupMember).setId(ILLEGAL_UUID).build();
 
-    groupScimResponse = groupRequest.updateGroup(updatedGroupWithMember);
+    logger.info("Updating Group: {}", createdParentGroup.getDisplayName());
+    SCIMResponse<Group> groupScimResponse = resourceAwareGroupRequest.updateGroup(updatedGroupWithMember);
 
-    assertFalse(groupScimResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), groupScimResponse.getStatusCode());
+    assertAll("Verify Update Group Response", getResponseStatusAssertions(groupScimResponse, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Update group with non existing id and verify Http status code: 404")
   public void testUpdateGroupWithNonExistingId404() {
     String nonExistingId = UUID.randomUUID().toString();
     Group parentGroup = new Group.Builder().setDisplayName("testUpdateGroupWithNonExistingId400").setId(nonExistingId).build();
 
-    SCIMResponse<Group> scimResponse = groupRequest.updateGroup(parentGroup);
-
-    assertFalse(scimResponse.isSuccess());
-    assertEquals(NOT_FOUND.getStatusCode(), scimResponse.getStatusCode());
+    logger.info("Updating Group with non-existing Id");
+    SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.updateGroup(parentGroup);
+    assertAll("Verify Update Group Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
+  @DisplayName("Test Delete group and verify Http status code: 204")
   public void testDeleteGroup204() {
-    Group groupWithoutMembers = TestData.buildGroup("testDeleteGroupHTTPResponse");
-    SCIMResponse<Group> scimResponse = groupRequest.createGroup(groupWithoutMembers);
+    Group createdGroup = createGroupAndVerifySuccessfulResponse("testDeleteGroupHTTPResponse").get();
 
-    assertTrue(scimResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), scimResponse.getStatusCode());
+    logger.info("Deleting group: {}", createdGroup.getDisplayName());
+    SCIMResponse<Void> deleteScimGroupResponse = resourceAwareGroupRequest.deleteGroup(createdGroup.getId());
 
-    SCIMResponse<Void> deleteScimGroupResponse = groupRequest.deleteGroup(scimResponse.get().getId());
-
-    assertTrue(deleteScimGroupResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), deleteScimGroupResponse.getStatusCode());
+    assertAll("Verify Delete Group Response", getResponseStatusAssertions(deleteScimGroupResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Delete group with illegal id and verify Http status code: 400")
   public void testDeleteGroupWithIllegalId400() {
-    SCIMResponse<Void> deleteScimGroupResponse = groupRequest.deleteGroup(ILLEGAL_UUID);
+    logger.info("Deleting Group with illegal Id");
+    SCIMResponse<Void> deleteScimGroupResponse = resourceAwareGroupRequest.deleteGroup(ILLEGAL_UUID);
 
-    assertFalse(deleteScimGroupResponse.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), deleteScimGroupResponse.getStatusCode());
+    assertAll("Verify Delete Group Response", getResponseStatusAssertions(deleteScimGroupResponse, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Delete group with non existing id and verify Http status code: 404")
   public void testDeleteGroupWithNonExistingId404() {
-    SCIMResponse<Void> deleteScimGroupResponse = groupRequest.deleteGroup(UUID.randomUUID().toString());
+    logger.info("Deleting Group with non existing id");
+    SCIMResponse<Void> deleteScimGroupResponse = resourceAwareGroupRequest.deleteGroup(UUID.randomUUID().toString());
 
-    assertFalse(deleteScimGroupResponse.isSuccess());
-    assertEquals(NOT_FOUND.getStatusCode(), deleteScimGroupResponse.getStatusCode());
+    assertAll("Verify Delete Group Response", getResponseStatusAssertions(deleteScimGroupResponse, false, NOT_FOUND));
   }
 
   @Test
-  public void testPatchGroupAddOperationForSimpleAttributeWithCorrectAttributes204() {
-    Group testGroup = TestData.buildGroup("testPatchGroupAddOperationForSimpleAttributeWithCorrectAttributes204");
-    SCIMResponse<Group> createGroupResponse = groupRequest.createGroup(testGroup);
+  @DisplayName("Test Delete deleted group and verify Http status code: 404")
+  public void testDeleteGroupTwice404() {
+    String displayName = "testDeleteGroupTwice-Group";
+    logger.info("Creating Group -{}- that will be deleted after that", displayName);
+    Group group = groupFailSafeClient.create(buildGroup(displayName));
 
-    assertTrue(createGroupResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createGroupResponse.getStatusCode());
-    Group createdGroup = createGroupResponse.get();
+    SCIMResponse<Void> firstDeleteAttemptResponse = resourceAwareGroupRequest.deleteGroup(group.getId());
+    SCIMResponse<Void> secondDeleteAttemptResponse = resourceAwareGroupRequest.deleteGroup(group.getId());
+
+    // @formatter:off
+    assertAll("Verify delete group attempts",
+        () -> assertAll("Verify Delete first Group Response", getResponseStatusAssertions(firstDeleteAttemptResponse, true, NO_CONTENT)),
+        () -> assertAll("Verify Delete second Group Response", getResponseStatusAssertions(secondDeleteAttemptResponse, false, NOT_FOUND))
+    );
+    // @formatter:on
+  }
+
+  @Test
+  @DisplayName("Test Delete group and verify members still exist and Http status code: 400")
+  public void testDeleteGroupMembersStillExist() {
+    logger.info("Creating User -testDeleteGroupMembersStillExist-User- who will be used as a member");
+    User user = userFailSafeClient.create(buildTestUser("testDeleteGroupMembersStillExist-User"));
+
+    String displayName = "testDeleteGroupMembersStillExist-Group";
+    logger.info("Creating Group -{}- that will be deleted after that", displayName);
+    Group group = groupFailSafeClient.create(buildGroup(displayName, user.getId()));
+
+    logger.info("Deleting Group: {}", group.getDisplayName());
+    SCIMResponse<Void> deleteGroupResponse = resourceAwareGroupRequest.deleteGroup(group.getId());
+
+    logger.info("Fetching User: {}", user.getUserName());
+    SCIMResponse<User> getUserResponse = resourceAwareUserRequest.readSingleUser(user.getId());
+
+    // @formatter:off
+    assertAll("Verify SCIM responses",
+        () -> assertAll("Verify Delete Group Response", getResponseStatusAssertions(deleteGroupResponse, true, NO_CONTENT)),
+        () -> assertAll("Verify GET User Response", getResponseStatusAssertions(getUserResponse, true, OK))
+    );
+    // @formatter:on
+  }
+
+  @Test
+  @DisplayName("Test Patch group with Add operation for simple attribute and verify Http status code: 204")
+  public void testPatchGroupAddOperationForSimpleAttributeWithCorrectAttributes204() {
+    Group createdGroup = createGroupAndVerifySuccessfulResponse("testPatchGroupAddOperationForSimpleAttributeWithCorrectAttributes204").get();
 
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder().setOp(PatchOperation.Type.ADD).setPath(DISPLAY_NAME.scimName())
@@ -227,20 +279,15 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
     PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
     // @formatter:on
 
-    SCIMResponse<?> patchResponse = groupRequest.patchGroup(patchBody, createdGroup.getId());
-    assertTrue(patchResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchResponse.getStatusCode());
+    logger.info("Patching Group: {}, adding new 'displayName'", createdGroup.getDisplayName());
+    SCIMResponse<?> patchResponse = resourceAwareGroupRequest.patchGroup(patchBody, createdGroup.getId());
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(patchResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Patch group with Replace operation for simple attribute and verify Http status code: 204")
   public void testPatchGroupReplaceOperationForSimpleAttributeWithCorrectAttributes204() {
-    Group testGroup = TestData.buildGroup("testPatchGroupReplaceOperationForSimpleAttributeWithCorrectAttributes204");
-    SCIMResponse<Group> createGroupResponse = groupRequest.createGroup(testGroup);
-
-    assertTrue(createGroupResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createGroupResponse.getStatusCode());
-
-    Group createdGroup = createGroupResponse.get();
+    Group createdGroup = createGroupAndVerifySuccessfulResponse("testPatchGroupReplaceOperationForSimpleAttributeWithCorrectAttributes204").get();
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder().setOp(PatchOperation.Type.REPLACE).setPath(DISPLAY_NAME.scimName())
         .setValue(JACKSON_NODE_FACTORY.textNode("AdoDisplayName")).build();
@@ -248,33 +295,32 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
     PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
     // @formatter:on
 
-    SCIMResponse<?> patchResponse = groupRequest.patchGroup(patchBody, createdGroup.getId());
+    logger.info("Patching Group: {}, replacing 'displayName'", createdGroup.getDisplayName());
+    SCIMResponse<?> patchResponse = resourceAwareGroupRequest.patchGroup(patchBody, createdGroup.getId());
 
-    assertTrue(patchResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchResponse.getStatusCode());
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(patchResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Patch group with Remove operation for simple attribute and verify Http status code: 204")
   public void testPatchGroupRemoveOperationForSimpleAttributeWithCorrectAttributes204() {
-    Group testGroup = TestData.buildGroup("testPatchGroupRemoveOperationForSimpleAttributeWithCorrectAttributes204");
-    SCIMResponse<Group> createGroupResponse = groupRequest.createGroup(testGroup);
-
-    assertTrue(createGroupResponse.isSuccess());
-    assertEquals(CREATED.getStatusCode(), createGroupResponse.getStatusCode());
-
-    Group createdGroup = createGroupResponse.get();
     // @formatter:off
+    Group createdGroup = createGroupAndVerifySuccessfulResponse("testPatchGroupRemoveOperationForSimpleAttributeWithCorrectAttributes204")
+        .get();
+
     PatchOperation operation = new PatchOperation.Builder().setOp(PatchOperation.Type.REMOVE).setPath(DISPLAY_NAME.scimName()).build();
-
     PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
-    // @formatter:on
-    SCIMResponse<?> patchResponse = groupRequest.patchGroup(patchBody, createdGroup.getId());
 
-    assertTrue(patchResponse.isSuccess());
-    assertEquals(NO_CONTENT.getStatusCode(), patchResponse.getStatusCode());
+    // @formatter:on
+
+    logger.info("Patching Group: {}, removing 'displayName'", createdGroup.getDisplayName());
+    SCIMResponse<?> patchResponse = resourceAwareGroupRequest.patchGroup(patchBody, createdGroup.getId());
+
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(patchResponse, true, NO_CONTENT));
   }
 
   @Test
+  @DisplayName("Test Patch group with missing Patch schema in body and verify Http status code: 400")
   public void testPatchGroupRequestDoesNotContainPatchSchema400() {
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder()
@@ -282,14 +328,16 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
         .setPath(DISPLAY_NAME.scimName())
         .setValue(JACKSON_NODE_FACTORY.textNode("AdoDisplayName")).build();
     // @formatter:on
-    PatchBody patchBody = new PatchBody.Builder().addOperation(operation).setSchemas(Collections.emptySet()).build();
-    SCIMResponse<?> response = groupRequest.patchGroup(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    PatchBody patchBody = new PatchBody.Builder().addOperation(operation).setSchemas(Collections.emptySet()).build();
+
+    logger.info("Patching Group without Patch Schema");
+    SCIMResponse<?> response = resourceAwareGroupRequest.patchGroup(patchBody, VALID_UUID);
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch group with wrong Patch schema in body and verify Http status code: 400")
   public void testPatchGroupRequestWithWrongPatchSchema400() {
     // @formatter:off
     PatchOperation operation = new PatchOperation.Builder().setOp(PatchOperation.Type.ADD).setPath(DISPLAY_NAME.scimName())
@@ -298,85 +346,126 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
     PatchBody patchBody = new PatchBody.Builder().setSchemas(new HashSet<>(Collections.singletonList("IllegalPatchSchema"))).addOperation(operation).build();
     // @formatter:on
 
-    SCIMResponse<?> response = groupRequest.patchGroup(patchBody, VALID_UUID);
-
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching Group with wrong Patch Schema");
+    SCIMResponse<?> response = resourceAwareGroupRequest.patchGroup(patchBody, VALID_UUID);
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch group with empty Patch operation list and verify Http status code: 400")
   public void testPatchGroupRequestWithNoOperations400() {
     PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().build();
-    SCIMResponse<?> response = groupRequest.patchGroup(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching Group with no patch operations");
+    SCIMResponse<?> response = resourceAwareGroupRequest.patchGroup(patchBody, VALID_UUID);
+
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch group with invalid Patch operation type and verify Http status code: 400")
   public void testPatchGroupRequestWithInvalidOperationType400() {
     // @formatter:off
-    PatchOperation operation = new PatchOperation.Builder().setOp(new PatchOperation.Type("invalid")).setPath(DISPLAY_NAME.scimName())
-        .setValue(JACKSON_NODE_FACTORY.textNode("AdoDisplayName")).build();
+    PatchOperation operation = new PatchOperation.Builder()
+        .setOp(new PatchOperation.Type("invalid"))
+        .setPath(DISPLAY_NAME.scimName())
+        .setValue(JACKSON_NODE_FACTORY.textNode("AdoDisplayName"))
+        .build();
 
-    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
+    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes()
+        .addOperation(operation)
+        .build();
     // @formatter:on
-    SCIMResponse<?> response = groupRequest.patchGroup(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching Group with invalid operation type");
+    SCIMResponse<?> response = resourceAwareGroupRequest.patchGroup(patchBody, VALID_UUID);
+
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch group with missing path when it is required (for Remove operation) and verify Http status code: 400")
   public void testPatchGroupRequestWithMissingPathWhenItIsRequired400() {
     // @formatter:off
-    PatchOperation operation = new PatchOperation.Builder().setOp(PatchOperation.Type.REMOVE)
-        .setValue(JACKSON_NODE_FACTORY.textNode("AdoDisplayName")).build();
+    PatchOperation operation = new PatchOperation.Builder()
+        .setOp(PatchOperation.Type.REMOVE)
+        .setValue(JACKSON_NODE_FACTORY.textNode("AdoDisplayName"))
+        .build();
 
-    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
+    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes()
+        .addOperation(operation)
+        .build();
     // @formatter:on
-    SCIMResponse<?> response = groupRequest.patchGroup(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching Group with missing path on remove operation");
+    SCIMResponse<?> response = resourceAwareGroupRequest.patchGroup(patchBody, VALID_UUID);
+
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch group with missing value on Add operation and verify Http status code: 400")
   public void testPatchGroupRequestWithMissingValueInAddOperation400() {
     // @formatter:off
-    PatchOperation operation = new PatchOperation.Builder().setOp(PatchOperation.Type.ADD).setPath(DISPLAY_NAME.scimName()).build();
+    PatchOperation operation = new PatchOperation.Builder()
+        .setOp(PatchOperation.Type.ADD)
+        .setPath(DISPLAY_NAME.scimName())
+        .build();
 
-    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
+    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes()
+        .addOperation(operation)
+        .build();
     // @formatter:on
-    SCIMResponse<?> response = groupRequest.patchGroup(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching Group with missing value on add operation");
+    SCIMResponse<?> response = resourceAwareGroupRequest.patchGroup(patchBody, VALID_UUID);
+
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
+  @DisplayName("Test Patch group with missing value on Replace operation and verify Http status code: 400")
   public void testPatchGroupRequestWithMissingValueInReplaceOperation400() {
     // @formatter:off
-    PatchOperation operation = new PatchOperation.Builder().setOp(PatchOperation.Type.REPLACE).setPath(DISPLAY_NAME.scimName()).build();
+    PatchOperation operation = new PatchOperation.Builder()
+        .setOp(PatchOperation.Type.REPLACE)
+        .setPath(DISPLAY_NAME.scimName())
+        .build();
 
-    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
+    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes()
+        .addOperation(operation)
+        .build();
     // @formatter:on
-    SCIMResponse<?> response = groupRequest.patchGroup(patchBody, VALID_UUID);
 
-    assertFalse(response.isSuccess());
-    assertEquals(BAD_REQUEST.getStatusCode(), response.getStatusCode());
+    logger.info("Patching Group with missing value on replace operation");
+    SCIMResponse<?> response = resourceAwareGroupRequest.patchGroup(patchBody, VALID_UUID);
+
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, BAD_REQUEST));
   }
 
   @Test
-  public void testPatchGroupWithInvalidId() {
+  @DisplayName("Test Patch group with non existing id and verify Http status code: 404")
+  public void testPatchGroupWithNonExistingId404() {
     // @formatter:off
     PatchOperation operation = TestData.setDefaultPatchOperationAttributes(PatchOperation.Type.REMOVE);
 
-    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes().addOperation(operation).build();
+    PatchBody patchBody = TestData.setDefaultPatchBodyAttributes()
+        .addOperation(operation)
+        .build();
     // @formatter:on
-    SCIMResponse<?> response = groupRequest.patchGroup(patchBody, UUID.randomUUID().toString());
 
-    assertFalse(response.isSuccess());
-    assertEquals(NOT_FOUND.getStatusCode(), response.getStatusCode());
+    logger.info("Patching Group with non existing id");
+    SCIMResponse<?> response = resourceAwareGroupRequest.patchGroup(patchBody, UUID.randomUUID().toString());
+    assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, NOT_FOUND));
+  }
+
+  private SCIMResponse<Group> createGroupAndVerifySuccessfulResponse(String displayName) {
+    Group groupToCreate = TestData.buildGroup(displayName);
+
+    logger.info("Creating Group: {}", displayName);
+    SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.createGroup(groupToCreate);
+    assertAll("Verify Create Group Response", getResponseStatusAssertions(scimResponse, true, CREATED));
+
+    return scimResponse;
   }
 }

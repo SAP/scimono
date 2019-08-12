@@ -10,28 +10,41 @@
 
 package com.sap.scimono.scim.system.tests;
 
-import com.sap.scimono.client.SCIMResponse;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.base.Extension;
+import com.sap.scimono.entity.base.ExtensionFieldType;
 import com.sap.scimono.entity.schema.Schema;
+import com.sap.scimono.scim.system.tests.extensions.SchemaClientScimResponseExtension;
+import com.sap.scimono.scim.system.tests.extensions.SchemaFailSafeClient;
+import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
+import com.sap.scimono.scim.system.tests.extensions.UserFailsSafeClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
-import org.junit.jupiter.api.BeforeEach;
+import com.sap.scimono.scim.system.tests.util.TestProperties;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static javax.ws.rs.core.Response.Status.OK;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
+  private static final Logger logger = LoggerFactory.getLogger(E2ECustomAttributesComplianceTest.class);
 
-  private static boolean setupDone;
+  @RegisterExtension
+  static SchemaClientScimResponseExtension resourceAwareSchemaRequest = SchemaClientScimResponseExtension
+      .forClearingAfterAllExecutions(SCIMComplianceTest.configureScimClientService(TestProperties.SERVICE_URL).buildSchemaRequest());
+
+  @RegisterExtension
+  UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);
 
   private static final String FIRST_CUSTOM_SCHEMA_ID = Schema.EXTENSION_SCHEMA_URN + "FirstCustAttr";
   private static final String SECOND_CUSTOM_SCHEMA_ID = Schema.EXTENSION_SCHEMA_URN + "SecondCustAttr";
@@ -39,40 +52,30 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
   private static final String FOURTH_CUSTOM_SCHEMA_ID = Schema.EXTENSION_SCHEMA_URN + "FourthCustAttr";
   private static final String CUSTOM_ATTR_DISPLAYNAME = "customDisplayName";
   private static final String CUSTOM_ATTR_INTERNALID = "internalId";
+  private static final SchemaFailSafeClient schemaFailSafeClient = resourceAwareSchemaRequest.getFailSafeClient();
 
-  private static List<Schema> testCustomSchemas = new ArrayList<>();
+  private final UserFailsSafeClient userFailsSafeClient = resourceAwareUserRequest.getFailSafeClient();
 
-  @BeforeEach
-  public void setUpBeforeTest() {
-    if (!setupDone) {
-      setupDone = true;
-
-      testCustomSchemas.add(createCustomTestSchema(FIRST_CUSTOM_SCHEMA_ID, CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID));
-      testCustomSchemas.add(createCustomTestSchema(SECOND_CUSTOM_SCHEMA_ID, CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID));
-      testCustomSchemas.add(createCustomTestSchema(THIRD_CUSTOM_SCHEMA_ID, CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID));
-      testCustomSchemas.add(createCustomTestSchema(FOURTH_CUSTOM_SCHEMA_ID, CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID));
-
-      for (Schema customSchema : testCustomSchemas) {
-        SCIMResponse<Schema> schemaResponse = schemaRequest.readSingleSchema(customSchema.getId());
-
-        assertEquals(OK.getStatusCode(), schemaResponse.getStatusCode());
-        assertEquals(customSchema.getId(), schemaResponse.get().getId());
-      }
-    }
+  @BeforeAll
+  public static void setup() {
+    createCustomTestSchema(FIRST_CUSTOM_SCHEMA_ID, CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID);
+    createCustomTestSchema(SECOND_CUSTOM_SCHEMA_ID, CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID);
+    createCustomTestSchema(THIRD_CUSTOM_SCHEMA_ID, CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID);
   }
 
-
-
   @Test
+  @DisplayName("Test Create user with custom attributes")
   public void testCreateUserCustomAttributes() {
     createUserCustomAttributes("testCreateUserCustomAttributes", FIRST_CUSTOM_SCHEMA_ID);
   }
 
   @Test
+  @DisplayName("Test Create user with custom attributes and verify Get response")
   public void testCreateReadUserCustomAttributes() {
     User createdUser = createUserCustomAttributes("testCreateReadUserCustomAttributes", FIRST_CUSTOM_SCHEMA_ID);
-    User returnedUser = getUser(createdUser.getId());
+    User returnedUser = userFailsSafeClient.getSingle(createdUser.getId());
 
+    // @formatter:off
     Arrays.stream(new String[] {FIRST_CUSTOM_SCHEMA_ID}).forEach(customSchemaId -> {
       Extension createdCustomAttributes = returnedUser.getExtension(customSchemaId);
       assertNotNull(createdCustomAttributes);
@@ -80,9 +83,11 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
       assertEquals("BigTopalka", createdCustomAttributes.getAttributeValueAsString(CUSTOM_ATTR_DISPLAYNAME));
       assertEquals("I071825", createdCustomAttributes.getAttributeValueAsString(CUSTOM_ATTR_INTERNALID));
     });
+    // @formatter:on
   }
 
   @Test
+  @DisplayName("Test Update user with custom attributes with PUT")
   public void testUpdateUserCustomAttributes() {
     User createdUser = createUserCustomAttributes("userWithCustomAttributes", FIRST_CUSTOM_SCHEMA_ID);
 
@@ -92,9 +97,10 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
     customAttributes.put(CUSTOM_ATTR_INTERNALID, "UpdatedInternalId");
     updatedUserBuilder.addExtension(new Extension.Builder(FIRST_CUSTOM_SCHEMA_ID).setAttributes(customAttributes).build());
 
-    User returnedUser = updateUser(createdUser.getId(), updatedUserBuilder.build());
-    assertNotNull(returnedUser);
+    logger.info("Updating User: {}, adding custom schema attributes", createdUser.getUserName());
+    User returnedUser = userFailsSafeClient.update(createdUser.getId(), updatedUserBuilder.build());
 
+    // @formatter:off
     Arrays.stream(new String[] {FIRST_CUSTOM_SCHEMA_ID}).forEach(customSchemaId -> {
       Extension createdCustomAttributes = returnedUser.getExtension(customSchemaId);
       assertNotNull(createdCustomAttributes);
@@ -102,9 +108,11 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
       assertEquals("UpdatedDisplayName", createdCustomAttributes.getAttributeValueAsString(CUSTOM_ATTR_DISPLAYNAME));
       assertEquals("UpdatedInternalId", createdCustomAttributes.getAttributeValueAsString(CUSTOM_ATTR_INTERNALID));
     });
+    // @formatter:on
   }
 
   @Test
+  @DisplayName("Test Update user with custom attributes with PUT and verify Get response")
   public void testUpdateReadUserCustomAttributes() {
     User createdUser = createUserCustomAttributes("testUpdateReadUserCustomAttributes", FIRST_CUSTOM_SCHEMA_ID);
 
@@ -114,11 +122,14 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
     customAttributes.put(CUSTOM_ATTR_INTERNALID, "UpdatedInternalId");
     updatedUserBuilder.addExtension(new Extension.Builder(FIRST_CUSTOM_SCHEMA_ID).setAttributes(customAttributes).build());
 
-    updateUser(createdUser.getId(), updatedUserBuilder.build());
+    String createdUserName = createdUser.getUserName();
+    logger.info("Updating User: {}, add custom schema attributes", createdUserName);
+    userFailsSafeClient.update(createdUser.getId(), updatedUserBuilder.build());
 
-    User returnedUser = getUser(createdUser.getId());
-    assertNotNull(returnedUser);
+    logger.info("Fetching User: {}", createdUserName);
+    User returnedUser = userFailsSafeClient.getSingle(createdUser.getId());
 
+    // @formatter:off
     Arrays.stream(new String[] {FIRST_CUSTOM_SCHEMA_ID}).forEach(customSchemaId -> {
       Extension createdCustomAttributes = returnedUser.getExtension(customSchemaId);
       assertNotNull(createdCustomAttributes);
@@ -126,37 +137,54 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
       assertEquals("UpdatedDisplayName", createdCustomAttributes.getAttributeValueAsString(CUSTOM_ATTR_DISPLAYNAME));
       assertEquals("UpdatedInternalId", createdCustomAttributes.getAttributeValueAsString(CUSTOM_ATTR_INTERNALID));
     });
+    // @formatter:on
   }
 
   @Test
+  @DisplayName("Test Get users filtered by custom attribute")
   public void testGetUsersFilteredCustomAttribute() {
-    createUserCustomAttributes("testUserFilterCustomAttribute", FIRST_CUSTOM_SCHEMA_ID);
+    logger.info("Creating User: testGetUsersFilteredCustomAttribute, without custom attributes");
+    userFailsSafeClient.create(TestData.buildTestUser("testGetUsersFilteredCustomAttribute-NoCustomSchema"));
+
+    createUserCustomAttributes("testUserFilterCustomAttribute-1", FIRST_CUSTOM_SCHEMA_ID);
+    createUserCustomAttributes("testGetUsersFilteredCustomAttribute-2", FIRST_CUSTOM_SCHEMA_ID);
+    createUserCustomAttributes("testGetUsersFilteredCustomAttribute-3", FIRST_CUSTOM_SCHEMA_ID);
 
     String customAttrFilter = FIRST_CUSTOM_SCHEMA_ID + ":" + CUSTOM_ATTR_INTERNALID + " eq \"I071825\"";
-    List<User> fetchedUsers = getUsersFiltered(customAttrFilter);
-    assertNotNull(fetchedUsers);
-    assertEquals(3, fetchedUsers.size());
+
+    logger.info("Fetching User with custom attribute filter: {}", customAttrFilter);
+    List<User> fetchedUsers = userFailsSafeClient.getAllByFilter(customAttrFilter);
+
+    assertEquals(3, fetchedUsers.size(), "Verify fetched Users count");
   }
 
   @Test
+  @DisplayName("Test Get users filtered by multiple custom attributes")
   public void testGetUsersFilteredCustomAttributes() {
     User testUser = createUserCustomAttributes("testUserFilterCustomAttributes", SECOND_CUSTOM_SCHEMA_ID, THIRD_CUSTOM_SCHEMA_ID);
 
     String firstCustomAttrFilter = SECOND_CUSTOM_SCHEMA_ID + ":" + CUSTOM_ATTR_INTERNALID + " eq \"I071825\"";
     String secondCustomAttrFilter = THIRD_CUSTOM_SCHEMA_ID + ":" + CUSTOM_ATTR_DISPLAYNAME + " eq \"BigTopalka\"";
-    List<User> fetchedUsers = getUsersFiltered(firstCustomAttrFilter + " and " + secondCustomAttrFilter);
-    assertNotNull(fetchedUsers);
+
+    logger.info("Fetching User with multiple custom attributes filters: {} | {}", firstCustomAttrFilter, secondCustomAttrFilter);
+    List<User> fetchedUsers = userFailsSafeClient.getAllByFilter(firstCustomAttrFilter + " and " + secondCustomAttrFilter);
+
     assertEquals(1, fetchedUsers.size());
     assertEquals(testUser, fetchedUsers.get(0));
   }
 
   @Test
+  @DisplayName("Test Delete custom schema and verify values from the resource are disappeared")
   public void testDeleteCustomSchemaValuesGone() {
+    createCustomTestSchema(FOURTH_CUSTOM_SCHEMA_ID, CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID);
     User testUser = createUserCustomAttributes("testDeleteCustomSchemaValuesGone", FOURTH_CUSTOM_SCHEMA_ID);
 
-    deleteTestCustomSchema(FOURTH_CUSTOM_SCHEMA_ID);
+    logger.info("Deleting custom schema: {}", FOURTH_CUSTOM_SCHEMA_ID);
+    schemaFailSafeClient.delete(FOURTH_CUSTOM_SCHEMA_ID);
 
-    User user = getUser(testUser.getId());
+    logger.info("Fetching User: {}", testUser.getUserName());
+    User user = userFailsSafeClient.getSingle(testUser.getId());
+
     assertNotNull(user);
     assertTrue(user.getExtensions().isEmpty());
   }
@@ -165,9 +193,10 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
     List<Extension> userCustomAttributes = TestData.createTestCustomAttribues(CUSTOM_ATTR_DISPLAYNAME, CUSTOM_ATTR_INTERNALID, customSchemaIds);
     User userToCreate = TestData.buildTestUserWithExtentions(userName, userCustomAttributes);
 
-    User testUser = createUser(userToCreate);
-    assertNotNull(testUser);
+    logger.info("Creating User: {}, with custom attributes", userName);
+    User testUser = userFailsSafeClient.create(userToCreate);
 
+    // @formatter:off
     Arrays.stream(customSchemaIds).forEach(customSchemaId -> {
       Extension createdCustomAttributes = testUser.getExtension(customSchemaId);
       assertNotNull(createdCustomAttributes);
@@ -175,13 +204,19 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
       assertEquals("BigTopalka", createdCustomAttributes.getAttributeValueAsString(CUSTOM_ATTR_DISPLAYNAME));
       assertEquals("I071825", createdCustomAttributes.getAttributeValueAsString(CUSTOM_ATTR_INTERNALID));
     });
+    // @formatter:on
 
     return testUser;
   }
 
-  private void deleteTestCustomSchema(final String customSchemaId) {
-    deleteSchema(customSchemaId);
-    testCustomSchemas.remove(testCustomSchemas.stream().filter(schema -> schema.getId().equals(customSchemaId)).findFirst().get());
+  private static Schema createCustomTestSchema(final String schemaId, final String custAttr1, final String custAttr2) {
+    Map<String, ExtensionFieldType<?>> customAttrsNameToType = new HashMap<>();
+    customAttrsNameToType.put(custAttr1, ExtensionFieldType.STRING);
+    customAttrsNameToType.put(custAttr2, ExtensionFieldType.STRING);
+    Schema testSchema = TestData.buildCustomSchemaWithAttrs(schemaId, customAttrsNameToType);
+
+    logger.info("Creating custom Schema: {}", schemaId);
+    return schemaFailSafeClient.create(testSchema);
   }
 
 }

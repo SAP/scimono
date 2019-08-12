@@ -9,7 +9,6 @@ import java.lang.reflect.Method;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -70,7 +69,7 @@ public class PropertyFileDiscoverySelector implements TestMethodsSelectorsCreato
   }
   private static Set<String> validateMethodsAndGet(Class<?> testClass, String methods) {
     Set<String> allTestMethods = Arrays.stream(testClass.getMethods()).map(Method::getName).collect(Collectors.toSet());
-    Set<String> testMethods = new HashSet<>(Arrays.asList(methods.split(METHODS_SPLIT_DELIMITER)));
+    Set<String> testMethods = Arrays.stream(methods.split(METHODS_SPLIT_DELIMITER)).map(String::trim).collect(Collectors.toSet());
 
     testMethods.forEach(testMethod -> {
       if (!allTestMethods.contains(testMethod)) {

@@ -102,7 +102,6 @@ public class SCIMClientService {
         configureTargetSystemAuthenticator(client);
 
         client.register(targetSystemAuthenticator.build());
-        client.register(new JacksonResolver());
       }
 
       resolvers.forEach(client::register);

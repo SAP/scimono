@@ -10,8 +10,8 @@ import com.sap.scimono.entity.schema.Schema;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.logging.LoggingFeature;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -36,6 +36,8 @@ import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SERVIC
 import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
 
 public class CustomTargetSystemRestClient {
+  private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CustomTargetSystemRestClient.class);
+
   private static final String OAUTH_GRANT_TYPE = "grant_type";
   private static final String CLIENT_CREDENTIALS_GRANT = "client_credentials";
 
@@ -116,7 +118,7 @@ public class CustomTargetSystemRestClient {
 
   private WebTarget configureRestClientEndpoint(final String serviceUrl) {
     return ClientBuilder.newClient(new ClientConfig()
-        .register(new JacksonFeature())
+        .register(new ClientJacksonResolver())
         .register(JacksonResolver.class)
         .property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true)
         .property(org.glassfish.jersey.test.TestProperties.LOG_TRAFFIC, true)
@@ -162,7 +164,7 @@ public class CustomTargetSystemRestClient {
 
       return map.get("access_token");
     } catch (Exception e) {
-      e.printStackTrace();
+      logger.error("Unable to get access token", e);
     }
 
     return "";

@@ -18,6 +18,27 @@
     <build>
         <plugins>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.2.1</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <shadedArtifactAttached>true</shadedArtifactAttached>
+                            <transformers>
+                                <transformer implementation=
+                                                     "org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.sap.scimono.scim.system.tests.launcher.TestsLauncher</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>${maven-test-plugins-version}</version>
                 <configuration>
@@ -34,6 +55,7 @@
             <groupId>com.sap.scimono</groupId>
             <artifactId>scimono-client</artifactId>
             <version>${project.version}</version>
+            <scope>compile</scope>
         </dependency>
         <!-- Test Scope-->
         <dependency>
@@ -57,7 +79,11 @@
             <version>1.4.2</version>
             <scope>compile</scope>
         </dependency>
-
+        <dependency>
+            <groupId>org.junit.platform</groupId>
+            <artifactId>junit-platform-reporting</artifactId>
+            <version>1.5.1</version>
+        </dependency>
 
         <dependency>
             <groupId>javax.ws.rs</groupId>

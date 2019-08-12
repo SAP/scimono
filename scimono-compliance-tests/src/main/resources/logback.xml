@@ -12,7 +12,7 @@
 
     <appender name="FILE" class="ch.qos.logback.core.FileAppender">
         <file>${TESTS_LOG_FILE_PATH}</file>
-        <append>true</append>
+        <append>false</append>
         <immediateFlush>true</immediateFlush>
         <encoder>
             <pattern>%d %p %c{1.} [%t] %m%n</pattern>

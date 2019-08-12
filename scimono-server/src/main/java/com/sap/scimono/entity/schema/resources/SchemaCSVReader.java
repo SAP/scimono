@@ -1,16 +1,20 @@
 
 package com.sap.scimono.entity.schema.resources;
 
+import com.sap.scimono.entity.Meta;
+import com.sap.scimono.entity.schema.Attribute;
+import com.sap.scimono.entity.schema.Schema;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-
-import com.sap.scimono.entity.Meta;
-import com.sap.scimono.entity.schema.Attribute;
-import com.sap.scimono.entity.schema.Schema;
 
 public class SchemaCSVReader {
   private static final String SCHEMAS_CSV_LOCATION = "data/schemas.csv";
@@ -20,6 +24,10 @@ public class SchemaCSVReader {
   private static final int CSV_HEADER_LINE_INDEX = 0;
 
   private static Map<String, Schema> importedSchemas;
+
+  private SchemaCSVReader() {
+
+  }
 
   public static Map<String, Schema> getImportedSchemasFromCSVs() {
     if (importedSchemas == null) {
@@ -91,7 +99,6 @@ public class SchemaCSVReader {
         csvLines.add(attributes);
       }
     } catch (IOException e) {
-      //TODO fixme
       e.printStackTrace();
     }
 

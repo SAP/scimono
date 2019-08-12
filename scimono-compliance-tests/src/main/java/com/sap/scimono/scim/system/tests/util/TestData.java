@@ -158,7 +158,7 @@ public class TestData {
         .setOrganization("SAP")
         .setDivision("SAP")
         .setDepartment("IDM")
-        .setManager(new Manager.Builder().setValue(managerId).build())
+        .setManager(managerId == null ? null : new Manager.Builder().setValue(managerId).build())
         .setEmployeeNumber("i31233")
         .build());
     // @formatter:on
@@ -453,5 +453,14 @@ public class TestData {
     }
 
     return resourceIds;
+  }
+
+  protected Schema buildCustomTestSchema(final String schemaId, final String custAttr1, final String custAttr2) {
+    Map<String, ExtensionFieldType<?>> customAttrsNameToType = new HashMap<>();
+
+    customAttrsNameToType.put(custAttr1, ExtensionFieldType.STRING);
+    customAttrsNameToType.put(custAttr2, ExtensionFieldType.STRING);
+
+    return buildCustomSchemaWithAttrs(schemaId, customAttrsNameToType);
   }
 }

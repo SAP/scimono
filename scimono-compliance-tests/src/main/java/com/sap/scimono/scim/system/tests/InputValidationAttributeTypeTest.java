@@ -5,32 +5,40 @@ import com.sap.scimono.client.SCIMResponse;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Schema;
+import com.sap.scimono.scim.system.tests.extensions.SchemaClientScimResponseExtension;
+import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
 import com.sap.scimono.scim.system.tests.util.TestData;
-import org.junit.jupiter.api.BeforeEach;
+import com.sap.scimono.scim.system.tests.util.TestProperties;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
-
-  private static boolean isSetUpExecuted = false;
+  private static final Logger logger = LoggerFactory.getLogger(InputValidationAttributeTypeTest.class);
   private static String TEST_SCHEMA_ID = Schema.EXTENSION_SCHEMA_URN + "TestSchemaAllIds";
   private static int testCounter = 0;
 
-  @BeforeEach
-  public void setUpBeforeTest() {
-    if (!isSetUpExecuted) {
-      isSetUpExecuted = true;
-      Schema createdSchema = createSchema(TestData.buildTestSchemaWithAllAttributeTypes(TEST_SCHEMA_ID));
-      assertNotNull(createdSchema);
-    }
+  @RegisterExtension
+  static SchemaClientScimResponseExtension resourceAwareSchemaRequest = SchemaClientScimResponseExtension
+      .forClearingAfterAllExecutions(SCIMComplianceTest.configureScimClientService(TestProperties.SERVICE_URL).buildSchemaRequest());
+
+  @RegisterExtension
+  UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);
+
+  @BeforeAll
+  public static void setUpBeforeTest() {
+    logger.info("Creating custom schema: {}", TEST_SCHEMA_ID);
+    resourceAwareSchemaRequest.createSchema(TestData.buildTestSchemaWithAllAttributeTypes(TEST_SCHEMA_ID));
   }
 
   private User buildTestUser(final String attrName, final Object attrValue) {
@@ -43,11 +51,12 @@ public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
     return testUser.addExtension(userExtension).build();
   }
 
-  @ParameterizedTest
+  @ParameterizedTest(name = "Test adding value: {2} to attribute: {1} and verify Http status: {0}")
   @MethodSource("provideCustomAttributeTestParameters")
   public void test(int expectedResponseCode, String attrName, Object attrValue) {
     User testUser = buildTestUser(attrName, attrValue);
-    SCIMResponse<User> scimResponse = userRequest.createUser(testUser);
+    logger.info("Creating User: {} with custom schema attributes", testUser.getUserName());
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(testUser);
 
     String errorMessage = String.format("Test for user \'%s\' with attribute \'%s\' and value \'%s\' fails!", testUser.getUserName(), attrName,
         attrValue);
