@@ -67,7 +67,7 @@ public class Schemas {
       schemasWithLocation.add(schema);
     }
 
-    return Response.ok(new PagedByIndexSearchResult<>(schemasWithLocation, schemasWithLocation.size(), scimConfig.getMaxResourcesPerPage(), 1L)).build();
+    return Response.ok(new PagedByIndexSearchResult<>(schemasWithLocation, schemasWithLocation.size(), scimConfig.getMaxResourcesPerPage(), 1)).build();
   }
 
   @GET

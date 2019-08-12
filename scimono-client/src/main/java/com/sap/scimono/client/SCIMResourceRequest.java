@@ -158,7 +158,7 @@ class SCIMResourceRequest<T extends Resource<T>> {
       startIndex = startIndex + count;
     } while (startIndex <= totalResults);
 
-    return SCIMResponse.fromEntity(new PagedByIndexSearchResult<>(new PagedResult<>(allResources.size(), allResources), 1L), lastHttpResponse,
+    return SCIMResponse.fromEntity(new PagedByIndexSearchResult<>(new PagedResult<>(allResources.size(), allResources), 1), lastHttpResponse,
         scimRequest.getScimActionResponseStatusConfig(GET_ALL));
   }
 }
