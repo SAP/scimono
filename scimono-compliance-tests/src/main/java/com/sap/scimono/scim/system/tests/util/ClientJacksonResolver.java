@@ -25,6 +25,7 @@ public class ClientJacksonResolver implements ContextResolver<ObjectMapper> {
   @Override
   public ObjectMapper getContext(final Class<?> type) {
     ObjectMapper mapper = new ObjectMapper();
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     mapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
     mapper.enable(SerializationFeature.INDENT_OUTPUT);
     mapper.enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS);
@@ -42,8 +43,7 @@ public class ClientJacksonResolver implements ContextResolver<ObjectMapper> {
 
     javaTimeModule.addDeserializer(Instant.class, new JsonDeserializer<Instant>() {
       @Override
-      public Instant deserialize(JsonParser jsonParser, DeserializationContext deserializationContext)
-          throws IOException {
+      public Instant deserialize(JsonParser jsonParser, DeserializationContext deserializationContext) throws IOException {
         DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATETIME_PATTERN);
         return Instant.from(dateTimeFormatter.parse(jsonParser.getText()));
       }

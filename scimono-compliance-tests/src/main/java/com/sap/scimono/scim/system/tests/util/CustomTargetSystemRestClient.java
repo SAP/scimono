@@ -27,10 +27,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_ENABLED;
+import static com.sap.scimono.scim.system.tests.util.TestProperties.AUTH_TYPE;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_PASSWORD;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_USER;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_CLIENT_ID;
+import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_GRANT;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SECRET;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SERVICE_URL;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
@@ -130,7 +131,7 @@ public class CustomTargetSystemRestClient {
   }
 
   private static boolean isBasicAuthEnabled() {
-    return "true".equalsIgnoreCase(BASIC_AUTH_ENABLED);
+    return "Basic".equalsIgnoreCase(AUTH_TYPE);
   }
 
   private static CustomTargetSystemRestClient createInstance() {
@@ -155,7 +156,7 @@ public class CustomTargetSystemRestClient {
     client.register(feature);
     client.register(loggingFeature);
 
-    WebTarget target = client.target(OAUTH_SERVICE_URL).queryParam(OAUTH_GRANT_TYPE, CLIENT_CREDENTIALS_GRANT);
+    WebTarget target = client.target(OAUTH_SERVICE_URL).queryParam(OAUTH_GRANT_TYPE, OAUTH_GRANT);
     Response response = target.request().post(null);
 
     ObjectMapper mapper = new ObjectMapper();

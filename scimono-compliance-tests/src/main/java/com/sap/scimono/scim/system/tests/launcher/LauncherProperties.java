@@ -12,7 +12,8 @@ public class LauncherProperties {
     OAUTH_CLIENT_ID("oauth.clientId"),
     OAUTH_SECRET("oauth.secret"),
     OAUTH_SERVICE_URL("oauth.service.url"),
-    BASIC_AUTH_ENABLED("basicAuthEnabled"),
+    OAUTH_GRANT("oauth.grant"),
+    AUTH_TYPE("auth.type"),
     BASIC_AUTH_USER("basic.auth.user"),
     BASIC_AUTH_PASSWORD("basic.auth.password"),
     SCIM_SERVICE_URL("scim.service.url"),
@@ -56,10 +57,6 @@ public class LauncherProperties {
     this.properties = properties;
   }
 
-  public LauncherProperty getBasicAuthEnabled() {
-    return properties.get(ParamName.BASIC_AUTH_ENABLED);
-  }
-
   public LauncherProperty getOauthClientId() {
     return properties.get(ParamName.OAUTH_CLIENT_ID);
   }
@@ -82,6 +79,14 @@ public class LauncherProperties {
 
   public LauncherProperty getServiceUrl() {
     return properties.get(ParamName.SCIM_SERVICE_URL);
+  }
+
+  public LauncherProperty getAuthType() {
+    return properties.get(ParamName.AUTH_TYPE);
+  }
+
+  public LauncherProperty getOauthGrantType() {
+    return properties.get(ParamName.OAUTH_GRANT);
   }
 
   public LauncherProperty getTestsFilePath() {

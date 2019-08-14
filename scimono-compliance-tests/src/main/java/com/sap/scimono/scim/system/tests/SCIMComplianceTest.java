@@ -16,6 +16,8 @@ import com.sap.scimono.client.SCIMResponse;
 import com.sap.scimono.client.SchemaRequest;
 import com.sap.scimono.client.UserRequest;
 import com.sap.scimono.client.authentication.OauthCredentials;
+import com.sap.scimono.client.authentication.OauthDeviceIdAuthenticator;
+import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
 import com.sap.scimono.client.authentication.TargetSystemBasicAuthenticator;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.Meta;
@@ -32,6 +34,7 @@ import org.junit.jupiter.api.function.Executable;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -39,10 +42,11 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import static com.sap.scimono.client.authentication.OauthAuthenticatorFactory.clientCredentialsGrantAuthenticator;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_ENABLED;
+import static com.sap.scimono.scim.system.tests.util.TestProperties.AUTH_TYPE;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_PASSWORD;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_USER;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_CLIENT_ID;
+import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_GRANT;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SECRET;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SERVICE_URL;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
@@ -72,19 +76,18 @@ public abstract class SCIMComplianceTest {
     // @formatter:off
     SCIMClientService.Builder clientServiceBuilder = SCIMClientService
         .builder(serviceUrl)
-        .addResolver(new ClientJacksonResolver())
         .addResolver(new LoggingFeature(logger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null))
         .addProperty(TestProperties.LOG_TRAFFIC, true)
         .addProperty(TestProperties.DUMP_ENTITY, true)
         .addProperty(LoggingFeature.LOGGING_FEATURE_LOGGER_LEVEL_CLIENT, "WARNING")
-        .addProperty(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true);
+        .addProperty(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true)
+        .addResolver(new ClientJacksonResolver());
     // @formatter:on
 
-    if("true".equalsIgnoreCase(BASIC_AUTH_ENABLED)) {
+    if("Basic".equalsIgnoreCase(AUTH_TYPE)) {
       clientServiceBuilder.addAuthenticator(TargetSystemBasicAuthenticator.create(BASIC_AUTH_USER, BASIC_AUTH_PASSWORD));
-    } else if (OAUTH_CLIENT_ID != null) {
-      clientServiceBuilder.addAuthenticator(clientCredentialsGrantAuthenticator(getOauthClient(), OAUTH_SERVICE_URL, new OauthCredentials(
-          OAUTH_CLIENT_ID, OAUTH_SECRET)));
+    } else if ("Oauth".equalsIgnoreCase(AUTH_TYPE)) {
+      clientServiceBuilder.addAuthenticator(getOauthAuthenticatorBuilder());
     }
 
     return clientServiceBuilder.build();
@@ -129,4 +132,14 @@ public abstract class SCIMComplianceTest {
     return Arrays.asList(responseExecutionAssertion, statusCodeAssertion);
   }
 
+  private static TargetSystemAuthenticator.Builder<?> getOauthAuthenticatorBuilder() {
+    if("device_id".equalsIgnoreCase(OAUTH_GRANT)) {
+      return new OauthDeviceIdAuthenticator.Builder()
+          .setHttpClient(getOauthClient())
+          .setOauthUrl(UriBuilder.fromPath(OAUTH_SERVICE_URL).build())
+          .setOauthCredentials(new OauthCredentials(OAUTH_CLIENT_ID, OAUTH_SECRET));
+    } else {
+      return clientCredentialsGrantAuthenticator(getOauthClient(), OAUTH_SERVICE_URL, new OauthCredentials(OAUTH_CLIENT_ID, OAUTH_SECRET));
+    }
+  }
 }

@@ -32,10 +32,10 @@ public class TestsLauncher {
 
     LauncherDiscoveryRequest launcherDiscoveryRequest = LauncherDiscoveryRequestBuilder.request()
         .selectors(testMethodsSelectorsFactory.getDiscoverySelectors())
-        .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "true")
-        .build();
+        .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "true").build();
 
-    LegacyXmlReportGeneratingListener xmlReporter = new LegacyXmlReportGeneratingListener(FileSystems.getDefault().getPath("."), new PrintWriter(System.out));
+    LegacyXmlReportGeneratingListener xmlReporter = new LegacyXmlReportGeneratingListener(FileSystems.getDefault().getPath("."),
+        new PrintWriter(System.out));
     Launcher launcher = LauncherFactory.create();
     launcher.discover(launcherDiscoveryRequest);
 
@@ -45,21 +45,22 @@ public class TestsLauncher {
 
   private void setTestParameters() {
     setTestParameter(launcherProperties.getServiceUrl());
-    setTestParameter(launcherProperties.getBasicAuthEnabled());
+    setTestParameter(launcherProperties.getAuthType());
     setTestParameter(launcherProperties.getBasicAuthUser());
     setTestParameter(launcherProperties.getBasicAuthPassword());
+    setTestParameter(launcherProperties.getOauthGrantType());
     setTestParameter(launcherProperties.getOauthServiceUrl());
     setTestParameter(launcherProperties.getOauthClientId());
     setTestParameter(launcherProperties.getOathSecret());
   }
 
   private void setTestParameter(LauncherProperties.LauncherProperty launcherProperty) {
-    if(launcherProperty != null) {
+    if (launcherProperty != null) {
       System.setProperty(launcherProperty.getName(), launcherProperty.getValue());
     }
   }
 
   public static void main(String[] args) {
-     new TestsLauncher(LauncherProperties.fromCommandLineArguments(args)).launch();
+    new TestsLauncher(LauncherProperties.fromCommandLineArguments(args)).launch();
   }
 }
