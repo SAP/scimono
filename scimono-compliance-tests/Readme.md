@@ -39,7 +39,7 @@ Currently supported oauth grant is only **Client Credentials**
 Values for the following command line arguments: `oauth.clientId`;  `oauth.secret`; `oauth.service.url` must be provided alongside with `oauth.grant=client_credentials` parameter. For example:
 
 ```
-java -jar scimono-compliance-tests-${version}-shaded.jar scim.service.url=http://localhost:8080/scim/v2 auth.type=Oauth oauth_grant=client_credentials oauth.clientId=admin oauth.secret=secret oauth.service.url=http://localhost:8080/oauth/token
+java -jar scimono-compliance-tests-${version}-shaded.jar scim.service.url=http://localhost:8080/scim/v2 auth.type=Oauth oauth.grant=client_credentials oauth.clientId=admin oauth.secret=secret oauth.service.url=http://localhost:8080/oauth/token
 ```
 
 ## Run custom tests
