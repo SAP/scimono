@@ -119,7 +119,15 @@ RIGHT_BRACKET:
 ;
 
 PARAM:
-   STRING | DIGIT | BOOLEAN
+    STRING | INTEGER | DECIMAL | BOOLEAN
+;
+
+INTEGER:
+    [+-]? DIGIT+
+;
+
+DECIMAL:
+    [+-]? DIGIT* '.' DIGIT+ ( [eE] [+-]? DIGIT+ )?
 ;
 
 BOOLEAN:
