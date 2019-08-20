@@ -13,7 +13,6 @@ import java.time.Instant;
 import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 public class OauthClientCredentialsAuthenticator implements TargetSystemAuthenticator {
-  private static final String OAUTH_GRANT_TYPE = "grant_type";
   private static final String CLIENT_CREDENTIALS_GRANT_VALUE = "client_credentials";
   private static final ObjectMapper JSON_OBJECT_MAPPER = ObjectMapperFactory.createObjectMapper();
 
@@ -25,6 +24,11 @@ public class OauthClientCredentialsAuthenticator implements TargetSystemAuthenti
   private OauthClientCredentialsAuthenticator(Builder builder) {
     this.oauthTarget = builder.httpClient.target(builder.oauthUrl).queryParam(OAUTH_GRANT_TYPE, CLIENT_CREDENTIALS_GRANT_VALUE);
     this.oauthCredentials = builder.oauthCredentials;
+  }
+
+  OauthClientCredentialsAuthenticator(OauthCredentials oauthCredentials, WebTarget oauthTarget) {
+    this.oauthTarget = oauthTarget;
+    this.oauthCredentials = oauthCredentials;
   }
 
   @Override

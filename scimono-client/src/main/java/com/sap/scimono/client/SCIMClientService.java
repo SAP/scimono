@@ -8,11 +8,13 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.ext.ContextResolver;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 public class SCIMClientService {
@@ -98,21 +100,21 @@ public class SCIMClientService {
 
     public SCIMClientService build() {
       Client client = ClientBuilder.newClient();
-      if(targetSystemAuthenticator != null) {
+      if (targetSystemAuthenticator != null) {
         configureTargetSystemAuthenticator(client);
 
         client.register(targetSystemAuthenticator.build());
       }
 
-      resolvers.forEach(client::register);
+      registerResolvers(client);
       properties.forEach(client::property);
       return new SCIMClientService(client.target(serviceUrl));
     }
 
     private void configureTargetSystemAuthenticator(Client client) {
-      if(targetSystemAuthenticator instanceof OauthClientCredentialsAuthenticator.Builder) {
+      if (targetSystemAuthenticator instanceof OauthClientCredentialsAuthenticator.Builder) {
         OauthClientCredentialsAuthenticator.Builder authBuilder = (OauthClientCredentialsAuthenticator.Builder) targetSystemAuthenticator;
-        if(authBuilder.getHttpClient() == null) {
+        if (authBuilder.getHttpClient() == null) {
           authBuilder.setHttpClient(client);
         }
       }
@@ -122,6 +124,21 @@ public class SCIMClientService {
       return new ArrayList<>(Collections.singletonList(new JacksonResolver()));
     }
 
+    private void registerResolvers(Client client) {
+      registerLastContextResolver(client);
+      resolvers.removeIf(ContextResolver.class::isInstance);
+      resolvers.forEach(client::register);
+    }
 
+    private void registerLastContextResolver(Client client) {
+      ListIterator<Object> resolversReverseIterator = resolvers.listIterator(resolvers.size());
+      while (resolversReverseIterator.hasPrevious()) {
+        Object resolver = resolversReverseIterator.previous();
+        if (resolver instanceof ContextResolver) {
+          client.register(resolver);
+          return;
+        }
+      }
+    }
   }
 }

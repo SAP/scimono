@@ -6,6 +6,8 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MultivaluedMap;
 
 public interface TargetSystemAuthenticator extends ClientRequestFilter {
+  String OAUTH_GRANT_TYPE = "grant_type";
+
   String authenticate();
 
   @Override

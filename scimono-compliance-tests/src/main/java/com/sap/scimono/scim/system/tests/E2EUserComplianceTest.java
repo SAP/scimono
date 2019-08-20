@@ -312,7 +312,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get users and verify empty list is received")
-  void testGetUsersEmptyList() {
+  public void testGetUsersEmptyList() {
     logger.info("Fetching all Users - without paging attributes");
     PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getAllWithoutPaging();
 
