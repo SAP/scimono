@@ -99,14 +99,17 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   @Test
   @DisplayName("Test Get users and verify required attributes are fetched")
   public void testGetUsersWithRequiredAttributes() {
+    logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User1");
     User firstUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User1").build());
+
+    logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User2");
     User secondUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User2").build());
 
     // @formatter:off
     PagedByIndexSearchResult<User> getUsersResponse = userFailSafeClient.getAllWithoutPaging();
     assertAll("Verify both users exist in the response",
         () -> assertEquals(2, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
-        () -> assertEquals(2, getUsersResponse.getItemsPerPage(), "Verify 'itemsPerPage'"),
+        () -> assertTrue(getUsersResponse.getItemsPerPage() >= 2, "Verify 'itemsPerPage' is greater than or equal to: 2"),
         () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty"),
         () -> assertAll("Verify 'Resources' attributes",
             getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), getUsersResponse.getResources(), this::getRequiredAttributeAssertions))
@@ -117,14 +120,17 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   @Test
   @DisplayName("Test Get users and verify common attributes are fetched")
   public void testGetUsersWithCommonUsedAttributes() {
+    logger.info("Creating User - {}", "testGetUsersWithCommonUsedAttributes-User1");
     User firstUser = userFailSafeClient.create(buildTestUser("testGetUsersWithCommonUsedAttributes-User1"));
+
+    logger.info("Creating User - {}", "testGetUsersWithCommonUsedAttributes-User2");
     User secondUser = userFailSafeClient.create(buildTestUser("testGetUsersWithCommonUsedAttributes-User2"));
 
     // @formatter:off
     PagedByIndexSearchResult<User> getUsersResponse = userFailSafeClient.getAllWithoutPaging();
     assertAll("Verify both users exist in the response",
         () -> assertEquals(2, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
-        () -> assertEquals(2, getUsersResponse.getItemsPerPage(), "Verify 'itemsPerPage'"),
+        () -> assertTrue(getUsersResponse.getItemsPerPage() >= 2, "Verify 'itemsPerPage' is greater than or equal to: 2"),
         () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty"),
         () -> assertAll("Verify 'Resources' attributes",
             getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), getUsersResponse.getResources(), this::getCommonUsedAttributeAssertions))
@@ -137,6 +143,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   public void testGetUsersWithAllAttributes() {
     logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User1");
     User firstUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User1").build());
+
     logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User2");
     User secondUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User2").build());
 
@@ -145,7 +152,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     PagedByIndexSearchResult<User> getUsersResponse = userFailSafeClient.getAllWithoutPaging();
     assertAll("Verify both users exist in the response",
         () -> assertEquals(2, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
-        () -> assertEquals(2, getUsersResponse.getItemsPerPage(), "Verify 'itemsPerPage'"),
+        () -> assertTrue(getUsersResponse.getItemsPerPage() >= 2, "Verify 'itemsPerPage' is greater than or equal to: 2"),
         () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty"),
         () -> assertAll("Verify 'Resources' attributes",
             getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), getUsersResponse.getResources(), this::getFullUserAssertions))
@@ -319,7 +326,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     // @formatter:off
     assertAll("Verify empty list response is received",
         () -> assertEquals(0, usersPage.getTotalResults(), "Verify 'totalResults' is 0"),
-        () -> assertEquals(0, usersPage.getItemsPerPage(), "Verify 'itemsPerPage' is 0"),
+        () -> assertTrue(usersPage.getItemsPerPage() >= 0, "Verify 'itemsPerPage' is greater than or equal to: 0"),
         () -> assertEquals(1, usersPage.getStartIndex(), "Verify startIndex is equal to the one provided in request starIndex param"),
         () -> assertTrue(usersPage.getResources().isEmpty(), "Verify 'Resources' is empty list")
     );
@@ -494,8 +501,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     // @formatter:off
     assertAll("Verify List Response",
-        () -> assertEquals(Long.valueOf(startIndex), getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex"),
-        () -> assertEquals(count, getPagedUsersSearchResult.getItemsPerPage(), "Verify 'itemsPerPage'"),
+        () -> assertEquals(startIndex, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex"),
+        () -> assertTrue(getPagedUsersSearchResult.getItemsPerPage() >= count, "Verify 'itemsPerPage' is greater than or equal to: " + count),
         () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is bigger 0"),
         () -> assertTrue(getPagedUsersSearchResult.getResources().isEmpty(), "Verify 'Resources' list size is not empty")
     );
@@ -520,7 +527,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertAll("Verify Correct ListResponse values",
         () -> assertEquals(startIndex, usersPage.getStartIndex(), "Verify 'startIndex"),
         () -> assertEquals(usersCount, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
-        () -> assertTrue(usersPage.getItemsPerPage() <= readCount, "Verify 'itemsPerPage' contains only one Resource"),
+        () -> assertTrue(usersPage.getItemsPerPage() <= readCount, "Verify 'itemsPerPage' is less than or equal to count param: " + readCount),
         () -> assertEquals(1, usersPage.getResources().size(), "Verify 'Resources' list size is equal to 'ItemsPerPage'"),
         () -> {
           String firstUserIdFromGetResponse = usersPage.getResources().get(0).getId();
@@ -589,8 +596,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     // @formatter:off
     assertAll("Verify List response",
-        () -> assertEquals(Long.valueOf(startIndex), getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
-        () -> assertTrue(0 <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'ItemsPerPage' is greater ot equal to 0"),
+        () -> assertEquals(startIndex, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
+        () -> assertTrue(0 <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'ItemsPerPage' is greater or equal to 0"),
         () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(getPagedUsersSearchResult.getResources().size() <= getPagedUsersSearchResult.getItemsPerPage(),
             "Verify 'Resources' list size is less than or equal to 'itemsPerPage''")
@@ -612,7 +619,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     // @formatter:off
     assertAll("Verify List Response",
         () -> assertEquals(startId, getPagedUsersSearchResult.getStartId(), "Verify 'startId'"),
-        () -> assertTrue(0 <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'ItemsPerPage' is greater ot equal to 0"),
+        () -> assertTrue(0 <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'ItemsPerPage' is greater or equal to 0"),
         () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(getPagedUsersSearchResult.getResources().size() <= getPagedUsersSearchResult.getItemsPerPage(),
             "Verify 'Resources' list size is less than or equal to 'itemsPerPage''")
@@ -631,7 +638,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     // @formatter:off
     assertAll("Verify List Response",
-        () -> assertEquals(Long.valueOf(1), getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
+        () -> assertEquals(1, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
         () -> assertTrue(count <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'count' is equal or less to 'itemsPerPage'"),
         () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertEquals(1, getPagedUsersSearchResult.getResources().size(), "Verify 'Resources' list size")
@@ -654,7 +661,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     // @formatter:off
     assertAll("Verify List response",
-        () -> assertEquals(Long.valueOf(1), pagedUsersResult.getStartIndex(), "Verify 'startIndex'"),
+        () -> assertEquals(1, pagedUsersResult.getStartIndex(), "Verify 'startIndex'"),
         () -> assertTrue(pagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0")
     );
     // @formatter:on
@@ -683,11 +690,10 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertTrue(pagedUsersResult.getTotalResults() > 0);
 
     if (pagedUsersResult.getTotalResults() <= Long.parseLong(DEFAULT_COUNT)) {
-      assertEquals(pagedUsersResult.getTotalResults(), pagedUsersResult.getItemsPerPage());
-      assertEquals(PAGINATION_BY_ID_END_PARAM, pagedUsersResult.getNextId());
-
+      assertTrue(pagedUsersResult.getItemsPerPage() >= Integer.parseInt(DEFAULT_COUNT), "Verify 'itemsPerPage' is greater than or equal to: " + DEFAULT_COUNT);
+      assertEquals(PAGINATION_BY_ID_END_PARAM, pagedUsersResult.getNextId(), "Verify 'nextId'");
     } else {
-      assertEquals(Long.parseLong(DEFAULT_COUNT), pagedUsersResult.getItemsPerPage());
+      assertEquals(Integer.parseInt(DEFAULT_COUNT), pagedUsersResult.getItemsPerPage(), "Verify 'itemsPerPage'");
     }
   }
 
@@ -755,7 +761,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     assertAll("Verify first GET Users response",
         () -> assertTrue(secondPagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
-        () -> assertEquals(0, secondPagedUsersResult.getItemsPerPage(), "Verify 'itemsPerPage' is greater than 0"),
+        () -> assertTrue(secondPagedUsersResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
         () -> assertEquals(biggestValidUUID, secondPagedUsersResult.getStartId(), "Verify 'startId'"),
         () -> assertEquals(PAGINATION_BY_ID_END_PARAM, secondPagedUsersResult.getNextId(), "Verify 'nextId'")
     );
@@ -780,7 +786,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
       final int startIndexCopy = startIndex;
       assertAll("Verify List Response",
-          () -> assertEquals(Long.valueOf(startIndexCopy), getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
+          () -> assertEquals(startIndexCopy, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
           () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
           () -> assertEquals(allUsers.size(), getPagedUsersSearchResult.getTotalResults(), "Verify 'totalResult' size")
       );

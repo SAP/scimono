@@ -88,7 +88,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     // @formatter:off
     assertAll("Verify empty list response is received",
         () -> assertEquals(0, groupsPage.getTotalResults(), "Verify 'totalResults' is 0"),
-        () -> assertEquals(0, groupsPage.getItemsPerPage(), "Verify 'itemsPerPage' is 0"),
+        () -> assertTrue(groupsPage.getItemsPerPage() > 0, "Verify 'itemsPerPage' is 0"),
         () -> assertEquals(startIndex, groupsPage.getStartIndex(), "Verify startIndex is equal to the one provided in request starIndex param"),
         () -> assertTrue(groupsPage.getResources().isEmpty(), "Verify 'Resources' is empty list")
     );
@@ -738,7 +738,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
   @DisplayName("Test Get groups with index paging and count=0")
   public void testGetGroupsTotalCountWithStartIndex() {
     int startIndex = 1;
-    int count = 0;
+    final int count = 0;
 
     createMultipleGroups("testGetGroupsTotalCountWithStartIndex", 3);
 
@@ -747,8 +747,8 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
 
     // @formatter:off
     assertAll("Verify List Response",
-        () -> assertEquals(Long.valueOf(startIndex), getPagedGroupsSearchResult.getStartIndex(), "Verify 'startIndex"),
-        () -> assertEquals(count, getPagedGroupsSearchResult.getItemsPerPage(), "Verify 'itemsPerPage'"),
+        () -> assertEquals(startIndex, getPagedGroupsSearchResult.getStartIndex(), "Verify 'startIndex"),
+        () -> assertTrue(getPagedGroupsSearchResult.getItemsPerPage() >= count, "Verify 'itemsPerPage' is greater than or equal to: " + count),
         () -> assertTrue(getPagedGroupsSearchResult.getTotalResults() > 0, "Verify 'totalResults' is bigger 0"),
         () -> assertTrue(getPagedGroupsSearchResult.getResources().isEmpty(), "Verify 'Resources' list size is not empty")
     );
@@ -794,7 +794,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     assertAll("Verify Correct ListResponse values",
         () -> assertEquals(groupsCount, groupsPage.getStartIndex(), "Verify 'startIndex"),
         () -> assertEquals(groupsCount, groupsPage.getTotalResults(), "Verify 'totalResults' is equal to created Groups"),
-        () -> assertEquals(1, groupsPage.getItemsPerPage(), "Verify 'itemsPerPage' contains only one Resource"),
+        () -> assertTrue(groupsPage.getItemsPerPage() >= 1, "Verify 'itemsPerPage' is greater than or equal to: " + 1),
         () -> assertEquals(1, groupsPage.getResources().size(), "Verify 'Resources' list size is equal to 'ItemsPerPage'"),
         () -> {
           String firstGroupIdFromGetResponse = groupsPage.getResources().get(0).getId();
@@ -837,7 +837,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
 
     // @formatter:off
     assertAll("Verify List Response",
-        () -> assertEquals(Long.valueOf(1), getPagedGroupsSearchResult.getStartIndex(), "Verify 'startIndex'"),
+        () -> assertEquals(1, getPagedGroupsSearchResult.getStartIndex(), "Verify 'startIndex'"),
         () -> assertTrue(count <= getPagedGroupsSearchResult.getItemsPerPage(), "Verify 'count' is equal or less to 'itemsPerPage'"),
         () -> assertTrue(getPagedGroupsSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertEquals(1, getPagedGroupsSearchResult.getResources().size(), "Verify 'Resources' list size")
@@ -857,12 +857,12 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
 
     PagedByIndexSearchResult<Group> pagedGroupsResult = pagedGroupsResponse.get();
 
-    assertEquals(Long.valueOf(1), pagedGroupsResult.getStartIndex());
-    assertTrue(pagedGroupsResult.getTotalResults() > 0);
+    assertEquals(1, pagedGroupsResult.getStartIndex(), "Verify 'startIndex'");
+    assertTrue(pagedGroupsResult.getTotalResults() > 0, "Verify 'totalResults' is grater than 0");
 
     // @formatter:off
     assertAll("Verify List response",
-        () -> assertEquals(Long.valueOf(1), pagedGroupsResult.getStartIndex(), "Verify 'startIndex'"),
+        () -> assertEquals(1, pagedGroupsResult.getStartIndex(), "Verify 'startIndex'"),
         () -> assertTrue(pagedGroupsResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0")
     );
     // @formatter:on
@@ -888,9 +888,9 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     // @formatter:on
 
     if (pagedGroupsResult.getTotalResults() <= Long.parseLong(DEFAULT_COUNT)) {
-      assertEquals(pagedGroupsResult.getTotalResults(), pagedGroupsResult.getItemsPerPage());
+      assertTrue(pagedGroupsResult.getItemsPerPage() >= Integer.parseInt(DEFAULT_COUNT), "Verify 'itemsPerPage' is greater than or equal to: " + DEFAULT_COUNT);
     } else {
-      assertEquals(Long.parseLong(DEFAULT_COUNT), pagedGroupsResult.getItemsPerPage());
+      assertEquals(Integer.parseInt(DEFAULT_COUNT), pagedGroupsResult.getItemsPerPage(), "Verify 'itemsPerPage'");
     }
   }
 
@@ -961,7 +961,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     // @formatter:off
     assertAll("Verify first GET Users response",
         () -> assertTrue(secondPagedGroupsResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
-        () -> assertEquals(0, secondPagedGroupsResult.getItemsPerPage(), "Verify 'itemsPerPage' is greater than 0"),
+        () -> assertTrue(secondPagedGroupsResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
         () -> assertEquals(biggestValidUUID, secondPagedGroupsResult.getStartId(), "Verify 'startId'"),
         () -> assertEquals(PAGINATION_BY_ID_END_PARAM, secondPagedGroupsResult.getNextId(), "Verify 'nextId'")
     );
@@ -987,7 +987,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
 
       final int startIndexCopy = startIndex;
       assertAll("Verify List Response",
-          () -> assertEquals(Long.valueOf(startIndexCopy), getPagedGroupsResult.getStartIndex(), "Verify 'startIndex'"),
+          () -> assertEquals(startIndexCopy, getPagedGroupsResult.getStartIndex(), "Verify 'startIndex'"),
           () -> assertTrue(getPagedGroupsResult.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
           () -> assertEquals(allGroups.size(), getPagedGroupsResult.getTotalResults(), "Verify 'totalResult' size")
       );
@@ -1111,7 +1111,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
 
             assertAll("Verify empty list response is received",
               () -> assertEquals(createdGroups.size(), groupsPage.getTotalResults(), "Verify 'totalResults'"),
-              () -> assertEquals(createdGroups.size(), groupsPage.getItemsPerPage(), "Verify 'itemsPerPage'"),
+              () -> assertTrue(groupsPage.getItemsPerPage() >= createdGroups.size(), "Verify 'itemsPerPage' is greater than or equal to: " + createdGroups.size()),
               () -> assertAll("Verify 'Resources list'", assertions)
               );
            } finally{
