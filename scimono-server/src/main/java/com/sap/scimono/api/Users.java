@@ -193,20 +193,16 @@ public class Users {
   @Path("{id}")
   public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
     String newVersion = UUID.randomUUID().toString();
-    User oldUser = usersAPI.getUser(userId);
 
-    if (oldUser != null) {
-      Meta.Builder lastModifiedMeta = new Meta.Builder(oldUser.getMeta());
+    Meta.Builder lastModifiedMeta = new Meta.Builder();
 
-      lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(uriInfo.getAbsolutePath().toString());
-      User updatedUser = userToUpdate.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
-      usersAPI.updateUser(updatedUser);
+    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(uriInfo.getAbsolutePath().toString())
+        .setResourceType(RESOURCE_TYPE_USER);
+    User updatedUser = userToUpdate.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
+    usersAPI.updateUser(updatedUser);
 
-      logger.trace("Updated user {}, new version is {}", userId, newVersion);
-      return Response.ok(updatedUser).tag(newVersion).location(uriInfo.getAbsolutePath()).build();
-    }
-
-    throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
+    logger.trace("Updated user {}, new version is {}", userId, newVersion);
+    return Response.ok(updatedUser).tag(newVersion).location(uriInfo.getAbsolutePath()).build();
   }
 
   @DELETE
