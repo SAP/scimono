@@ -123,7 +123,7 @@ public class Users {
   @GET
   //@formatter:off
   public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) int startIndex,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) int count, @QueryParam(START_ID_PARAM) @ValidStartId String startId,
+      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) int count, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
       @QueryParam(FILTER_PARAM) final String filter) {
     // @formatter:on
     logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndex, startId, count);
@@ -155,7 +155,8 @@ public class Users {
     // TODO maybe move this paging logic inside the PagedByX classes, what will remain here is whether to return paged by id or paged by index results
     if (startId != null) {
       if (usersToReturn.size() <= count) {
-        return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
+        return Response
+            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
       }
 
       int indexOfLastUser = usersToReturn.size() - 1;
@@ -175,15 +176,15 @@ public class Users {
 
     String version = UUID.randomUUID().toString();
     Meta userMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_USER).build();
-    
+
     User.Builder userWithMeta = newUser.builder().setMeta(userMeta);
     usersAPI.generateId().ifPresent(userWithMeta::setId);
 
     User createdUser = usersAPI.createUser(userWithMeta.build());
-    
+
     UriBuilder location = uriInfo.getAbsolutePathBuilder().path(createdUser.getId());
     createdUser = addLocation(createdUser, location);
-    
+
     logger.trace("Created user {} with version {}", createdUser.getId(), version);
     return Response.created(location.build()).tag(version).entity(createdUser).build();
   }
@@ -192,14 +193,15 @@ public class Users {
   @Path("{id}")
   public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
     String newVersion = UUID.randomUUID().toString();
-    Meta.Builder lastModifiedMeta = new Meta.Builder(userToUpdate.getMeta());
-    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion);
 
+    Meta.Builder lastModifiedMeta = new Meta.Builder();
+
+    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(uriInfo.getAbsolutePath().toString())
+        .setResourceType(RESOURCE_TYPE_USER);
     User updatedUser = userToUpdate.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
     usersAPI.updateUser(updatedUser);
 
     logger.trace("Updated user {}, new version is {}", userId, newVersion);
-    addLocation(updatedUser, uriInfo.getAbsolutePath());
     return Response.ok(updatedUser).tag(newVersion).location(uriInfo.getAbsolutePath()).build();
   }
 
