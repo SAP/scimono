@@ -9,17 +9,18 @@ import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 
 class StartIdValidator implements ConstraintValidator<ValidStartId, String> {
   private IdValidator resourceIdValidator;
 
-  public StartIdValidator(@Context Application application) {
-    this.resourceIdValidator = new IdValidator(application);
+  public StartIdValidator(@Context Application application, @Context UriInfo uriInfo) {
+    resourceIdValidator = new IdValidator(application, uriInfo);
   }
 
   @Override
   public boolean isValid(String startId, ConstraintValidatorContext context) {
-    if(isNullOrEmpty(startId) || isValidStartId(startId, context)) {
+    if (isNullOrEmpty(startId) || isValidStartId(startId, context)) {
       return true;
     }
 
