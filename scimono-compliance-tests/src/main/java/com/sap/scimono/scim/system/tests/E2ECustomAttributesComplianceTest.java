@@ -17,7 +17,7 @@ import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.scim.system.tests.extensions.SchemaClientScimResponseExtension;
 import com.sap.scimono.scim.system.tests.extensions.SchemaFailSafeClient;
 import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
-import com.sap.scimono.scim.system.tests.extensions.UserFailsSafeClient;
+import com.sap.scimono.scim.system.tests.extensions.UserFailSafeClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import com.sap.scimono.scim.system.tests.util.TestProperties;
 import org.junit.jupiter.api.BeforeAll;
@@ -54,7 +54,7 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
   private static final String CUSTOM_ATTR_INTERNALID = "internalId";
   private static final SchemaFailSafeClient schemaFailSafeClient = resourceAwareSchemaRequest.getFailSafeClient();
 
-  private final UserFailsSafeClient userFailsSafeClient = resourceAwareUserRequest.getFailSafeClient();
+  private final UserFailSafeClient userFailsSafeClient = resourceAwareUserRequest.getFailSafeClient();
 
   @BeforeAll
   public static void setup() {

@@ -16,10 +16,10 @@ import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATI
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static org.junit.jupiter.api.Assertions.fail;
 
-public class UserFailsSafeClient implements ResourceFailSafeClient<User>{
+public class UserFailSafeClient implements ResourceFailSafeClient<User>{
   private final UserClientScimResponseExtension userRequest;
 
-  public UserFailsSafeClient(UserClientScimResponseExtension userRequest) {
+  public UserFailSafeClient(UserClientScimResponseExtension userRequest) {
     this.userRequest = userRequest;
   }
 

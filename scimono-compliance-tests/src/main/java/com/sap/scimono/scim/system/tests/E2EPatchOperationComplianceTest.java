@@ -19,7 +19,7 @@ import com.sap.scimono.scim.system.tests.extensions.GroupFailSafeClient;
 import com.sap.scimono.scim.system.tests.extensions.SchemaClientScimResponseExtension;
 import com.sap.scimono.scim.system.tests.extensions.SchemaFailSafeClient;
 import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
-import com.sap.scimono.scim.system.tests.extensions.UserFailsSafeClient;
+import com.sap.scimono.scim.system.tests.extensions.UserFailSafeClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -64,7 +64,7 @@ public class E2EPatchOperationComplianceTest extends SCIMComplianceTest {
   @RegisterExtension
   SchemaClientScimResponseExtension resourceAwareSchemaRequest = SchemaClientScimResponseExtension.forClearingAfterEachExecutions(schemaRequest);
 
-  private final UserFailsSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
+  private final UserFailSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
   private final GroupFailSafeClient groupFailSafeClient = resourceAwareGroupRequest.getFailSafeClient();
   private final SchemaFailSafeClient schemaFailSafeClient = resourceAwareSchemaRequest.getFailSafeClient();
 
