@@ -513,10 +513,10 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get users with index paging and startIndex out of range (more than total results)")
-  public void testGetUsersWithStarIndexOutOfRangeNonEmptyBackend() {
+  public void testGetUsersWithStarIndexOutOfRange() {
     logger.info("Fetching all users");
     int alreadyCreatedUsers = userFailSafeClient.getAllWithIndexPaging().size();
-    String displayName = "testGetUsersWithStarIndexOutOfRange-UserNonEmptyBackend";
+    String displayName = "testGetUsersWithStarIndexOutOfRange-User";
     int usersCount = 3;
 
     createMultipleUsers(displayName, usersCount);

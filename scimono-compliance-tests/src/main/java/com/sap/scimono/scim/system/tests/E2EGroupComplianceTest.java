@@ -806,32 +806,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get groups with index paging and startIndex out of range (more than total results)")
-  @EnableOnEmptyGroupsEndpoint
   public void testGetGroupsWithStarIndexOutOfRange() {
-    String displayName = "testGetGroupsWithStarIndexOutOfRange-Group";
-    int groupsCount = 3;
-
-    createMultipleGroups(displayName, groupsCount);
-
-    int readCount = 100;
-    int startIndex = groupsCount + 1;
-
-    logger.info("Fetching Groups with startIndex: {} and count: {}", startIndex, readCount);
-    PagedByIndexSearchResult<Group> groupsPage = groupFailSafeClient.getPagedByIndex(startIndex, readCount);
-
-    // @formatter:off
-    assertAll("Verify Correct ListResponse values",
-        () -> assertEquals(startIndex, groupsPage.getStartIndex(), "Verify 'startIndex"),
-        () -> assertEquals(groupsCount, groupsPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
-        () -> assertTrue(groupsPage.getItemsPerPage() <= readCount, "Verify 'count' is equal or less to 'itemsPerPage'"),
-        () -> assertTrue(groupsPage.getResources().isEmpty(), "Verify 'Resources' list size is empty'"));
-    // @formatter:on
-  }
-
-  @Test
-  @DisplayName("Test Get groups with index paging and startIndex out of range (more than total results)NonEmptyBackend")
-  @DisableOnEmptyGroupsEndpoint
-  public void testGetGroupsWithStarIndexOutOfRangeNonEmptyBackend() {
     logger.info("Fetching all groups");
     int alreadyCreatedGroups = groupFailSafeClient.getAllWithIndexPaging().size();
 
