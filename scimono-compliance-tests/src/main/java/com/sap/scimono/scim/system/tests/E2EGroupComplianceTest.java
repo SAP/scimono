@@ -116,7 +116,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
   @TestFactory
   @DisableOnEmptyGroupsEndpoint
   public Collection<DynamicTest> testGetMultipleExistingGroups() {
-    return Arrays.asList(getMultipleGroupsDynamicTest("Test get multiple groups", () -> {
+    return Collections.singletonList(getMultipleGroupsDynamicTest("Test get multiple groups", () -> {
       return resourceAwareGroupRequest.readAllGroups().get().getResources();
     }));
   }
@@ -319,13 +319,15 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     logger.info("Creating Group -{}- with members", groupDisplayName);
     Group createdTestGroupWithMembers = groupFailSafeClient.create(buildGroup(groupDisplayName, firstUserMember.getId()));
 
-    Group groupForUpdate = new Group.Builder(createdTestGroupWithMembers).removeMembers()
-        .addMember(buildGroupMemberResourceWithId(firstUserMember.getId())).build();
+    // @formatter:off
+    Group groupForUpdate = new Group.Builder(createdTestGroupWithMembers)
+        .removeMembers()
+        .addMember(buildGroupMemberResourceWithId(firstUserMember.getId()))
+        .build();
 
     logger.info("Updating Group -testUpdateGroupRemovingOnlyOneMember-GroupWithMembers- and remove members");
     Group updatedGroupWithMembers = groupFailSafeClient.update(groupForUpdate.getId(), groupForUpdate);
 
-    // @formatter:off
     assertAll("Verify Group response attributes",
         () -> assertEquals(createdTestGroupWithMembers.getDisplayName(), updatedGroupWithMembers.getDisplayName(), "Verify displayName was not changed"),
         () -> assertEquals(1, updatedGroupWithMembers.getMembers().size(), "Verify members does not exist"),
@@ -689,9 +691,11 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     List<String> groupMembersDisplayNames = getGroupMembersDisplayNames(createdTestGroupWithMembers, updateMemberDisplayNameTestUserNewName,
         updateMemberDisplayNameTestGroupNewName);
 
+    // @formatter:off
     assertAll("Verify member.display is updated in parent group", () -> assertEquals(2, groupMembersDisplayNames.size(), "Verify members size"),
         () -> assertTrue(groupMembersDisplayNames.contains(updateMemberDisplayNameTestUserNewName), "Verify user member display is updated"),
         () -> assertTrue(groupMembersDisplayNames.contains(updateMemberDisplayNameTestGroupNewName), "Verify group member display is updated"));
+    // @formatter:on
   }
 
   @Test
@@ -729,9 +733,11 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
 
     List<String> groupMembersDisplayNames = getGroupMembersDisplayNames(createdTestGroupWithMembers, newUserDisplayName, newGroupDisplayName);
 
+    // @formatter:on
     assertAll("Verify member.display is updated in parent group", () -> assertEquals(2, groupMembersDisplayNames.size(), "Verify members size"),
         () -> assertTrue(groupMembersDisplayNames.contains(newUserDisplayName), "Verify user member display is updated"),
         () -> assertTrue(groupMembersDisplayNames.contains(newGroupDisplayName), "Verify group member display is updated"));
+    // @formatter:off
   }
 
   @Test
@@ -921,10 +927,12 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
 
     PagedByIdentitySearchResult<Group> pagedGroupsResult = pagedGroupsResponse.get();
 
+    // @formatter:off
     assertAll("Verify List Response", () -> assertTrue(pagedGroupsResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(Integer.parseInt(DEFAULT_COUNT) <= pagedGroupsResult.getItemsPerPage(), "Verify 'count' is equal or less to 'itemsPerPage'"),
         () -> assertEquals(startId, pagedGroupsResult.getStartId(), "Verify 'startId'"),
         () -> assertEquals(PAGINATION_BY_ID_END_PARAM, pagedGroupsResult.getNextId(), "Verify 'nextId'"));
+    // @formatter:on
   }
 
   @Test
@@ -1030,9 +1038,12 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
       PagedByIndexSearchResult<Group> getPagedGroupsResult = groupFailSafeClient.getPagedByIndex(startIndex, count);
 
       final int startIndexCopy = startIndex;
+
+      // @formatter:off
       assertAll("Verify List Response", () -> assertEquals(startIndexCopy, getPagedGroupsResult.getStartIndex(), "Verify 'startIndex'"),
           () -> assertTrue(getPagedGroupsResult.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
           () -> assertEquals(allGroups.size(), getPagedGroupsResult.getTotalResults(), "Verify 'totalResult' size"));
+      // @formatter:on
       totalResults = getPagedGroupsResult.getTotalResults();
 
       List<Group> groupsPerPage = getPagedGroupsResult.getResources();
@@ -1068,9 +1079,12 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
       PagedByIdentitySearchResult<Group> pagedGroups = groupFailSafeClient.getPagedById(startId, count);
 
       final String startIdCopy = startId;
+
+      // @formatter:off
       assertAll("Verify List Response", () -> assertEquals(startIdCopy, pagedGroups.getStartId(), "Verify 'startId'"),
           () -> assertTrue(pagedGroups.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
           () -> assertEquals(allGroups.size(), pagedGroups.getTotalResults(), "Verify 'totalResult' size"));
+      // @formatter:on
 
       List<Group> groupsPerPage = pagedGroups.getResources();
       groupsFromAllPages.addAll(groupsPerPage);
@@ -1108,9 +1122,12 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
       PagedByIdentitySearchResult<Group> pagedGroups = groupFailSafeClient.getPagedById(startId, count);
 
       final String startIdCopy = startId;
+
+      // @formatter:off
       assertAll("Verify List Response", () -> assertEquals(startIdCopy, pagedGroups.getStartId(), "Verify 'startId'"),
           () -> assertTrue(pagedGroups.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
           () -> assertEquals(allGroups.size(), pagedGroups.getTotalResults(), "Verify 'totalResult' size"));
+      // @formatter:on
 
       List<Group> groupsPerPage = pagedGroups.getResources();
       groupsFromAllPages.addAll(groupsPerPage);

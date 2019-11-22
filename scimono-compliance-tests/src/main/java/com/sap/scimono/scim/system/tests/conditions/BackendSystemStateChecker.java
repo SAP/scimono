@@ -18,7 +18,7 @@ import com.sap.scimono.scim.system.tests.extensions.GroupFailSafeClient;
 import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
 import com.sap.scimono.scim.system.tests.extensions.UserFailSafeClient;
 
-public class BackendSystemStateChecker extends SCIMComplianceTest {
+class BackendSystemStateChecker extends SCIMComplianceTest {
 
   @RegisterExtension
   UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);
@@ -29,22 +29,16 @@ public class BackendSystemStateChecker extends SCIMComplianceTest {
   private final UserFailSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
   private final GroupFailSafeClient groupFailSafeClient = resourceAwareGroupRequest.getFailSafeClient();
 
-  public boolean isUsersEndpointEmpty() {
+  boolean isUsersEndpointEmpty() {
     int alreadyCreatedUsersCount = userFailSafeClient.getAllWithIdPaging().size();
-    if (alreadyCreatedUsersCount == 0) {
-      return true;
-    }
 
-    return false;
+    return alreadyCreatedUsersCount == 0;
   }
 
-  public boolean isGroupsEndpointEmpty() {
+  boolean isGroupsEndpointEmpty() {
     int alreadyCreatedGroupsCount = groupFailSafeClient.getAllWithIdPaging().size();
-    if (alreadyCreatedGroupsCount == 0) {
-      return true;
-    }
 
-    return false;
+    return alreadyCreatedGroupsCount == 0;
   }
 
 }

@@ -266,6 +266,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     User updatedUser = userFailSafeClient.update(oldUser.getId(), userToUpdate);
     // check all previous data is intact
 
+    // @formatter:off
     assertAll("Check updated attributes exist in the response", () -> assertEquals(oldUser.getId(), updatedUser.getId(), "Verify 'id' attribute"),
         () -> assertEquals(userToUpdate.getUserName(), updatedUser.getUserName(), "Verify 'userName' attribute"),
         () -> assertEquals(userToUpdate.getName().getGivenName(), updatedUser.getName().getGivenName(), "Verify 'name.givenName' attribute"),
@@ -274,7 +275,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         () -> assertEquals(userToUpdate.getNickName(), updatedUser.getNickName(), "Verify 'nickName' attribute"),
         () -> assertNotNull(updatedUser.getMeta(), "Verify 'meta' is not null"),
         () -> assertEquals(User.RESOURCE_TYPE_USER, updatedUser.getMeta().getResourceType(), "Verify 'meta.resourceType' attribute"),
-        () -> assertEquals(oldUser.getMeta().getLocation(), updatedUser.getMeta().getLocation(), "Verify 'meta.location' attribute"));
+        () -> assertEquals(oldUser.getMeta().getLocation(), updatedUser.getMeta().getLocation(), "Verify 'meta.location' attribute")
+    );
 
     assertAll("Check no old attributes left", () -> assertNull(updatedUser.getProfileUrl(), "Verify 'prfileUrl' is missing"),
         () -> assertNull(updatedUser.getTitle(), "Verify 'title' is missing"),
@@ -290,7 +292,9 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         () -> assertTrue(updatedUser.getAddresses().isEmpty(), "Verify 'addresses' has no values"),
         () -> assertTrue(updatedUser.getGroups().isEmpty(), "Verify 'groups' has no values"),
         () -> assertTrue(updatedUser.getEntitlements().isEmpty(), "Verify 'entitlements' has no values"),
-        () -> assertTrue(updatedUser.getIms().isEmpty(), "Verify 'ims' has no values"));
+        () -> assertTrue(updatedUser.getIms().isEmpty(), "Verify 'ims' has no values")
+    );
+    // @formatter:on
   }
 
   @Test
@@ -703,10 +707,13 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     PagedByIdentitySearchResult<User> pagedUsersResult = pagedUsersResponse.get();
 
+    // @formatter:off
     assertAll("Verify List Response", () -> assertTrue(pagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(Integer.parseInt(DEFAULT_COUNT) <= pagedUsersResult.getItemsPerPage(), "Verify 'count' is equal or less to 'itemsPerPage'"),
         () -> assertEquals(startId, pagedUsersResult.getStartId(), "Verify 'startId'"),
-        () -> assertEquals(PAGINATION_BY_ID_END_PARAM, pagedUsersResult.getNextId(), "Verify 'nextId'"));
+        () -> assertEquals(PAGINATION_BY_ID_END_PARAM, pagedUsersResult.getNextId(), "Verify 'nextId'")
+    );
+    // @formatter:on
   }
 
   @Test
@@ -726,10 +733,13 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     final PagedByIdentitySearchResult<User> firstPagedUsersResult = pagedUsersResponse.get();
 
+    // @formatter:off
     assertAll("Verify first GET Users response",
         () -> assertTrue(firstPagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(firstPagedUsersResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
-        () -> assertEquals(createdTestUser.getId(), firstPagedUsersResult.getStartId(), "Verify 'startId'"));
+        () -> assertEquals(createdTestUser.getId(), firstPagedUsersResult.getStartId(), "Verify 'startId'")
+    );
+    // @formatter:on
 
     String biggestValidUUID = "FFFFFFFF-FFFF-1FFF-BFFF-FFFFFFFFFFFF";
     logger.info("Fetching Multiple Users with startId: {}, and default count", biggestValidUUID);
@@ -738,11 +748,14 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertTrue(pagedUsersResponse.isSuccess(), "Verify GET response is success");
     final PagedByIdentitySearchResult<User> secondPagedUsersResult = pagedUsersResponse.get();
 
+    // @formatter:off
     assertAll("Verify first GET Users response",
         () -> assertTrue(secondPagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(secondPagedUsersResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
         () -> assertEquals(biggestValidUUID, secondPagedUsersResult.getStartId(), "Verify 'startId'"),
-        () -> assertEquals(PAGINATION_BY_ID_END_PARAM, secondPagedUsersResult.getNextId(), "Verify 'nextId'"));
+        () -> assertEquals(PAGINATION_BY_ID_END_PARAM, secondPagedUsersResult.getNextId(), "Verify 'nextId'")
+    );
+    // @formatter:on
   }
 
   @Test
@@ -806,9 +819,13 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
       PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
 
       final int startIndexCopy = startIndex;
+
+      // @formatter:off
       assertAll("Verify List Response", () -> assertEquals(startIndexCopy, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
           () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
-          () -> assertEquals(allUsers.size(), getPagedUsersSearchResult.getTotalResults(), "Verify 'totalResult' size"));
+          () -> assertEquals(allUsers.size(), getPagedUsersSearchResult.getTotalResults(), "Verify 'totalResult' size")
+      );
+      // @formatter:on
       totalResults = getPagedUsersSearchResult.getTotalResults();
 
       List<User> usersPerPage = getPagedUsersSearchResult.getResources();
@@ -844,9 +861,13 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
       PagedByIdentitySearchResult<User> pagedUsers = userFailSafeClient.getPagedById(startId, count);
 
       final String startIdCopy = startId;
+
+      // @formatter:off
       assertAll("Verify List Response", () -> assertEquals(startIdCopy, pagedUsers.getStartId(), "Verify 'startId'"),
           () -> assertTrue(pagedUsers.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
-          () -> assertEquals(allUsers.size(), pagedUsers.getTotalResults(), "Verify 'totalResult' size"));
+          () -> assertEquals(allUsers.size(), pagedUsers.getTotalResults(), "Verify 'totalResult' size")
+      );
+      // @formatter:off
 
       List<User> usersPerPage = pagedUsers.getResources();
       usersFromAllPages.addAll(usersPerPage);
@@ -885,9 +906,13 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
       PagedByIdentitySearchResult<User> pagedUsers = userFailSafeClient.getPagedById(startId, count);
 
       final String startIdCopy = startId;
+
+      // @formatter:off
       assertAll("Verify List Response", () -> assertEquals(startIdCopy, pagedUsers.getStartId(), "Verify 'startId'"),
           () -> assertTrue(pagedUsers.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
-          () -> assertEquals(allUsers.size(), pagedUsers.getTotalResults(), "Verify 'totalResult' size"));
+          () -> assertEquals(allUsers.size(), pagedUsers.getTotalResults(), "Verify 'totalResult' size")
+      );
+      // @formatter:off
 
       List<User> usersPerPage = pagedUsers.getResources();
       usersFromAllPages.addAll(usersPerPage);
@@ -944,9 +969,12 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     PagedByIdentitySearchResult<User> filteredUsers = userFailSafeClient.getByFilteredAndPagedById(PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE,
         filterExpression);
 
+    // @formatter:off
     assertAll("Verify GET Responses", () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
         () -> assertEquals(1, filteredUsers.getTotalResults(), "Verify 'totalResults' of Users fetched with filter"),
-        () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of Users fetched without filter is bigger than 1"));
+        () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of Users fetched without filter is bigger than 1")
+    );
+    // @formatter:on
   }
 
   @Test
@@ -967,9 +995,12 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         RESOURCES_PER_PAGE, filterExpression);
     PagedByIndexSearchResult<User> filteredUsers = userFailSafeClient.getByFilteredAndPagedByIndex(1, RESOURCES_PER_PAGE, filterExpression);
 
+    // @formatter:off
     assertAll("Verify GET Responses", () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
         () -> assertEquals(1, filteredUsers.getTotalResults(), "Verify 'totalResults' of User fetched with filter"),
-        () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of User fetched without filter is bigger than 1"));
+        () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of User fetched without filter is bigger than 1")
+    );
+    // @formatter:on
   }
 
   @Test
@@ -1001,19 +1032,27 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     User fetchedEmployeeUser = userFailSafeClient.getSingle(createdEmployeeUser.getId());
 
     final String managerUserId = managerUserCreated.getId();
+
+    // @formatter:off
     assertAll("Verify GET User by Id response", () -> assertEquals(1, fetchedEmployeeUser.getAddresses().size(), "Verify addresses size"),
         () -> assertEquals(defaultAddress, fetchedEmployeeUser.getAddresses().get(0), "Verify address"), () -> assertEquals(managerUserId,
-            ((EnterpriseExtension) fetchedEmployeeUser.getExtension(ENTERPRISE_URN)).getManager().getValue(), "Verify manager 'value'"));
+            ((EnterpriseExtension) fetchedEmployeeUser.getExtension(ENTERPRISE_URN)).getManager().getValue(), "Verify manager 'value'")
+    );
+    // @formatter:on
   }
 
   private Collection<Executable> getFullUserAssertions(final User expected, final User actual) {
+    // @formatter:off
     return Arrays.asList(getMetaAssertions(actual, User.RESOURCE_TYPE_USER),
         () -> assertAll("Verify all single-value attributes", getAllUserSingleValueAttributeAssertions(expected, actual)),
         () -> assertAll("Verify all multi-value attributes", getAllUserMultivaluedAttributeAssertions(expected, actual)),
-        () -> assertAll("Verify all enterprise schema attributes", getAllUserEnterpriseAttributeAssertions(expected, actual)));
+        () -> assertAll("Verify all enterprise schema attributes", getAllUserEnterpriseAttributeAssertions(expected, actual))
+    );
+    // @formatter:on
   }
 
   private Collection<Executable> getAllUserSingleValueAttributeAssertions(final User expected, final User actual) {
+    // @formatter:off
     return Arrays.asList(() -> assertEquals(expected.isActive(), actual.isActive(), "Verify 'active' attribute"),
         () -> assertEquals(expected.getUserName(), actual.getUserName(), "Verify 'userName' attribute"),
         () -> assertAll("Verify 'name' attribute", getNameAssertions(expected.getName(), actual.getName())),
@@ -1025,7 +1064,9 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         () -> assertEquals(expected.getPreferredLanguage(), actual.getPreferredLanguage(), "Verify 'preferredLanguage' attribute"),
         () -> assertEquals(expected.getLocale(), actual.getLocale(), "Verify 'locale' attribute"),
         () -> assertEquals(expected.getTimezone(), actual.getTimezone(), "Verify 'timezone' attribute"),
-        () -> assertEquals(expected.getExternalId(), actual.getExternalId(), "Verify 'externalId' attribute"));
+        () -> assertEquals(expected.getExternalId(), actual.getExternalId(), "Verify 'externalId' attribute")
+    );
+    // @formatter:on
   }
 
   private Collection<Executable> getNameAssertions(final Name expected, final Name actual) {
@@ -1037,14 +1078,18 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
       fail("actual 'name' could not be null");
     }
 
+    // @formatter:off
     return Arrays.asList(() -> assertEquals(expected.getGivenName(), actual.getGivenName(), "Verify 'name.givenName' attribute"),
         () -> assertEquals(expected.getFamilyName(), actual.getFamilyName(), "Verify 'name.familyName' attribute"),
         () -> assertEquals(expected.getHonorificSuffix(), actual.getHonorificSuffix(), "Verify 'name.honorificSuffix' attribute"),
         () -> assertEquals(expected.getHonorificPrefix(), actual.getHonorificPrefix(), "Verify 'name.honorificPrefix' attribute"),
-        () -> assertEquals(expected.getMiddleName(), actual.getMiddleName(), "Verify 'name.middleName' attribute"));
+        () -> assertEquals(expected.getMiddleName(), actual.getMiddleName(), "Verify 'name.middleName' attribute")
+    );
+    // @formatter:on
   }
 
   private Collection<Executable> getAllUserMultivaluedAttributeAssertions(final User expected, final User actual) {
+    // @formatter:off
     return Arrays.asList(
         () -> assertAll("Verify User emails", getMultivaluedAttrAssertions(expected.getEmails(), actual.getEmails(), Email::getType)),
         () -> assertAll("Verify User roles", getMultivaluedAttrAssertions(expected.getRoles(), actual.getRoles(), Role::getType)),
@@ -1056,7 +1101,9 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
             getMultivaluedAttrAssertions(expected.getEntitlements(), actual.getEntitlements(), Entitlement::getType)),
         () -> assertAll("Verify User x509Certificates",
             getMultivaluedAttrAssertions(expected.getX509Certificates(), actual.getX509Certificates(), X509Certificate::getType)),
-        () -> assertTrue(areAddressesPresent(expected.getAddresses(), actual.getAddresses()), "Verify User addresses"));
+        () -> assertTrue(areAddressesPresent(expected.getAddresses(), actual.getAddresses()), "Verify User addresses")
+    );
+    // @formatter:on
   }
 
   private Collection<Executable> getAllUserEnterpriseAttributeAssertions(final User expected, final User actual) {
@@ -1070,6 +1117,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     EnterpriseExtension expectedEnterpriseExtension = (EnterpriseExtension) expectedExtensions.get(ENTERPRISE_URN);
     EnterpriseExtension actualEnterpriseExtension = (EnterpriseExtension) actualExtensions.get(ENTERPRISE_URN);
 
+    // @formatter:off
     return Arrays.asList(
         () -> assertEquals(expectedEnterpriseExtension.getCostCenter(), actualEnterpriseExtension.getCostCenter(), "Verify 'costCenter' attribute"),
         () -> assertEquals(expectedEnterpriseExtension.getDepartment(), actualEnterpriseExtension.getDepartment(), "Verify 'department' attribute"),
@@ -1078,7 +1126,9 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
             "Verify 'employeeNumber' attribute"),
         () -> assertEquals(expectedEnterpriseExtension.getOrganization(), actualEnterpriseExtension.getOrganization(),
             "Verify 'organization' attribute"),
-        () -> assertAll("Verify manager", getManagerAssertions(expectedEnterpriseExtension.getManager(), actualEnterpriseExtension.getManager())));
+        () -> assertAll("Verify manager", getManagerAssertions(expectedEnterpriseExtension.getManager(), actualEnterpriseExtension.getManager()))
+    );
+    // @formatter:on
   }
 
   private Collection<Executable> getManagerAssertions(final Manager expected, final Manager actual) {
@@ -1132,19 +1182,26 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   private Collection<Executable> getMultivaluedAttrAssertions(final MultiValuedAttribute expected, final MultiValuedAttributeType expectedType,
       final MultiValuedAttribute actual, final MultiValuedAttributeType actualType) {
+
+    // @formatter:off
     return Arrays.asList(() -> assertEquals(expected.getDisplay(), actual.getDisplay(), "Verify 'display' attribute"),
         () -> assertEquals(expected.isPrimary(), actual.isPrimary(), "Verify 'primary' attribute"),
         () -> assertEquals(expected.getValue(), actual.getValue(), "Verify 'value' attribute"),
-        () -> assertEquals(expectedType.getValue(), actualType.getValue(), "Verify 'type' attribute"));
+        () -> assertEquals(expectedType.getValue(), actualType.getValue(), "Verify 'type' attribute")
+    );
+    // @formatter:on
   }
 
   private Collection<Executable> getCommonUsedAttributeAssertions(final User expected, final User actual) {
+    // @formatter:off
     return Arrays.asList(() -> assertEquals(expected.getUserName(), actual.getUserName(), "Verify 'userName' attribute"),
         () -> assertAll("Verify 'name' attribute", getNameAssertions(expected.getName(), actual.getName())),
         () -> assertEquals(expected.getNickName(), actual.getNickName(), "Verify 'nickName' attribute"),
         () -> assertTrue(actual.isActive() != null && actual.isActive(), "Verify 'active' attribute"),
         () -> getMetaAssertions(actual, User.RESOURCE_TYPE_USER),
-        () -> assertTrue(actual.getMeta().getLocation().endsWith(constructResourceLocation(actual)), "Verify 'meta.location' attribute"));
+        () -> assertTrue(actual.getMeta().getLocation().endsWith(constructResourceLocation(actual)), "Verify 'meta.location' attribute")
+    );
+    // @formatter:on
   }
 
   private Collection<Executable> getRequiredAttributeAssertions(final User expectedUser, final User actualUser) {
