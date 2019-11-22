@@ -1141,6 +1141,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   private <T extends MultiValuedAttribute, S extends MultiValuedAttributeType> Collection<Executable> getMultivaluedAttrAssertions(
       final Collection<T> expectedCollection, final Collection<T> actualCollection, final Function<T, S> attributeTypeRetriever) {
 
+    // @formatter:off
     Collection<Executable> executables = expectedCollection.stream()
         .map(mattr -> (Executable) () -> assertAll("Verify assertions for current multivalue attribute: " + mattr.getClass().getSimpleName(),
             () -> assertTrue(actualCollection.stream().map(MultiValuedAttribute::getValue).anyMatch(mattr.getValue()::equals),
@@ -1157,10 +1158,12 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     return Arrays.asList(() -> assertEquals(expectedCollection.size(), actualCollection.size()),
         () -> assertAll("Verify multivalued attribute existence", executables));
+    // @formatter:on
   }
 
   private Collection<Executable> getMultipleUsersAssertions(final Collection<User> expectedUsers, final Collection<User> actualUsers,
       final BiFunction<User, User, Collection<Executable>> singleUserAssertions) {
+    // @formatter:off
     return expectedUsers.stream()
         .map(createdUser -> (Executable) () -> assertAll("Verify assertions for current '" + createdUser.getUserName() + "' user",
             () -> assertTrue(isUserExistInCollection(createdUser, actualUsers), "Verify existence in GET Users response"), () -> {
@@ -1170,6 +1173,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
               assertAll(singleUserAssertions.apply(createdUser, fetchedUser));
             }))
         .collect(Collectors.toList());
+    // @formatter:on
   }
 
   private boolean isUserExistInCollection(final User user, final Collection<User> userCollection) {

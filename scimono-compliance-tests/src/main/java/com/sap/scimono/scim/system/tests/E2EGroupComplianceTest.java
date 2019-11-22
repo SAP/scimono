@@ -105,12 +105,14 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     int createdGroupsCount = 3;
     String commonGroupDisplayName = "testGetMultipleGroups";
 
+    // @formatter:off
     return Arrays.asList(getMultipleGroupsDynamicTest("Test get multiple groups without members", () -> {
       return createMultipleGroups(commonGroupDisplayName + "-Without-Members", createdGroupsCount);
     }), getMultipleGroupsDynamicTest("Test get multiple groups with members", () -> {
       String userNameOfMember = commonGroupDisplayName + "-UserMember";
       return createMultipleGroups(commonGroupDisplayName + "-With-Members", userNameOfMember, createdGroupsCount);
     }));
+    // @formatter:on
   }
 
   @TestFactory
@@ -161,7 +163,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
           return createMultipleGroups(commonGroupDisplayName + "-With-Members", userNameOfMember, createdGroupsCount).get(0);
         })
     );
-     // @formatter:on
+    // @formatter:on
   }
 
   @Test
@@ -996,9 +998,12 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
       PagedByIndexSearchResult<Group> getPagedGroupsResult = groupFailSafeClient.getPagedByIndex(startIndex, count);
 
       final int startIndexCopy = startIndex;
+
+      // @formatter:off
       assertAll("Verify List Response", () -> assertEquals(startIndexCopy, getPagedGroupsResult.getStartIndex(), "Verify 'startIndex'"),
           () -> assertTrue(getPagedGroupsResult.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
           () -> assertEquals(allGroups.size(), getPagedGroupsResult.getTotalResults(), "Verify 'totalResult' size"));
+      // @formatter:on
       totalResults = getPagedGroupsResult.getTotalResults();
 
       List<Group> groupsPerPage = getPagedGroupsResult.getResources();
