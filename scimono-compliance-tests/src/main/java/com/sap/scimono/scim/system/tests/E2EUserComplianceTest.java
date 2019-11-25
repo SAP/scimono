@@ -10,53 +10,6 @@
 
 package com.sap.scimono.scim.system.tests;
 
-import com.sap.scimono.client.SCIMResponse;
-import com.sap.scimono.entity.Address;
-import com.sap.scimono.entity.Email;
-import com.sap.scimono.entity.EnterpriseExtension;
-import com.sap.scimono.entity.Entitlement;
-import com.sap.scimono.entity.Group;
-import com.sap.scimono.entity.Im;
-import com.sap.scimono.entity.Manager;
-import com.sap.scimono.entity.Name;
-import com.sap.scimono.entity.PhoneNumber;
-import com.sap.scimono.entity.Photo;
-import com.sap.scimono.entity.Role;
-import com.sap.scimono.entity.User;
-import com.sap.scimono.entity.X509Certificate;
-import com.sap.scimono.entity.base.Extension;
-import com.sap.scimono.entity.base.MultiValuedAttribute;
-import com.sap.scimono.entity.base.MultiValuedAttributeType;
-import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
-import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
-import com.sap.scimono.scim.system.tests.extensions.GroupClientScimResponseExtension;
-import com.sap.scimono.scim.system.tests.extensions.GroupFailSafeClient;
-import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
-import com.sap.scimono.scim.system.tests.extensions.UserFailsSafeClient;
-import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
-import com.sap.scimono.scim.system.tests.util.TestData;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
-import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.api.function.Executable;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiFunction;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
-
 import static com.sap.scimono.api.API.COUNT_PARAM;
 import static com.sap.scimono.api.API.USERS;
 import static com.sap.scimono.client.query.ResourcePageQuery.identityPageQuery;
@@ -83,6 +36,56 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.function.Executable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sap.scimono.client.SCIMResponse;
+import com.sap.scimono.entity.Address;
+import com.sap.scimono.entity.Email;
+import com.sap.scimono.entity.EnterpriseExtension;
+import com.sap.scimono.entity.Entitlement;
+import com.sap.scimono.entity.Group;
+import com.sap.scimono.entity.Im;
+import com.sap.scimono.entity.Manager;
+import com.sap.scimono.entity.Name;
+import com.sap.scimono.entity.PhoneNumber;
+import com.sap.scimono.entity.Photo;
+import com.sap.scimono.entity.Role;
+import com.sap.scimono.entity.User;
+import com.sap.scimono.entity.X509Certificate;
+import com.sap.scimono.entity.base.Extension;
+import com.sap.scimono.entity.base.MultiValuedAttribute;
+import com.sap.scimono.entity.base.MultiValuedAttributeType;
+import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
+import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
+import com.sap.scimono.scim.system.tests.conditions.DisableOnEmptyUsersEndpoint;
+import com.sap.scimono.scim.system.tests.conditions.EnableOnEmptyUsersEndpoint;
+import com.sap.scimono.scim.system.tests.extensions.GroupClientScimResponseExtension;
+import com.sap.scimono.scim.system.tests.extensions.GroupFailSafeClient;
+import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
+import com.sap.scimono.scim.system.tests.extensions.UserFailSafeClient;
+import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
+import com.sap.scimono.scim.system.tests.util.TestData;
+
 public class E2EUserComplianceTest extends SCIMComplianceTest {
   private static final Logger logger = LoggerFactory.getLogger(E2EUserComplianceTest.class);
   private static final int RESOURCES_PER_PAGE = 1000;
@@ -93,11 +96,12 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   @RegisterExtension
   GroupClientScimResponseExtension resourceAwareGroupRequest = GroupClientScimResponseExtension.forClearingAfterEachExecutions(groupRequest);
 
-  private final UserFailsSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
+  private final UserFailSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
   private final GroupFailSafeClient groupFailSafeClient = resourceAwareGroupRequest.getFailSafeClient();
 
   @Test
-  @DisplayName("Test Get users and verify required attributes are fetched")
+  @DisplayName("Test Get users and verify required attributes are fetchedNonEmptyBackend")
+  @EnableOnEmptyUsersEndpoint
   public void testGetUsersWithRequiredAttributes() {
     logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User1");
     User firstUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User1").build());
@@ -118,44 +122,27 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
-  @DisplayName("Test Get users and verify common attributes are fetched")
-  public void testGetUsersWithCommonUsedAttributes() {
-    logger.info("Creating User - {}", "testGetUsersWithCommonUsedAttributes-User1");
-    User firstUser = userFailSafeClient.create(buildTestUser("testGetUsersWithCommonUsedAttributes-User1"));
+  @DisplayName("Test Get users and verify common attributes are fetchedNonEmptyBackend")
+  @DisableOnEmptyUsersEndpoint
+  public void testGetUsersWithCommonUsedAttributesNonEmptyBackend() {
+    logger.info("Fetching all users");
+    int alreadyCreatedUsers = userFailSafeClient.getAllWithIndexPaging().size();
 
-    logger.info("Creating User - {}", "testGetUsersWithCommonUsedAttributes-User2");
-    User secondUser = userFailSafeClient.create(buildTestUser("testGetUsersWithCommonUsedAttributes-User2"));
+    logger.info("Creating User - {}", "testGetUsersWithCommonUsedAttributes-User1NonEmptyBackend");
+    User firstUser = userFailSafeClient.create(buildTestUser("testGetUsersWithCommonUsedAttributes-User1NonEmptyBackend"));
 
+    logger.info("Creating User - {}", "testGetUsersWithCommonUsedAttributes-User2NonEmptyBackend");
+    User secondUser = userFailSafeClient.create(buildTestUser("testGetUsersWithCommonUsedAttributes-User2NonEmptyBackend"));
+
+    int allUsers = alreadyCreatedUsers + 2;
     // @formatter:off
     PagedByIndexSearchResult<User> getUsersResponse = userFailSafeClient.getAllWithoutPaging();
     assertAll("Verify both users exist in the response",
-        () -> assertEquals(2, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
+        () -> assertEquals(allUsers, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
         () -> assertTrue(getUsersResponse.getItemsPerPage() >= 2, "Verify 'itemsPerPage' is greater than or equal to: 2"),
         () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty"),
         () -> assertAll("Verify 'Resources' attributes",
             getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), getUsersResponse.getResources(), this::getCommonUsedAttributeAssertions))
-    );
-    // @formatter:on
-  }
-
-  @Test
-  @DisplayName("Test Get users and verify all attributes are fetched")
-  public void testGetUsersWithAllAttributes() {
-    logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User1");
-    User firstUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User1").build());
-
-    logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User2");
-    User secondUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User2").build());
-
-    // @formatter:off
-    logger.info("Fetching all Users - without paging attributes");
-    PagedByIndexSearchResult<User> getUsersResponse = userFailSafeClient.getAllWithoutPaging();
-    assertAll("Verify both users exist in the response",
-        () -> assertEquals(2, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
-        () -> assertTrue(getUsersResponse.getItemsPerPage() >= 2, "Verify 'itemsPerPage' is greater than or equal to: 2"),
-        () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty"),
-        () -> assertAll("Verify 'Resources' attributes",
-            getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), getUsersResponse.getResources(), this::getFullUserAssertions))
     );
     // @formatter:on
   }
@@ -271,23 +258,16 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     logger.info("Creating User: {}", userName);
     User oldUser = userFailSafeClient.create(TestData.setAllAttributesToTestUser(userName, null).build());
 
-    User userToUpdate = new User.Builder(oldUser.getUserName())
-        .setId(oldUser.getId())
-        .setName(
-            new Name.Builder()
-                .setGivenName("updateGivenName")
-                .setMiddleName("updatedMiddleName")
-                .setFamilyName("updatedFamilyName")
-                .build())
-        .setNickName("topalka")
-        .build();
+    User userToUpdate = new User.Builder(oldUser.getUserName()).setId(oldUser.getId())
+        .setName(new Name.Builder().setGivenName("updateGivenName").setMiddleName("updatedMiddleName").setFamilyName("updatedFamilyName").build())
+        .setNickName("topalka").build();
 
     logger.info("Updating User: {}", userName);
     User updatedUser = userFailSafeClient.update(oldUser.getId(), userToUpdate);
     // check all previous data is intact
 
-    assertAll("Check updated attributes exist in the response",
-        () -> assertEquals(oldUser.getId(), updatedUser.getId(), "Verify 'id' attribute"),
+    // @formatter:off
+    assertAll("Check updated attributes exist in the response", () -> assertEquals(oldUser.getId(), updatedUser.getId(), "Verify 'id' attribute"),
         () -> assertEquals(userToUpdate.getUserName(), updatedUser.getUserName(), "Verify 'userName' attribute"),
         () -> assertEquals(userToUpdate.getName().getGivenName(), updatedUser.getName().getGivenName(), "Verify 'name.givenName' attribute"),
         () -> assertEquals(userToUpdate.getName().getMiddleName(), updatedUser.getName().getMiddleName(), "Verify 'name.middleName' attribute"),
@@ -298,8 +278,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         () -> assertEquals(oldUser.getMeta().getLocation(), updatedUser.getMeta().getLocation(), "Verify 'meta.location' attribute")
     );
 
-    assertAll("Check no old attributes left",
-        () -> assertNull(updatedUser.getProfileUrl(), "Verify 'prfileUrl' is missing"),
+    assertAll("Check no old attributes left", () -> assertNull(updatedUser.getProfileUrl(), "Verify 'prfileUrl' is missing"),
         () -> assertNull(updatedUser.getTitle(), "Verify 'title' is missing"),
         () -> assertNull(updatedUser.getUserType(), "Verify 'userType' is missing"),
         () -> assertNull(updatedUser.getPreferredLanguage(), "Verify 'preferredLanguage' is missing"),
@@ -315,10 +294,12 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         () -> assertTrue(updatedUser.getEntitlements().isEmpty(), "Verify 'entitlements' has no values"),
         () -> assertTrue(updatedUser.getIms().isEmpty(), "Verify 'ims' has no values")
     );
+    // @formatter:on
   }
 
   @Test
   @DisplayName("Test Get users and verify empty list is received")
+  @EnableOnEmptyUsersEndpoint
   public void testGetUsersEmptyList() {
     logger.info("Fetching all Users - without paging attributes");
     PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getAllWithoutPaging();
@@ -346,18 +327,14 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     logger.info("Deleting User: {}", userName);
     SCIMResponse<Void> scimResponse = resourceAwareUserRequest.deleteUser(createdTestUser.getId());
 
-    assertAll("Verify DELETE Response",
-        () -> assertTrue(scimResponse.isSuccess(), "Verify DELETE Request finished successfully"),
-        () -> assertEquals(SC_NO_CONTENT, scimResponse.getStatusCode(), "Verify response status")
-    );
+    assertAll("Verify DELETE Response", () -> assertTrue(scimResponse.isSuccess(), "Verify DELETE Request finished successfully"),
+        () -> assertEquals(SC_NO_CONTENT, scimResponse.getStatusCode(), "Verify response status"));
 
     logger.info("Fetching User: {}, again", userName);
     SCIMResponse<User> getUserResponse = resourceAwareUserRequest.readSingleUser(createdTestUser.getId());
 
-    assertAll("Verify GET Response",
-        () -> assertFalse(getUserResponse.isSuccess(), "Verify GET Request finished successfully"),
-        () -> assertEquals(SC_NOT_FOUND, getUserResponse.getStatusCode(), "Verify response status")
-    );
+    assertAll("Verify GET Response", () -> assertFalse(getUserResponse.isSuccess(), "Verify GET Request finished successfully"),
+        () -> assertEquals(SC_NOT_FOUND, getUserResponse.getStatusCode(), "Verify response status"));
   }
 
   @Test
@@ -405,12 +382,15 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     logger.info("Creating Group: testGroupWithMember1, with User member: {}", testUserName);
     Group testGroupWithMember1 = groupFailSafeClient.create(buildGroup("testGroupWithMember1", createdTestUser.getId()));
 
-    logger.info("Creating Group: testGroupWithMember2, with User member: {}, and Group member: {}", testUserName, testGroupWithMember1.getDisplayName());
-    Group testGroupWithMember2 = groupFailSafeClient.create(buildGroup("testGroupWithMember2", createdTestUser.getId(), testGroupWithMember1.getId()));
+    logger.info("Creating Group: testGroupWithMember2, with User member: {}, and Group member: {}", testUserName,
+        testGroupWithMember1.getDisplayName());
+    Group testGroupWithMember2 = groupFailSafeClient
+        .create(buildGroup("testGroupWithMember2", createdTestUser.getId(), testGroupWithMember1.getId()));
 
     logger.info("Creating Group: testGroupWithMember3, with User member: {}, and Group members: {}, {}", testUserName,
         testGroupWithMember1.getDisplayName(), testGroupWithMember2.getDisplayName());
-    groupFailSafeClient.create(buildGroup("testGroupWithMember3", createdTestUser.getId(), testGroupWithMember1.getId(), testGroupWithMember2.getId()));
+    groupFailSafeClient
+        .create(buildGroup("testGroupWithMember3", createdTestUser.getId(), testGroupWithMember1.getId(), testGroupWithMember2.getId()));
 
     logger.info("Fetching ");
     User returnedTestUser = userFailSafeClient.getSingle(createdTestUser.getId());
@@ -431,10 +411,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     logger.info("Fetching Users by filter expression: {}", filterExpression);
     List<User> filteredUsers = userFailSafeClient.getAllByFilter(filterExpression);
 
-    assertAll("Verify GET filtered Users response",
-        () -> assertEquals(1, filteredUsers.size(), "Verify exact number of Users is fetched"),
-        () -> assertEquals(testUser.getId(), filteredUsers.get(0).getId(), "Verify User with same Id is fetched")
-    );
+    assertAll("Verify GET filtered Users response", () -> assertEquals(1, filteredUsers.size(), "Verify exact number of Users is fetched"),
+        () -> assertEquals(testUser.getId(), filteredUsers.get(0).getId(), "Verify User with same Id is fetched"));
   }
 
   @TestFactory
@@ -469,7 +447,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     // @formatter:on
   }
 
-  private DynamicTest getGetUsersFilteredDynamicTest(String testName, User userBody, String filterExpression){
+  private DynamicTest getGetUsersFilteredDynamicTest(final String testName, final User userBody, final String filterExpression) {
     // @formatter:off
     return DynamicTest.dynamicTest(testName,
         () -> {
@@ -511,6 +489,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get users with index paging and startIndex=totalResults")
+  @EnableOnEmptyUsersEndpoint
   public void testGetUsersWithStarIndexEqualTotalResults() {
     String displayName = "testGetUsersWithStarIndexEqualTotalResults-User";
     int usersCount = 3;
@@ -536,17 +515,20 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     // @formatter:on
   }
 
-
   @Test
   @DisplayName("Test Get users with index paging and startIndex out of range (more than total results)")
   public void testGetUsersWithStarIndexOutOfRange() {
+    logger.info("Fetching all users");
+    int alreadyCreatedUsers = userFailSafeClient.getAllWithIndexPaging().size();
     String displayName = "testGetUsersWithStarIndexOutOfRange-User";
     int usersCount = 3;
 
     createMultipleUsers(displayName, usersCount);
 
+    int allUsers = alreadyCreatedUsers + usersCount;
+
     int readCount = 100;
-    int startIndex = usersCount + 1;
+    int startIndex = allUsers + 1;
 
     logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, readCount);
     PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getPagedByIndex(startIndex, readCount);
@@ -554,7 +536,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     // @formatter:off
     assertAll("Verify Correct ListResponse values",
         () -> assertEquals(startIndex, usersPage.getStartIndex(), "Verify 'startIndex"),
-        () -> assertEquals(usersCount, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
+        () -> assertEquals(allUsers, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
         () -> assertTrue(usersPage.getItemsPerPage() <= readCount, "Verify 'count' is equal or less to 'itemsPerPage'"),
         () -> assertTrue(usersPage.getResources().isEmpty(), "Verify 'Resources' list size is empty'"));
     // @formatter:on
@@ -633,8 +615,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     int count = 1;
 
     createMultipleUsers("testGetUsersDefaultStartIndex", 3);
-    PagedByIndexSearchResult<User> getPagedUsersSearchResult = CustomTargetSystemRestClient.INSTANCE.getEntitiesHttpResponse(USERS, singletonMap(COUNT_PARAM, count))
-        .readEntity(USER_LIST_RESPONSE_TYPE_INDEX_PAGING);
+    PagedByIndexSearchResult<User> getPagedUsersSearchResult = CustomTargetSystemRestClient.INSTANCE
+        .getEntitiesHttpResponse(USERS, singletonMap(COUNT_PARAM, count)).readEntity(USER_LIST_RESPONSE_TYPE_INDEX_PAGING);
 
     // @formatter:off
     assertAll("Verify List Response",
@@ -654,7 +636,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     createMultipleUsers("testGetUsersDefaultCountWithStartIndex", 3);
 
     logger.info("Fetching Multiple Users with startIndex: {}, and default count", startIndex);
-    SCIMResponse<PagedByIndexSearchResult<User>> pagedUsersResponse = resourceAwareUserRequest.readMultipleUsers(indexPageQuery().withStartIndex(startIndex));
+    SCIMResponse<PagedByIndexSearchResult<User>> pagedUsersResponse = resourceAwareUserRequest
+        .readMultipleUsers(indexPageQuery().withStartIndex(startIndex));
     assertTrue(pagedUsersResponse.isSuccess(), "Verify GET response is success");
 
     PagedByIndexSearchResult<User> pagedUsersResult = pagedUsersResponse.get();
@@ -674,7 +657,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     createMultipleUsers("testGetUsersDefaultCountWithStartId", 6);
 
     logger.info("Fetching Multiple Users with startId: {}, and default count", startId);
-    SCIMResponse<PagedByIdentitySearchResult<User>> pagedUsersResponse = resourceAwareUserRequest.readMultipleUsers(identityPageQuery().withStartId(startId));
+    SCIMResponse<PagedByIdentitySearchResult<User>> pagedUsersResponse = resourceAwareUserRequest
+        .readMultipleUsers(identityPageQuery().withStartId(startId));
     assertTrue(pagedUsersResponse.isSuccess(), "Verify GET response is success");
 
     PagedByIdentitySearchResult<User> pagedUsersResult = pagedUsersResponse.get();
@@ -690,7 +674,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertTrue(pagedUsersResult.getTotalResults() > 0);
 
     if (pagedUsersResult.getTotalResults() <= Long.parseLong(DEFAULT_COUNT)) {
-      assertTrue(pagedUsersResult.getItemsPerPage() >= Integer.parseInt(DEFAULT_COUNT), "Verify 'itemsPerPage' is greater than or equal to: " + DEFAULT_COUNT);
+      assertTrue(pagedUsersResult.getItemsPerPage() >= Integer.parseInt(DEFAULT_COUNT),
+          "Verify 'itemsPerPage' is greater than or equal to: " + DEFAULT_COUNT);
       assertEquals(PAGINATION_BY_ID_END_PARAM, pagedUsersResult.getNextId(), "Verify 'nextId'");
     } else {
       assertEquals(Integer.parseInt(DEFAULT_COUNT), pagedUsersResult.getItemsPerPage(), "Verify 'itemsPerPage'");
@@ -716,17 +701,19 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     String startId = PAGINATION_BY_ID_END_PARAM;
 
     logger.info("Fetching Multiple users with startId: {}, and default count", startId);
-    SCIMResponse<PagedByIdentitySearchResult<User>> pagedUsersResponse = resourceAwareUserRequest.readMultipleUsers(identityPageQuery().withStartId(startId));
+    SCIMResponse<PagedByIdentitySearchResult<User>> pagedUsersResponse = resourceAwareUserRequest
+        .readMultipleUsers(identityPageQuery().withStartId(startId));
     assertTrue(pagedUsersResponse.isSuccess(), "Verify GET response is success");
 
     PagedByIdentitySearchResult<User> pagedUsersResult = pagedUsersResponse.get();
 
-    assertAll("Verify List Response",
-        () -> assertTrue(pagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
+    // @formatter:off
+    assertAll("Verify List Response", () -> assertTrue(pagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(Integer.parseInt(DEFAULT_COUNT) <= pagedUsersResult.getItemsPerPage(), "Verify 'count' is equal or less to 'itemsPerPage'"),
         () -> assertEquals(startId, pagedUsersResult.getStartId(), "Verify 'startId'"),
         () -> assertEquals(PAGINATION_BY_ID_END_PARAM, pagedUsersResult.getNextId(), "Verify 'nextId'")
     );
+    // @formatter:on
   }
 
   @Test
@@ -746,11 +733,13 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     final PagedByIdentitySearchResult<User> firstPagedUsersResult = pagedUsersResponse.get();
 
+    // @formatter:off
     assertAll("Verify first GET Users response",
         () -> assertTrue(firstPagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(firstPagedUsersResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
         () -> assertEquals(createdTestUser.getId(), firstPagedUsersResult.getStartId(), "Verify 'startId'")
     );
+    // @formatter:on
 
     String biggestValidUUID = "FFFFFFFF-FFFF-1FFF-BFFF-FFFFFFFFFFFF";
     logger.info("Fetching Multiple Users with startId: {}, and default count", biggestValidUUID);
@@ -759,16 +748,19 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertTrue(pagedUsersResponse.isSuccess(), "Verify GET response is success");
     final PagedByIdentitySearchResult<User> secondPagedUsersResult = pagedUsersResponse.get();
 
+    // @formatter:off
     assertAll("Verify first GET Users response",
         () -> assertTrue(secondPagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(secondPagedUsersResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
         () -> assertEquals(biggestValidUUID, secondPagedUsersResult.getStartId(), "Verify 'startId'"),
         () -> assertEquals(PAGINATION_BY_ID_END_PARAM, secondPagedUsersResult.getNextId(), "Verify 'nextId'")
     );
+    // @formatter:on
   }
 
   @Test
   @DisplayName("Test Get users all pages with index paging")
+  @EnableOnEmptyUsersEndpoint
   public void testGetUsersSeveralPagesUsingIndex() {
     int startIndex = 1;
     int count = 3;
@@ -785,11 +777,9 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
       PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
 
       final int startIndexCopy = startIndex;
-      assertAll("Verify List Response",
-          () -> assertEquals(startIndexCopy, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
+      assertAll("Verify List Response", () -> assertEquals(startIndexCopy, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
           () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
-          () -> assertEquals(allUsers.size(), getPagedUsersSearchResult.getTotalResults(), "Verify 'totalResult' size")
-      );
+          () -> assertEquals(allUsers.size(), getPagedUsersSearchResult.getTotalResults(), "Verify 'totalResult' size"));
       totalResults = getPagedUsersSearchResult.getTotalResults();
 
       List<User> usersPerPage = getPagedUsersSearchResult.getResources();
@@ -804,12 +794,58 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     List<String> allUsersIds = extractUserIds(allUsers);
     userIdsFromAllPages.removeAll(allUsersIds);
 
+    assertEquals(0, userIdsFromAllPages.size(), "Verify paged Users are same sa All users");
+  }
+
+  @Test
+  @DisplayName("Test Get users all pages with index pagingNonEmptyBackend")
+  @DisableOnEmptyUsersEndpoint
+  public void testGetUsersSeveralPagesUsingIndexNonEmptyBackend() {
+    logger.info("Fetching Users without paging");
+    List<User> allUsers = userFailSafeClient.getAllWithoutPaging().getResources();
+    if (allUsers.size() < 2) {
+      allUsers.addAll(createMultipleUsers("testGetUsersSeveralPagesUsingIndexNonEmptyBackend", 1));
+    }
+
+    int startIndex = 1;
+    // read on at least 2 pages
+    int count = allUsers.size() / 2;
+    long totalResults = 0;
+
+    List<User> usersFromAllPages = new LinkedList<>();
+
+    do {
+      logger.info("Fetching Multiple Users with startIndex: {}, and count: {}", startIndex, count);
+      PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
+
+      final int startIndexCopy = startIndex;
+
+      // @formatter:off
+      assertAll("Verify List Response", () -> assertEquals(startIndexCopy, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
+          () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
+          () -> assertEquals(allUsers.size(), getPagedUsersSearchResult.getTotalResults(), "Verify 'totalResult' size")
+      );
+      // @formatter:on
+      totalResults = getPagedUsersSearchResult.getTotalResults();
+
+      List<User> usersPerPage = getPagedUsersSearchResult.getResources();
+      usersFromAllPages.addAll(usersPerPage);
+
+      startIndex = startIndex + count;
+    } while (startIndex <= totalResults);
+
+    assertEquals(allUsers.size(), usersFromAllPages.size(), "Verify all Users count is equal to sum of those extracted from all pages");
+
+    List<String> userIdsFromAllPages = extractUserIds(usersFromAllPages);
+    List<String> allUsersIds = extractUserIds(allUsers);
+    userIdsFromAllPages.removeAll(allUsersIds);
 
     assertEquals(0, userIdsFromAllPages.size(), "Verify paged Users are same sa All users");
   }
 
   @Test
   @DisplayName("Test Get users all pages with Id paging")
+  @EnableOnEmptyUsersEndpoint
   public void testGetUsersSeveralPagesUsingId() {
     String startId = PAGINATION_BY_ID_START_PARAM;
     int count = 3;
@@ -825,11 +861,58 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
       PagedByIdentitySearchResult<User> pagedUsers = userFailSafeClient.getPagedById(startId, count);
 
       final String startIdCopy = startId;
-      assertAll("Verify List Response",
-          () -> assertEquals(startIdCopy, pagedUsers.getStartId(), "Verify 'startId'"),
+
+      // @formatter:off
+      assertAll("Verify List Response", () -> assertEquals(startIdCopy, pagedUsers.getStartId(), "Verify 'startId'"),
           () -> assertTrue(pagedUsers.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
           () -> assertEquals(allUsers.size(), pagedUsers.getTotalResults(), "Verify 'totalResult' size")
       );
+      // @formatter:off
+
+      List<User> usersPerPage = pagedUsers.getResources();
+      usersFromAllPages.addAll(usersPerPage);
+
+      startId = pagedUsers.getNextId();
+    } while (!startId.equals(PAGINATION_BY_ID_END_PARAM));
+
+    assertEquals(allUsers.size(), usersFromAllPages.size(), "Verify all Users count is equal to sum of those extracted from all pages");
+
+    List<String> userIdsFromAllPages = extractUserIds(usersFromAllPages);
+    List<String> allUsersIds = extractUserIds(allUsers);
+
+    userIdsFromAllPages.removeAll(allUsersIds);
+    assertEquals(0, userIdsFromAllPages.size(), "Verify paged Users are same sa All users");
+  }
+
+  @Test
+  @DisplayName("Test Get users all pages with Id pagingNonEmptyBackend")
+  @DisableOnEmptyUsersEndpoint
+  public void testGetUsersSeveralPagesUsingIdNonEmptyBackend() {
+    logger.info("Fetching Users without paging");
+    List<User> allUsers = userFailSafeClient.getAllWithoutPaging().getResources();
+    if (allUsers.size() < 2) {
+      allUsers.addAll(createMultipleUsers("testGetUsersSeveralPagesUsingIdNonEmptyBackend", 1));
+    }
+
+    String startId = PAGINATION_BY_ID_START_PARAM;
+    // read on at least 2 pages
+    int count = allUsers.size() / 2;
+
+    createMultipleUsers("testGetUsersSeveralPagesUsingId", 10);
+    List<User> usersFromAllPages = new LinkedList<>();
+
+    do {
+      logger.info("Fetching Multiple Users with startId: {}, and count: {}", startId, count);
+      PagedByIdentitySearchResult<User> pagedUsers = userFailSafeClient.getPagedById(startId, count);
+
+      final String startIdCopy = startId;
+
+      // @formatter:off
+      assertAll("Verify List Response", () -> assertEquals(startIdCopy, pagedUsers.getStartId(), "Verify 'startId'"),
+          () -> assertTrue(pagedUsers.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
+          () -> assertEquals(allUsers.size(), pagedUsers.getTotalResults(), "Verify 'totalResult' size")
+      );
+      // @formatter:off
 
       List<User> usersPerPage = pagedUsers.getResources();
       usersFromAllPages.addAll(usersPerPage);
@@ -881,15 +964,17 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     logger.info("Fetching Multiple Users with startId: {}, and count: {}", PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE);
     PagedByIdentitySearchResult<User> allUsers = userFailSafeClient.getPagedById(PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE);
 
-    logger.info("Fetching Multiple Users with startId: {}, and count: {} and filter expression: {}", PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE, filterExpression);
-    PagedByIdentitySearchResult<User> filteredUsers = userFailSafeClient
-        .getByFilteredAndPagedById(PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE, filterExpression);
+    logger.info("Fetching Multiple Users with startId: {}, and count: {} and filter expression: {}", PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE,
+        filterExpression);
+    PagedByIdentitySearchResult<User> filteredUsers = userFailSafeClient.getByFilteredAndPagedById(PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE,
+        filterExpression);
 
-    assertAll("Verify GET Responses",
-        () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
+    // @formatter:off
+    assertAll("Verify GET Responses", () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
         () -> assertEquals(1, filteredUsers.getTotalResults(), "Verify 'totalResults' of Users fetched with filter"),
         () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of Users fetched without filter is bigger than 1")
     );
+    // @formatter:on
   }
 
   @Test
@@ -906,19 +991,21 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     logger.info("Fetching Multiple Users with startIndex: {}, and count: {}", 1, RESOURCES_PER_PAGE);
     PagedByIndexSearchResult<User> allUsers = userFailSafeClient.getPagedByIndex(1, RESOURCES_PER_PAGE);
 
-    logger.info("Fetching Multiple Users with startIndex: {}, and count: {} and filter expression: {}", PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE, filterExpression);
+    logger.info("Fetching Multiple Users with startIndex: {}, and count: {} and filter expression: {}", PAGINATION_BY_ID_START_PARAM,
+        RESOURCES_PER_PAGE, filterExpression);
     PagedByIndexSearchResult<User> filteredUsers = userFailSafeClient.getByFilteredAndPagedByIndex(1, RESOURCES_PER_PAGE, filterExpression);
 
-    assertAll("Verify GET Responses",
-        () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
+    // @formatter:off
+    assertAll("Verify GET Responses", () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
         () -> assertEquals(1, filteredUsers.getTotalResults(), "Verify 'totalResults' of User fetched with filter"),
         () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of User fetched without filter is bigger than 1")
     );
+    // @formatter:on
   }
 
   @Test
   @DisplayName("Test Create users with multivalued attributes and updated manager")
-  public void testCreateUserWithMultivaluedAttributesAndUpdatedManager(){
+  public void testCreateUserWithMultivaluedAttributesAndUpdatedManager() {
     String managerUserName = "testCreateUserWithMultivaluedAttributesAndUpdatedManager-Manager";
     logger.info("Creating User: {}, who will me used as a manager", managerUserName);
     User managerUser = userFailSafeClient.create(TestData.setAttributesToATestUser(managerUserName).build());
@@ -931,7 +1018,8 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
     Address defaultAddress = TestData.buildHomeAddressDefaultAttrs();
 
-    User.Builder employeeUserRequestBuilder = TestData.setAttributesToATestUser("testCreateUserWithMultivaluedAttributesAndUpdatedManager-Employee").addAddress(defaultAddress);
+    User.Builder employeeUserRequestBuilder = TestData.setAttributesToATestUser("testCreateUserWithMultivaluedAttributesAndUpdatedManager-Employee")
+        .addAddress(defaultAddress);
     User employeeUserRequest = TestData.addAllEnterpriseAttributesToTestUser(employeeUserRequestBuilder, managerUserCreated.getId()).build();
 
     logger.info("Crating User: {} with manager: {}", employeeUserRequest.getUserName(), managerUserName);
@@ -944,25 +1032,28 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     User fetchedEmployeeUser = userFailSafeClient.getSingle(createdEmployeeUser.getId());
 
     final String managerUserId = managerUserCreated.getId();
-    assertAll("Verify GET User by Id response",
-        () -> assertEquals(1, fetchedEmployeeUser.getAddresses().size(), "Verify addresses size"),
-        () -> assertEquals(defaultAddress, fetchedEmployeeUser.getAddresses().get(0), "Verify address"),
-        () -> assertEquals(managerUserId, ((EnterpriseExtension) fetchedEmployeeUser.getExtension(ENTERPRISE_URN)).getManager().getValue(), "Verify manager 'value'")
+
+    // @formatter:off
+    assertAll("Verify GET User by Id response", () -> assertEquals(1, fetchedEmployeeUser.getAddresses().size(), "Verify addresses size"),
+        () -> assertEquals(defaultAddress, fetchedEmployeeUser.getAddresses().get(0), "Verify address"), () -> assertEquals(managerUserId,
+            ((EnterpriseExtension) fetchedEmployeeUser.getExtension(ENTERPRISE_URN)).getManager().getValue(), "Verify manager 'value'")
     );
+    // @formatter:on
   }
 
-  private Collection<Executable> getFullUserAssertions(User expected, User actual) {
-    return Arrays.asList(
-        getMetaAssertions(actual, User.RESOURCE_TYPE_USER),
+  private Collection<Executable> getFullUserAssertions(final User expected, final User actual) {
+    // @formatter:off
+    return Arrays.asList(getMetaAssertions(actual, User.RESOURCE_TYPE_USER),
         () -> assertAll("Verify all single-value attributes", getAllUserSingleValueAttributeAssertions(expected, actual)),
         () -> assertAll("Verify all multi-value attributes", getAllUserMultivaluedAttributeAssertions(expected, actual)),
         () -> assertAll("Verify all enterprise schema attributes", getAllUserEnterpriseAttributeAssertions(expected, actual))
     );
+    // @formatter:on
   }
 
-  private Collection<Executable> getAllUserSingleValueAttributeAssertions(User expected, User actual) {
-    return Arrays.asList(
-        () -> assertEquals(expected.isActive(), actual.isActive(), "Verify 'active' attribute"),
+  private Collection<Executable> getAllUserSingleValueAttributeAssertions(final User expected, final User actual) {
+    // @formatter:off
+    return Arrays.asList(() -> assertEquals(expected.isActive(), actual.isActive(), "Verify 'active' attribute"),
         () -> assertEquals(expected.getUserName(), actual.getUserName(), "Verify 'userName' attribute"),
         () -> assertAll("Verify 'name' attribute", getNameAssertions(expected.getName(), actual.getName())),
         () -> assertEquals(expected.getDisplayName(), actual.getDisplayName(), "Verify 'displayName' attribute"),
@@ -975,10 +1066,11 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         () -> assertEquals(expected.getTimezone(), actual.getTimezone(), "Verify 'timezone' attribute"),
         () -> assertEquals(expected.getExternalId(), actual.getExternalId(), "Verify 'externalId' attribute")
     );
+    // @formatter:on
   }
 
-  private Collection<Executable> getNameAssertions(Name expected, Name actual) {
-    if(expected == null) {
+  private Collection<Executable> getNameAssertions(final Name expected, final Name actual) {
+    if (expected == null) {
       return Collections.emptyList();
     }
 
@@ -986,138 +1078,144 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
       fail("actual 'name' could not be null");
     }
 
-    return Arrays.asList(
-        () -> assertEquals(expected.getGivenName(), actual.getGivenName(), "Verify 'name.givenName' attribute"),
+    // @formatter:off
+    return Arrays.asList(() -> assertEquals(expected.getGivenName(), actual.getGivenName(), "Verify 'name.givenName' attribute"),
         () -> assertEquals(expected.getFamilyName(), actual.getFamilyName(), "Verify 'name.familyName' attribute"),
         () -> assertEquals(expected.getHonorificSuffix(), actual.getHonorificSuffix(), "Verify 'name.honorificSuffix' attribute"),
         () -> assertEquals(expected.getHonorificPrefix(), actual.getHonorificPrefix(), "Verify 'name.honorificPrefix' attribute"),
         () -> assertEquals(expected.getMiddleName(), actual.getMiddleName(), "Verify 'name.middleName' attribute")
     );
+    // @formatter:on
   }
 
-  private Collection<Executable> getAllUserMultivaluedAttributeAssertions(User expected, User actual) {
+  private Collection<Executable> getAllUserMultivaluedAttributeAssertions(final User expected, final User actual) {
+    // @formatter:off
     return Arrays.asList(
         () -> assertAll("Verify User emails", getMultivaluedAttrAssertions(expected.getEmails(), actual.getEmails(), Email::getType)),
         () -> assertAll("Verify User roles", getMultivaluedAttrAssertions(expected.getRoles(), actual.getRoles(), Role::getType)),
         () -> assertAll("Verify User photos", getMultivaluedAttrAssertions(expected.getPhotos(), actual.getPhotos(), Photo::getType)),
-        () -> assertAll("Verify User phone numbers", getMultivaluedAttrAssertions(expected.getPhoneNumbers(), actual.getPhoneNumbers(), PhoneNumber::getType)),
+        () -> assertAll("Verify User phone numbers",
+            getMultivaluedAttrAssertions(expected.getPhoneNumbers(), actual.getPhoneNumbers(), PhoneNumber::getType)),
         () -> assertAll("Verify User ims", getMultivaluedAttrAssertions(expected.getIms(), actual.getIms(), Im::getType)),
-        () -> assertAll("Verify User entitlements", getMultivaluedAttrAssertions(expected.getEntitlements(), actual.getEntitlements(), Entitlement::getType)),
-        () -> assertAll("Verify User x509Certificates", getMultivaluedAttrAssertions(expected.getX509Certificates(), actual.getX509Certificates(), X509Certificate::getType)),
+        () -> assertAll("Verify User entitlements",
+            getMultivaluedAttrAssertions(expected.getEntitlements(), actual.getEntitlements(), Entitlement::getType)),
+        () -> assertAll("Verify User x509Certificates",
+            getMultivaluedAttrAssertions(expected.getX509Certificates(), actual.getX509Certificates(), X509Certificate::getType)),
         () -> assertTrue(areAddressesPresent(expected.getAddresses(), actual.getAddresses()), "Verify User addresses")
     );
+    // @formatter:on
   }
 
-  private Collection<Executable> getAllUserEnterpriseAttributeAssertions(User expected, User actual) {
+  private Collection<Executable> getAllUserEnterpriseAttributeAssertions(final User expected, final User actual) {
     Map<String, Extension> expectedExtensions = expected.getExtensions();
     Map<String, Extension> actualExtensions = actual.getExtensions();
 
-    if(!Stream.of(expectedExtensions, actualExtensions).allMatch(extension -> extension.containsKey(ENTERPRISE_URN))) {
+    if (!Stream.of(expectedExtensions, actualExtensions).allMatch(extension -> extension.containsKey(ENTERPRISE_URN))) {
       return Collections.emptyList();
     }
 
     EnterpriseExtension expectedEnterpriseExtension = (EnterpriseExtension) expectedExtensions.get(ENTERPRISE_URN);
     EnterpriseExtension actualEnterpriseExtension = (EnterpriseExtension) actualExtensions.get(ENTERPRISE_URN);
 
+    // @formatter:off
     return Arrays.asList(
         () -> assertEquals(expectedEnterpriseExtension.getCostCenter(), actualEnterpriseExtension.getCostCenter(), "Verify 'costCenter' attribute"),
         () -> assertEquals(expectedEnterpriseExtension.getDepartment(), actualEnterpriseExtension.getDepartment(), "Verify 'department' attribute"),
         () -> assertEquals(expectedEnterpriseExtension.getDivision(), actualEnterpriseExtension.getDivision(), "Verify 'division' attribute"),
-        () -> assertEquals(expectedEnterpriseExtension.getEmployeeNumber(), actualEnterpriseExtension.getEmployeeNumber(), "Verify 'employeeNumber' attribute"),
-        () -> assertEquals(expectedEnterpriseExtension.getOrganization(), actualEnterpriseExtension.getOrganization(), "Verify 'organization' attribute"),
+        () -> assertEquals(expectedEnterpriseExtension.getEmployeeNumber(), actualEnterpriseExtension.getEmployeeNumber(),
+            "Verify 'employeeNumber' attribute"),
+        () -> assertEquals(expectedEnterpriseExtension.getOrganization(), actualEnterpriseExtension.getOrganization(),
+            "Verify 'organization' attribute"),
         () -> assertAll("Verify manager", getManagerAssertions(expectedEnterpriseExtension.getManager(), actualEnterpriseExtension.getManager()))
     );
+    // @formatter:on
   }
 
-  private Collection<Executable> getManagerAssertions(Manager expected, Manager actual) {
-    if(expected == null) {
+  private Collection<Executable> getManagerAssertions(final Manager expected, final Manager actual) {
+    if (expected == null) {
       return Collections.emptyList();
     }
     return Collections.singletonList(() -> assertEquals(expected.getValue(), actual.getValue(), "Verify manager 'value' attribute"));
   }
 
-  private <T extends MultiValuedAttribute, S extends MultiValuedAttributeType> Collection<Executable> getMultivaluedAttrAssertions(Collection<T> expectedCollection,
-      Collection<T> actualCollection, Function<T, S> attributeTypeRetriever) {
+  private <T extends MultiValuedAttribute, S extends MultiValuedAttributeType> Collection<Executable> getMultivaluedAttrAssertions(
+      final Collection<T> expectedCollection, final Collection<T> actualCollection, final Function<T, S> attributeTypeRetriever) {
 
-    Collection<Executable> executables = expectedCollection.stream().map(
-        mattr -> (Executable) () -> assertAll("Verify assertions for current multivalue attribute: " + mattr.getClass().getSimpleName(),
-            () -> assertTrue(actualCollection.stream().map(MultiValuedAttribute::getValue).anyMatch(mattr.getValue()::equals), "Verify multivalued attribute exist"),
+    // @formatter:off
+    Collection<Executable> executables = expectedCollection.stream()
+        .map(mattr -> (Executable) () -> assertAll("Verify assertions for current multivalue attribute: " + mattr.getClass().getSimpleName(),
+            () -> assertTrue(actualCollection.stream().map(MultiValuedAttribute::getValue).anyMatch(mattr.getValue()::equals),
+                "Verify multivalued attribute exist"),
             () -> {
-              T currentActualAttribute = actualCollection.stream()
-                  .filter(currentAttr -> mattr.getValue().equals(currentAttr.getValue()))
-                  .findFirst()
+              T currentActualAttribute = actualCollection.stream().filter(currentAttr -> mattr.getValue().equals(currentAttr.getValue())).findFirst()
                   .orElseThrow(() -> new RuntimeException("Multivalued attribute was not found"));
 
               assertAll(String.format("Verify Multivalued attribute - %s, sub-attributes", currentActualAttribute.getClass().getSimpleName()),
-                  getMultivaluedAttrAssertions(mattr, attributeTypeRetriever.apply(mattr), currentActualAttribute, attributeTypeRetriever.apply(currentActualAttribute)));
-            })
-    ).collect(Collectors.toList());
+                  getMultivaluedAttrAssertions(mattr, attributeTypeRetriever.apply(mattr), currentActualAttribute,
+                      attributeTypeRetriever.apply(currentActualAttribute)));
+            }))
+        .collect(Collectors.toList());
 
-    return Arrays.asList(
-        () -> assertEquals(expectedCollection.size(), actualCollection.size()),
-        () -> assertAll("Verify multivalued attribute existence", executables)
-    );
+    return Arrays.asList(() -> assertEquals(expectedCollection.size(), actualCollection.size()),
+        () -> assertAll("Verify multivalued attribute existence", executables));
+    // @formatter:on
   }
 
-  private Collection<Executable> getMultipleUsersAssertions(Collection<User> expectedUsers, Collection<User> actualUsers,
-      BiFunction<User, User, Collection<Executable>> singleUserAssertions) {
+  private Collection<Executable> getMultipleUsersAssertions(final Collection<User> expectedUsers, final Collection<User> actualUsers,
+      final BiFunction<User, User, Collection<Executable>> singleUserAssertions) {
+    // @formatter:off
     return expectedUsers.stream()
         .map(createdUser -> (Executable) () -> assertAll("Verify assertions for current '" + createdUser.getUserName() + "' user",
-            () -> assertTrue(isUserExistInCollection(createdUser, actualUsers), "Verify existence in GET Users response"),
-            () -> {
-              User fetchedUser = actualUsers.stream()
-                  .filter(currentUser -> createdUser.getId().equals(currentUser.getId()))
-                  .findFirst()
+            () -> assertTrue(isUserExistInCollection(createdUser, actualUsers), "Verify existence in GET Users response"), () -> {
+              User fetchedUser = actualUsers.stream().filter(currentUser -> createdUser.getId().equals(currentUser.getId())).findFirst()
                   .orElseThrow(() -> new RuntimeException("User was not found"));
 
               assertAll(singleUserAssertions.apply(createdUser, fetchedUser));
-            })
-        ).collect(Collectors.toList());
+            }))
+        .collect(Collectors.toList());
+    // @formatter:on
   }
 
-  private boolean isUserExistInCollection(User user, Collection<User> userCollection) {
+  private boolean isUserExistInCollection(final User user, final Collection<User> userCollection) {
     return userCollection.stream().map(User::getId).anyMatch(user.getId()::equals);
   }
 
-  private boolean areAddressesPresent(Collection<Address> expected, Collection<Address> actual) {
+  private boolean areAddressesPresent(final Collection<Address> expected, final Collection<Address> actual) {
     return expected.size() == actual.size() && expected.stream().allMatch(address -> actual.stream().anyMatch(address::equals));
   }
 
-  private Collection<Executable> getMultivaluedAttrAssertions(MultiValuedAttribute expected, MultiValuedAttributeType expectedType,
-      MultiValuedAttribute actual, MultiValuedAttributeType actualType) {
-    return Arrays.asList(
-        () -> assertEquals(expected.getDisplay(), actual.getDisplay(), "Verify 'display' attribute"),
+  private Collection<Executable> getMultivaluedAttrAssertions(final MultiValuedAttribute expected, final MultiValuedAttributeType expectedType,
+      final MultiValuedAttribute actual, final MultiValuedAttributeType actualType) {
+
+    // @formatter:off
+    return Arrays.asList(() -> assertEquals(expected.getDisplay(), actual.getDisplay(), "Verify 'display' attribute"),
         () -> assertEquals(expected.isPrimary(), actual.isPrimary(), "Verify 'primary' attribute"),
         () -> assertEquals(expected.getValue(), actual.getValue(), "Verify 'value' attribute"),
         () -> assertEquals(expectedType.getValue(), actualType.getValue(), "Verify 'type' attribute")
     );
+    // @formatter:on
   }
 
-  private Collection<Executable> getCommonUsedAttributeAssertions(User expected, User actual) {
-    return Arrays.asList(
-        () -> assertEquals(expected.getUserName(), actual.getUserName(), "Verify 'userName' attribute"),
+  private Collection<Executable> getCommonUsedAttributeAssertions(final User expected, final User actual) {
+    // @formatter:off
+    return Arrays.asList(() -> assertEquals(expected.getUserName(), actual.getUserName(), "Verify 'userName' attribute"),
         () -> assertAll("Verify 'name' attribute", getNameAssertions(expected.getName(), actual.getName())),
         () -> assertEquals(expected.getNickName(), actual.getNickName(), "Verify 'nickName' attribute"),
         () -> assertTrue(actual.isActive() != null && actual.isActive(), "Verify 'active' attribute"),
         () -> getMetaAssertions(actual, User.RESOURCE_TYPE_USER),
         () -> assertTrue(actual.getMeta().getLocation().endsWith(constructResourceLocation(actual)), "Verify 'meta.location' attribute")
     );
+    // @formatter:on
   }
 
-  private Collection<Executable> getRequiredAttributeAssertions(User expectedUser, User actualUser) {
-    return Arrays.asList(
-        () -> assertEquals(expectedUser.getUserName(), actualUser.getUserName(), "Verify userName is assigned"),
-        () -> assertNotNull(actualUser.getId(), "Verify Id is provided by the server"),
-        getMetaAssertions(actualUser, User.RESOURCE_TYPE_USER)
-    );
+  private Collection<Executable> getRequiredAttributeAssertions(final User expectedUser, final User actualUser) {
+    return Arrays.asList(() -> assertEquals(expectedUser.getUserName(), actualUser.getUserName(), "Verify userName is assigned"),
+        () -> assertNotNull(actualUser.getId(), "Verify Id is provided by the server"), getMetaAssertions(actualUser, User.RESOURCE_TYPE_USER));
   }
 
-  private List<User> createMultipleUsers(String commonUserNamePart, int count) {
-    return IntStream.rangeClosed(1, count)
-        .mapToObj(number -> commonUserNamePart + number)
-        .peek(currentDisplayName -> logger.info("Creating User -{}-", currentDisplayName))
-        .map(TestData::buildTestUser)
-        .map(userFailSafeClient::create)
-        .collect(Collectors.toList());
+  private List<User> createMultipleUsers(final String commonUserNamePart, final int count) {
+    return IntStream.rangeClosed(1, count).mapToObj(number -> commonUserNamePart + number)
+        .peek(currentDisplayName -> logger.info("Creating User -{}-", currentDisplayName)).map(TestData::buildTestUser)
+        .map(userFailSafeClient::create).collect(Collectors.toList());
   }
 }

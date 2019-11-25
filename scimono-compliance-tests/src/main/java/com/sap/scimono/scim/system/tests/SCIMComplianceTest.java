@@ -10,37 +10,6 @@
 
 package com.sap.scimono.scim.system.tests;
 
-import com.sap.scimono.client.GroupRequest;
-import com.sap.scimono.client.SCIMClientService;
-import com.sap.scimono.client.SCIMResponse;
-import com.sap.scimono.client.SchemaRequest;
-import com.sap.scimono.client.UserRequest;
-import com.sap.scimono.client.authentication.OauthCredentials;
-import com.sap.scimono.client.authentication.OauthDeviceIdAuthenticator;
-import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
-import com.sap.scimono.client.authentication.TargetSystemBasicAuthenticator;
-import com.sap.scimono.entity.Group;
-import com.sap.scimono.entity.Meta;
-import com.sap.scimono.entity.Resource;
-import com.sap.scimono.entity.User;
-import com.sap.scimono.scim.system.tests.util.ClientJacksonResolver;
-import com.sap.scimono.scim.system.tests.util.TestReporter;
-import org.glassfish.jersey.client.HttpUrlConnectorProvider;
-import org.glassfish.jersey.logging.LoggingFeature;
-import org.glassfish.jersey.test.TestProperties;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.junit.jupiter.api.function.Executable;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 import static com.sap.scimono.client.authentication.OauthAuthenticatorFactory.clientCredentialsGrantAuthenticator;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.AUTH_TYPE;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_PASSWORD;
@@ -57,13 +26,56 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+
+import org.glassfish.jersey.client.HttpUrlConnectorProvider;
+import org.glassfish.jersey.logging.LoggingFeature;
+import org.glassfish.jersey.test.TestProperties;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.function.Executable;
+
+import com.sap.scimono.client.GroupRequest;
+import com.sap.scimono.client.SCIMClientService;
+import com.sap.scimono.client.SCIMResponse;
+import com.sap.scimono.client.SchemaRequest;
+import com.sap.scimono.client.UserRequest;
+import com.sap.scimono.client.authentication.OauthCredentials;
+import com.sap.scimono.client.authentication.OauthDeviceIdAuthenticator;
+import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
+import com.sap.scimono.client.authentication.TargetSystemBasicAuthenticator;
+import com.sap.scimono.entity.Group;
+import com.sap.scimono.entity.Meta;
+import com.sap.scimono.entity.Resource;
+import com.sap.scimono.entity.User;
+import com.sap.scimono.scim.system.tests.util.ClientJacksonResolver;
+import com.sap.scimono.scim.system.tests.util.TestReporter;
+
 @ExtendWith(TestReporter.class)
 public abstract class SCIMComplianceTest {
   private static final Logger logger = Logger.getLogger(SCIMComplianceTest.class.getName());
 
+  private static TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator;
+
   protected final UserRequest userRequest;
   protected final GroupRequest groupRequest;
   protected final SchemaRequest schemaRequest;
+
+  static {
+    if ("Basic".equalsIgnoreCase(AUTH_TYPE)) {
+      targetSystemAuthenticator = TargetSystemBasicAuthenticator.create(BASIC_AUTH_USER, BASIC_AUTH_PASSWORD);
+    } else if ("Oauth".equalsIgnoreCase(AUTH_TYPE)) {
+      targetSystemAuthenticator = getOauthAuthenticatorBuilder();
+    }
+  }
 
   protected SCIMComplianceTest() {
     SCIMClientService scimClientService = configureScimClientService(SERVICE_URL);
@@ -72,7 +84,7 @@ public abstract class SCIMComplianceTest {
     schemaRequest = scimClientService.buildSchemaRequest();
   }
 
-  public static SCIMClientService configureScimClientService(String serviceUrl) {
+  public static SCIMClientService configureScimClientService(final String serviceUrl) {
     // @formatter:off
     SCIMClientService.Builder clientServiceBuilder = SCIMClientService
         .builder(serviceUrl)
@@ -84,14 +96,11 @@ public abstract class SCIMComplianceTest {
         .addResolver(new ClientJacksonResolver());
     // @formatter:on
 
-    if("Basic".equalsIgnoreCase(AUTH_TYPE)) {
-      clientServiceBuilder.addAuthenticator(TargetSystemBasicAuthenticator.create(BASIC_AUTH_USER, BASIC_AUTH_PASSWORD));
-    } else if ("Oauth".equalsIgnoreCase(AUTH_TYPE)) {
-      clientServiceBuilder.addAuthenticator(getOauthAuthenticatorBuilder());
-    }
+    clientServiceBuilder.addAuthenticator(targetSystemAuthenticator);
 
     return clientServiceBuilder.build();
   }
+
   private static Client getOauthClient() {
     LoggingFeature loggingFeature = new LoggingFeature(logger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null);
 
@@ -108,7 +117,7 @@ public abstract class SCIMComplianceTest {
     return fetchedGroups.stream().anyMatch(group -> group.getId().equals(groupId));
   }
 
-  protected Executable getMetaAssertions(Resource<?> resource, String resourceType) {
+  protected Executable getMetaAssertions(final Resource<?> resource, final String resourceType) {
     // @formatter:off
     Meta meta = resource.getMeta();
 
@@ -123,7 +132,7 @@ public abstract class SCIMComplianceTest {
     );
   }
 
-  protected Collection<Executable> getResponseStatusAssertions(SCIMResponse<?> scimResponse, boolean expectedToBeSuccess, Response.Status expectedStatus) {
+  protected Collection<Executable> getResponseStatusAssertions(final SCIMResponse<?> scimResponse, final boolean expectedToBeSuccess, final Response.Status expectedStatus) {
     Executable responseExecutionAssertion = expectedToBeSuccess ?
         () -> assertTrue(scimResponse.isSuccess(), "Verify response is successful"):
         () -> assertFalse(scimResponse.isSuccess(), "Verify response is failure");

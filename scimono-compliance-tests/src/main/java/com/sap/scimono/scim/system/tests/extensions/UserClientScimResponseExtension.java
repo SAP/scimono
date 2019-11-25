@@ -25,11 +25,11 @@ public abstract class UserClientScimResponseExtension implements BeforeEachCallb
 
   private final Map<String, User> managedResources = new HashMap<>();
   private final UserRequest userRequest;
-  private final UserFailsSafeClient userFailsSafeClient;
+  private final UserFailSafeClient userFailsSafeClient;
 
   public UserClientScimResponseExtension(UserRequest userRequest) {
     this.userRequest = userRequest;
-    this.userFailsSafeClient = new UserFailsSafeClient(this);
+    this.userFailsSafeClient = new UserFailSafeClient(this);
   }
 
   public void after(ExtensionContext extensionContext) {
@@ -46,7 +46,7 @@ public abstract class UserClientScimResponseExtension implements BeforeEachCallb
     managedResources.clear();
   }
 
-  public UserFailsSafeClient getFailSafeClient() {
+  public UserFailSafeClient getFailSafeClient() {
     return userFailsSafeClient;
   }
 

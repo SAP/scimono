@@ -13,7 +13,7 @@ import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
-import com.sap.scimono.scim.system.tests.extensions.UserFailsSafeClient;
+import com.sap.scimono.scim.system.tests.extensions.UserFailSafeClient;
 import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import org.junit.jupiter.api.DisplayName;
@@ -47,7 +47,7 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   @RegisterExtension 
   UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);
   
-  private final UserFailsSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
+  private final UserFailSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
 
   @Test
   @DisplayName("Test Get user and verify Http status code: 200")

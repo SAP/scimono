@@ -1,14 +1,15 @@
+
 package com.sap.scimono.scim.system.tests.extensions;
+
+import static org.junit.jupiter.api.Assertions.fail;
+
+import java.util.List;
 
 import com.sap.scimono.client.SCIMResponse;
 import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
-
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.fail;
 
 public interface ResourceFailSafeClient<T extends Resource<T>> {
   T create(final T resource);
@@ -37,8 +38,8 @@ public interface ResourceFailSafeClient<T extends Resource<T>> {
 
   PagedByIdentitySearchResult<T> getByFilteredAndPagedById(final String startId, final int count, final String filter);
 
-  default <T> T verifyAndGetResponse(SCIMResponse<T> scimResponse) {
-    if(!scimResponse.isSuccess()) {
+  default <T> T verifyAndGetResponse(final SCIMResponse<T> scimResponse) {
+    if (!scimResponse.isSuccess()) {
       fail("Scim request executed and unexpected response received: " + scimResponse.getError().asUnknownException());
     }
 

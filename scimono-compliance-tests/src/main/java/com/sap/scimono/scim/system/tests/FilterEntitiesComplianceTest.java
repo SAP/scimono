@@ -12,7 +12,7 @@ import com.sap.scimono.scim.system.tests.extensions.GroupFailSafeClient;
 import com.sap.scimono.scim.system.tests.extensions.SchemaClientScimResponseExtension;
 import com.sap.scimono.scim.system.tests.extensions.SchemaFailSafeClient;
 import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
-import com.sap.scimono.scim.system.tests.extensions.UserFailsSafeClient;
+import com.sap.scimono.scim.system.tests.extensions.UserFailSafeClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
 import com.sap.scimono.scim.system.tests.util.TestProperties;
 import org.junit.jupiter.api.BeforeAll;
@@ -90,11 +90,11 @@ public class FilterEntitiesComplianceTest extends SCIMComplianceTest {
   @RegisterExtension
   GroupClientScimResponseExtension resourceAwareGroupRequest = GroupClientScimResponseExtension.forClearingAfterEachExecutions(groupRequest);
 
-  private static final UserFailsSafeClient clearAfterAllUserFailSafeClient = clearAfterAllUserRequest.getFailSafeClient();
+  private static final UserFailSafeClient clearAfterAllUserFailSafeClient = clearAfterAllUserRequest.getFailSafeClient();
   private static final GroupFailSafeClient clearAfterAllGroupFailSafeClient = clearAfterAllGroupRequest.getFailSafeClient();
   private static final SchemaFailSafeClient clearAfterAllSchemaFailSafeClient = clearAfterAllSchemaRequest.getFailSafeClient();
 
-  private final UserFailsSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
+  private final UserFailSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
   private final GroupFailSafeClient groupFailSafeClient = resourceAwareGroupRequest.getFailSafeClient();
 
   @BeforeAll
