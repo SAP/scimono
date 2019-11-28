@@ -8,6 +8,7 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
+import com.sap.scimono.scim.system.tests.conditions.EnableOnGroupsBackendState;
 import com.sap.scimono.scim.system.tests.extensions.GroupClientScimResponseExtension;
 import com.sap.scimono.scim.system.tests.extensions.GroupFailSafeClient;
 import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
@@ -24,6 +25,7 @@ import java.util.HashSet;
 import java.util.UUID;
 
 import static com.sap.scimono.entity.definition.CoreGroupAttributes.DISPLAY_NAME;
+import static com.sap.scimono.scim.system.tests.conditions.BackendState.WITH_INITIAL_EXISTING_RESOURCES;
 import static com.sap.scimono.scim.system.tests.util.TestData.JACKSON_NODE_FACTORY;
 import static com.sap.scimono.scim.system.tests.util.TestData.buildGroup;
 import static com.sap.scimono.scim.system.tests.util.TestData.buildTestUser;
@@ -50,12 +52,26 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
   private final UserFailSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
 
   @Test
-  @DisplayName("Test Get group and verify Http status code: 200")
-  public void testGetGroup200() {
+  @DisplayName("Test Create and Get group and verify Http status code: 200")
+  public void testCreateAndGetGroup200() {
     SCIMResponse<Group> scimResponse = createGroupAndVerifySuccessfulResponse("testGetGroupHTTPResponse");
 
     logger.info("Fetching Group: testGetGroupHTTPResponse");
     scimResponse = resourceAwareGroupRequest.readSingleGroup(scimResponse.get().getId());
+    assertTrue(scimResponse.isSuccess());
+
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, true, OK));
+  }
+
+  @Test
+  @DisplayName("Test Get group and verify Http status code: 200")
+  @EnableOnGroupsBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetGroup200() {
+    SCIMResponse<PagedByIndexSearchResult<Group>> readGroupsResponse = getMultipleGroupsAndVerifySuccessfulResponse();
+    Group group = readGroupsResponse.get().getResources().stream().findFirst().orElseThrow(IllegalStateException::new);
+
+    logger.info("Fetching Group: testGetGroupHTTPResponse");
+    SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.readSingleGroup(group.getId());
     assertTrue(scimResponse.isSuccess());
 
     assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, true, OK));
@@ -467,5 +483,13 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
     assertAll("Verify Create Group Response", getResponseStatusAssertions(scimResponse, true, CREATED));
 
     return scimResponse;
+  }
+
+  private SCIMResponse<PagedByIndexSearchResult<Group>> getMultipleGroupsAndVerifySuccessfulResponse() {
+    logger.info("Fetching multiple Groups");
+    SCIMResponse<PagedByIndexSearchResult<Group>> readGroupsResponse = resourceAwareGroupRequest.readMultipleGroupsWithoutPaging();
+    assertAll("Verify GET Multiple Groups Response", getResponseStatusAssertions(readGroupsResponse, true, OK));
+
+    return readGroupsResponse;
   }
 }

@@ -43,7 +43,6 @@ import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest {
   private static final Logger logger = LoggerFactory.getLogger(UserOperationsHttpResponseCodeTest.class);
@@ -597,7 +596,7 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   private SCIMResponse<PagedByIndexSearchResult<User>> getMultipleUsersAndVerifySuccessfulResponse() {
     logger.info("Fetching multiple Users");
     SCIMResponse<PagedByIndexSearchResult<User>> readUsersResponse = resourceAwareUserRequest.readMultipleUsersWithoutPaging();
-    assertAll("Verify GET Multiple Users Response", getResponseStatusAssertions(readUsersResponse, true, CREATED));
+    assertAll("Verify GET Multiple Users Response", getResponseStatusAssertions(readUsersResponse, true, OK));
 
     return readUsersResponse;
   }

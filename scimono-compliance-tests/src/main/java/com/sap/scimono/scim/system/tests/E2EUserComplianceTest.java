@@ -571,7 +571,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users with Index paging and count=0")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersTotalCountWithStartIndexAndZeroCount() {
     int startIndex = 1;
 
@@ -628,12 +627,17 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users with Id paging and count=0")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersTotalCountWithStartId() {
+    createMultipleUsers("testGetUsersWithStarIdEqualTotalResults", 3);
+    testGetUsersTotalCountWithStartId();
+  }
+
+  @Test
+  @DisplayName("Test Get users with Id paging and count=0")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersTotalCountWithStartId() {
     String startId = PAGINATION_BY_ID_START_PARAM;
     int count = 0;
-
-    createMultipleUsers("testGetUsersWithStarIdEqualTotalResults", 3);
 
     logger.info("Fetching Users with startId: {} and count: {}", startId, count);
     PagedByIdentitySearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedById(startId, count);
@@ -652,7 +656,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users with index paging and negative count")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersNegativeCountAndStartIndex() {
     createMultipleUsers("testGetUsersNegativeCountAndStartIndex", 3);
     testGetUsersNegativeCountAndStartIndex(1, -10);
@@ -666,13 +669,18 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
+  @DisplayName("Test Create and Get users with Id paging and negative count")
+  public void testCreateAndGetUsersNegativeCountAndStartId() {
+    createMultipleUsers("testCreateAndGetUsersNegativeCountAndStartId", 3);
+    testGetUsersNegativeCountAndStartId();
+  }
+
+  @Test
   @DisplayName("Test Get users with Id paging and negative count")
-  @EnableOnUsersBackendState(state = EMPTY)
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersNegativeCountAndStartId() {
     String startId = PAGINATION_BY_ID_START_PARAM;
     int count = -10;
-
-    createMultipleUsers("testGetUsersNegativeCountAndStartIndex", 3);
 
     logger.info("Fetching Users with startId: {} and count: {}", startId, count);
     PagedByIdentitySearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedById(startId, count);
@@ -690,7 +698,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users with default startIndex")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersDefaultStartIndex() {
     createMultipleUsers("testCreateAndGetUsersDefaultStartIndex", 3);
     testGetUsersDefaultStartIndex(1);
@@ -705,6 +712,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get users with default count")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersDefaultCountWithStartIndex() {
     int startIndex = 1;
 
@@ -725,7 +733,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users with default count")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersDefaultCountWithStartIndex() {
     createMultipleUsers("testGetUsersDefaultCountWithStartIndex", 3);
     testGetUsersDefaultCountWithStartIndex();
@@ -733,10 +740,16 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create And Get users with default count and Id paging")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersDefaultCountWithStartId() {
-    String startId = PAGINATION_BY_ID_START_PARAM;
     createMultipleUsers("testCreateAndGetUsersDefaultCountWithStartId", 6);
+    testGetUsersDefaultCountWithStartId();
+  }
+
+  @Test
+  @DisplayName("Test Get users with default count and Id paging")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersDefaultCountWithStartId() {
+    String startId = PAGINATION_BY_ID_START_PARAM;
 
     logger.info("Fetching Multiple Users with startId: {}, and default count", startId);
     SCIMResponse<PagedByIdentitySearchResult<User>> pagedUsersResponse = resourceAwareUserRequest
@@ -766,7 +779,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create And Get users with Id paging and startId=end")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersPagingStartIdEqEnd() {
     createMultipleUsers("testCreateAndGetUsersPagingStartIdEqEnd", 10);
     testGetUsersPagingStartIdEqEnd();
@@ -796,7 +808,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users with Id paging and startId in upper case")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersPagingStartIdWithUpperCase() {
     createMultipleUsers("testCreateAndGetUsersPagingStartIdWithUpperCase", 6);
     testGetUsersPagingStartIdWithUpperCase();
@@ -821,7 +832,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertAll("Verify first GET Users response",
         () -> assertTrue(firstPagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(firstPagedUsersResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
-        () -> assertEquals(user.getId(), firstPagedUsersResult.getStartId(), "Verify 'startId'")
+        () -> assertEquals(user.getId().toLowerCase(), firstPagedUsersResult.getStartId().toLowerCase(), "Verify 'startId'")
     );
     // @formatter:on
   }
@@ -869,7 +880,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users all pages with index paging")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersSeveralPagesUsingIndex() {
     createMultipleUsers("testCreateAndGetUsersSeveralPagesUsingIndex", 10);
     testGetUsersSeveralPagesUsingIndex();
@@ -917,7 +927,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create And Get users all pages with Id paging")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetUsersSeveralPagesUsingId() {
     createMultipleUsers("testCreateAndGetUsersSeveralPagesUsingId", 10);
     testGetUsersSeveralPagesUsingId();
@@ -925,7 +934,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users with userName filter")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateAndGetPagedUsersWithFiltering() {
     String testUserName = "pagedUserTest";
     logger.info("Creating User: {}", testUserName);
@@ -935,6 +943,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get users with userName filter")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetPagedUsersWithFiltering() {
     logger.info("Fetching all Users without paging");
     PagedByIndexSearchResult<User> usersFetchedWithoutPaging = userFailSafeClient.getAllWithoutPaging();
@@ -945,7 +954,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Create and Get users with userName filter and id paging")
-  @EnableOnUsersBackendState(state = EMPTY)
   public void testCreateGetFilteredPagedByIdUsersTotalCount() {
     createMultipleUsers("testGetFilteredPagedByIdUsersTotalCount", 3);
 
@@ -983,6 +991,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get users with userName filter and index paging")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetFilteredPagedByIndexUsersTotalCount() {
     logger.info("Fetching multiple users without paging");
     PagedByIndexSearchResult<User> userFetchedWithoutPaging = userFailSafeClient.getAllWithoutPaging();

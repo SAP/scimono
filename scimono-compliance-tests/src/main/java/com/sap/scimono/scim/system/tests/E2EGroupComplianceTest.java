@@ -106,6 +106,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
   }
 
   @TestFactory
+  @EnableOnGroupsBackendState(state = EMPTY)
   public Collection<DynamicTest> testCreateAndGetMultipleGroups() {
     int createdGroupsCount = 3;
     String commonGroupDisplayName = "testCreateAndGetMultipleGroups";
@@ -822,9 +823,9 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     assertAll(
         getResourcesWithStartIndexEqualTotalResultsAssertions(groupsCount, readCount, groupsPage),
         () -> {
-          String firstUserIdFromGetResponse = groupsPage.getResources().get(0).getId();
-          assertTrue(createdGroups.stream().map(Group::getId).anyMatch(firstUserIdFromGetResponse::equals),
-              "Verify fetched user is part of previously created Users");
+          String firstGroupIdFromGetResponse = groupsPage.getResources().get(0).getId();
+          assertTrue(createdGroups.stream().map(Group::getId).anyMatch(firstGroupIdFromGetResponse::equals),
+              "Verify fetched group is part of previously created Groups");
         });
     // @formatter:on
   }
@@ -840,9 +841,9 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     int startIndex = groupsWithoutPaging.getTotalResults();
 
     logger.info("Fetching Groups with startIndex: {} and count: {}", startIndex, readCount);
-    PagedByIndexSearchResult<Group> usersPage = groupFailSafeClient.getPagedByIndex(startIndex, readCount);
+    PagedByIndexSearchResult<Group> groupsPage = groupFailSafeClient.getPagedByIndex(startIndex, readCount);
 
-    assertAll(getResourcesWithStartIndexEqualTotalResultsAssertions(startIndex, readCount, usersPage));
+    assertAll(getResourcesWithStartIndexEqualTotalResultsAssertions(startIndex, readCount, groupsPage));
   }
 
   @Test
@@ -860,7 +861,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     // @formatter:off
     assertAll("Verify Correct ListResponse values",
         () -> assertEquals(startIndex, groupsPage.getStartIndex(), "Verify 'startIndex"),
-        () -> assertEquals(alreadyCreatedGroups, groupsPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
+        () -> assertEquals(alreadyCreatedGroups, groupsPage.getTotalResults(), "Verify 'totalResults' is equal to created Groups"),
         () -> assertTrue(groupsPage.getItemsPerPage() <= readCount, "Verify 'count' is equal or less to 'itemsPerPage'"),
         () -> assertTrue(groupsPage.getResources().isEmpty(), "Verify 'Resources' list size is empty'"));
     // @formatter:on
@@ -874,9 +875,38 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
+  @DisplayName("Test Create and Get groups with Id paging and negative count")
+  @EnableOnGroupsBackendState(state = EMPTY)
+  public void testCreateAndGetGroupsNegativeCountAndStartId() {
+    createMultipleGroups("testCreateAndGetGroupsNegativeCountAndStartId", 3);
+    testGetGroupsNegativeCountAndStartId();
+  }
+
+  @Test
+  @DisplayName("Test Get groups with Id paging and negative count")
+  @EnableOnGroupsBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetGroupsNegativeCountAndStartId() {
+    String startId = PAGINATION_BY_ID_START_PARAM;
+    int count = -10;
+
+    logger.info("Fetching Groups with startId: {} and count: {}", startId, count);
+    PagedByIdentitySearchResult<Group> getPagedGroupsSearchResult = groupFailSafeClient.getPagedById(startId, count);
+
+    // @formatter:off
+    assertAll("Verify List Response",
+        () -> assertEquals(startId, getPagedGroupsSearchResult.getStartId(), "Verify 'startId'"),
+        () -> assertTrue(0 <= getPagedGroupsSearchResult.getItemsPerPage(), "Verify 'ItemsPerPage' is greater or equal to 0"),
+        () -> assertTrue(getPagedGroupsSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
+        () -> assertTrue(getPagedGroupsSearchResult.getResources().size() <= getPagedGroupsSearchResult.getItemsPerPage(),
+            "Verify 'Resources' list size is less than or equal to 'itemsPerPage''")
+    );
+    // @formatter:on
+  }
+
+  @Test
   @DisplayName("Test Get groups with default startIndex")
   @EnableOnGroupsBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
-  private void testGetGroupsDefaultStartIndex() {
+  public void testGetGroupsDefaultStartIndex() {
     // @formatter:off
     int count = 1;
     PagedByIndexSearchResult<Group> getPagedGroupsSearchResult = CustomTargetSystemRestClient.INSTANCE
@@ -891,7 +921,6 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     );
     // @formatter:on
   }
-
 
   @Test
   @DisplayName("Test Create and Get groups with default count")
@@ -1011,7 +1040,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     assertAll("Verify first GET Groups response",
         () -> assertTrue(firstPagedGroupsResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(firstPagedGroupsResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
-        () -> assertEquals(group.getId(), firstPagedGroupsResult.getStartId(), "Verify 'startId'")
+        () -> assertEquals(group.getId().toLowerCase(), firstPagedGroupsResult.getStartId().toLowerCase(), "Verify 'startId'")
     );
     // @formatter:on
   }
@@ -1109,7 +1138,7 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     List<String> allGroupsIds = extractGroupIds(allGroups);
 
     groupIdsFromAllPages.removeAll(allGroupsIds);
-    assertEquals(0, groupIdsFromAllPages.size(), "Verify paged Groups are same sa All users");
+    assertEquals(0, groupIdsFromAllPages.size(), "Verify paged Groups are same sa All groups");
   }
 
   @Test

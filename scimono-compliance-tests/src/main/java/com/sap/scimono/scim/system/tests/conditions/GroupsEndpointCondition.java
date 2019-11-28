@@ -4,6 +4,8 @@ import org.junit.jupiter.api.extension.ConditionEvaluationResult;
 import org.junit.jupiter.api.extension.ExecutionCondition;
 import org.junit.jupiter.api.extension.ExtensionContext;
 
+import java.lang.reflect.AnnotatedElement;
+
 import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
 
 public class GroupsEndpointCondition implements ExecutionCondition {
@@ -12,6 +14,15 @@ public class GroupsEndpointCondition implements ExecutionCondition {
 
   @Override
   public ConditionEvaluationResult evaluateExecutionCondition(ExtensionContext context) {
-    return evaluation.evaluate(new BackendStateConditionalAnnotationResolver(context).getBackendState(), RESOURCE_TYPE_GROUP);
+    return evaluation.evaluate(getBackendState(context), RESOURCE_TYPE_GROUP);
+  }
+
+  private BackendState getBackendState(ExtensionContext extensionContext) {
+    AnnotatedElement annotatedElement = extensionContext.getElement().orElseThrow(IllegalStateException::new);
+    if (!annotatedElement.isAnnotationPresent(EnableOnGroupsBackendState.class)){
+      throw new IllegalStateException();
+    }
+
+    return annotatedElement.getAnnotation(EnableOnGroupsBackendState.class).state();
   }
 }
