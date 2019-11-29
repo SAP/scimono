@@ -107,39 +107,6 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   private final GroupFailSafeClient groupFailSafeClient = resourceAwareGroupRequest.getFailSafeClient();
 
   @Test
-  @DisplayName("Test Create and Get users and verify required attributes are fetchedNonEmptyBackend")
-  public void testCreateGetUsersWithRequiredAttributes() {
-    logger.info("Fetching existing Users");
-    int existingUsersCount = userFailSafeClient.getAllWithoutPaging().getTotalResults();
-
-    logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User1");
-    User firstUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User1").build());
-
-    logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User2");
-    User secondUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User2").build());
-
-    // @formatter:off
-    logger.info("Fetch multiple Users without paging");
-    PagedByIndexSearchResult<User> getUsersResponse = userFailSafeClient.getAllWithoutPaging();
-    assertAll("Verify both users exist in the response",
-        () -> assertEquals(2 + existingUsersCount, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
-        () -> assertTrue(getUsersResponse.getItemsPerPage() >= 2, "Verify 'itemsPerPage' is greater than or equal to: 2"),
-        () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty")
-    );
-
-    if(getUsersResponse.getItemsPerPage() >= getUsersResponse.getTotalResults()) {
-      assertAll("Verify created Users are present in 'Resources' array",
-            getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), getUsersResponse.getResources(), this::getRequiredAttributeAssertions));
-    } else {
-      logger.info("Fetch all Users with index paging");
-      List<User> allUsers = userFailSafeClient.getAllWithIndexPaging();
-
-      assertAll("Verify created Users are present",
-            getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), allUsers, this::getRequiredAttributeAssertions));
-    }
-  }
-
-  @Test
   @DisplayName("Test Get users and verify common attributes are fetchedNonEmptyBackend")
   @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersWithCommonUsedAttributes() {
@@ -606,6 +573,35 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
           String firstUserIdFromGetResponse = usersPage.getResources().get(0).getId();
           assertTrue(createdUsers.stream().map(User::getId).anyMatch(firstUserIdFromGetResponse::equals), "Verify fetched user is part of previously created Users");
         });
+    // @formatter:on
+  }
+
+  @Test
+  @DisplayName("Test Create and Get users with index paging and startIndex out of range (more than total results)")
+  public void testCreateAndGetUsersWithStarIndexOutOfRange() {
+    createMultipleUsers("testCreateAndGetUsersWithStarIndexOutOfRange-User", 3);
+    testGetUsersWithStarIndexOutOfRange();
+  }
+
+  @Test
+  @DisplayName("Test Get users with index paging and startIndex out of range (more than total results)")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersWithStarIndexOutOfRange() {
+    logger.info("Fetching all users");
+    int alreadyCreatedUsers = userFailSafeClient.getAllWithIndexPaging().size();
+
+    int readCount = 100;
+    int startIndex = alreadyCreatedUsers + 1;
+
+    logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, readCount);
+    PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getPagedByIndex(startIndex, readCount);
+
+    // @formatter:off
+    assertAll("Verify Correct ListResponse values",
+        () -> assertEquals(startIndex, usersPage.getStartIndex(), "Verify 'startIndex"),
+        () -> assertEquals(alreadyCreatedUsers, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
+        () -> assertTrue(usersPage.getItemsPerPage() <= readCount, "Verify 'count' is equal or less to 'itemsPerPage'"),
+        () -> assertTrue(usersPage.getResources().isEmpty(), "Verify 'Resources' list size is empty'"));
     // @formatter:on
   }
 

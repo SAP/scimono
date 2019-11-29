@@ -763,12 +763,18 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
+  @DisplayName("Test Create and Get groups with index paging and count=0")
+  public void testCreateAndGetGroupsWithZeroCountAndStartIndex() {
+    createMultipleGroups("testCreateAndGetGroupsWithZeroCountAndStartIndex", 3);
+    testGetGroupsWithZeroCountAndStartIndex();
+  }
+
+  @Test
   @DisplayName("Test Get groups with index paging and count=0")
-  public void testGetGroupsTotalCountWithStartIndex() {
+  @EnableOnGroupsBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetGroupsWithZeroCountAndStartIndex() {
     int startIndex = 1;
     final int count = 0;
-
-    createMultipleGroups("testGetGroupsTotalCountWithStartIndex", 3);
 
     logger.info("Fetching multiple groups with starIndex: {} and count: {}", startIndex, count);
     PagedByIndexSearchResult<Group> getPagedGroupsSearchResult = groupFailSafeClient.getPagedByIndex(startIndex, count);
@@ -783,13 +789,20 @@ public class E2EGroupComplianceTest extends SCIMComplianceTest {
     // @formatter:on
   }
 
+
+  @Test
+  @DisplayName("Test Create and Get groups with Id paging and count=0")
+  public void testCreateGetGroupsWithZeroCountAndStartId() {
+    createMultipleGroups("testCreateGetGroupsWithZeroCountAndStartId", 3);
+    testGetGroupsWithZeroCountAndStartId();
+  }
+
   @Test
   @DisplayName("Test Get groups with Id paging and count=0")
-  public void testGetGroupsTotalCountWithStartId() {
+  @EnableOnGroupsBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetGroupsWithZeroCountAndStartId() {
     String startId = PAGINATION_BY_ID_START_PARAM;
     int count = 0;
-
-    createMultipleGroups("testGetGroupsTotalCountWithStartId", 3);
 
     logger.info("Fetching Groups with startId: {} and count: {}", startId, count);
     PagedByIdentitySearchResult<Group> getPagedGroupsSearchResult = groupFailSafeClient.getPagedById(startId, count);

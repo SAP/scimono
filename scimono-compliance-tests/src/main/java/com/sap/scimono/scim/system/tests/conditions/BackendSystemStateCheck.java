@@ -1,13 +1,3 @@
-/**
- * Copyright (c) 2019 by SAP Labs Bulgaria, url: http://www.sap.com All rights reserved.
- *
- * This software is the confidential and proprietary information of SAP SE, Walldorf. You shall not disclose such Confidential Information and shall
- * use it only in accordance with the terms of the license agreement you entered into with SAP.
- *
- * Created on Nov 6, 2019 by I309486
- *
- */
-
 package com.sap.scimono.scim.system.tests.conditions;
 
 import com.sap.scimono.scim.system.tests.SCIMComplianceTest;
