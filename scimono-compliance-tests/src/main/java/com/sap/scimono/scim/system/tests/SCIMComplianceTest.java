@@ -1,13 +1,3 @@
-/**
- * Copyright (c) 2017 by SAP Labs Bulgaria, url: http://www.sap.com All rights reserved.
- *
- * This software is the confidential and proprietary information of SAP SE, Walldorf. You shall not disclose such Confidential Information and shall
- * use it only in accordance with the terms of the license agreement you entered into with SAP.
- *
- * Created on Mar 17, 2017 by i061675
- *
- */
-
 package com.sap.scimono.scim.system.tests;
 
 import static com.sap.scimono.client.authentication.OauthAuthenticatorFactory.clientCredentialsGrantAuthenticator;
@@ -37,6 +27,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.logging.LoggingFeature;
 import org.glassfish.jersey.test.TestProperties;
@@ -150,5 +141,15 @@ public abstract class SCIMComplianceTest {
     } else {
       return clientCredentialsGrantAuthenticator(getOauthClient(), OAUTH_SERVICE_URL, new OauthCredentials(OAUTH_CLIENT_ID, OAUTH_SECRET));
     }
+  }
+
+  protected Executable getResourcesWithStartIndexEqualTotalResultsAssertions(int startIndex, int readCount, PagedByIndexSearchResult<?> resourcesPage) {
+    // @formatter:off
+    return () -> assertAll("Verify Correct ListResponse values",
+        () -> assertEquals(startIndex, resourcesPage.getStartIndex(), "Verify 'startIndex"),
+        () -> assertEquals(startIndex, resourcesPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
+        () -> assertTrue(resourcesPage.getItemsPerPage() <= readCount, "Verify 'itemsPerPage' is less than or equal to count param: " + readCount),
+        () -> assertEquals(1, resourcesPage.getResources().size(), "Verify 'Resources' list size is equal to 'ItemsPerPage'"));
+    // @formatter:on
   }
 }

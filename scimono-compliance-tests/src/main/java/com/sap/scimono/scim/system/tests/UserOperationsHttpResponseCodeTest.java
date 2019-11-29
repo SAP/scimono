@@ -12,6 +12,7 @@ import com.sap.scimono.entity.definition.CoreUserAttributes;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
+import com.sap.scimono.scim.system.tests.conditions.EnableOnUsersBackendState;
 import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
 import com.sap.scimono.scim.system.tests.extensions.UserFailSafeClient;
 import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
@@ -30,6 +31,8 @@ import java.util.UUID;
 
 import static com.sap.scimono.api.API.USERS;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.DISPLAY_NAME;
+import static com.sap.scimono.scim.system.tests.conditions.BackendState.EMPTY;
+import static com.sap.scimono.scim.system.tests.conditions.BackendState.WITH_INITIAL_EXISTING_RESOURCES;
 import static com.sap.scimono.scim.system.tests.util.TestData.JACKSON_NODE_FACTORY;
 import static com.sap.scimono.scim.system.tests.util.TestData.buildTestUser;
 import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
@@ -50,13 +53,27 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   private final UserFailSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
 
   @Test
-  @DisplayName("Test Get user and verify Http status code: 200")
-  public void testGetUser200() {
-    String testUserName = "testGetUserHTTPResponse";
+  @DisplayName("Test Create and Get user and verify Http status code: 200")
+  @EnableOnUsersBackendState(state = EMPTY)
+  public void testCreateAndGetUser200() {
+    String testUserName = "testCreateAndGetUserHTTPResponse";
     SCIMResponse<User> createUserResponse = createUserAndVerifySuccessfulResponse(testUserName);
 
     logger.info("Fetching user User: {}", testUserName);
     SCIMResponse<User> readUserResponse = resourceAwareUserRequest.readSingleUser(createUserResponse.get().getId());
+
+    assertAll("Verify GET Response", getResponseStatusAssertions(readUserResponse, true, OK));
+  }
+
+  @Test
+  @DisplayName("Test Get user and verify Http status code: 200")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUser200() {
+    SCIMResponse<PagedByIndexSearchResult<User>> readUsersResponse = getMultipleUsersAndVerifySuccessfulResponse();
+    User user = readUsersResponse.get().getResources().stream().findFirst().orElseThrow(IllegalStateException::new);
+
+    logger.info("Fetching user User: {}", user.getUserName());
+    SCIMResponse<User> readUserResponse = resourceAwareUserRequest.readSingleUser(user.getId());
 
     assertAll("Verify GET Response", getResponseStatusAssertions(readUserResponse, true, OK));
   }
@@ -82,8 +99,15 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   @Test
   @DisplayName("Test Get all users and verify Http status code: 200")
   public void testGetAllUsers200() {
-    createUserAndVerifySuccessfulResponse("testGetAllUsersHTTPResponse");
+    logger.info("Fetching multiple Users");
+    SCIMResponse<PagedByIndexSearchResult<User>> readUsersResponse = resourceAwareUserRequest.readMultipleUsersWithoutPaging();
 
+    assertAll("Verify GET Response", getResponseStatusAssertions(readUsersResponse, true, OK));
+  }
+
+  @Test
+  @DisplayName("Test Get all users using index paging and verify Http status code: 200")
+  public void testGetMultipleUsersWithIndexPaging200() {
     logger.info("Fetching multiple Users");
     SCIMResponse<PagedByIndexSearchResult<User>> readUsersResponse = resourceAwareUserRequest.readMultipleUsers();
 
@@ -567,5 +591,13 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
     assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
 
     return scimResponse;
+  }
+
+  private SCIMResponse<PagedByIndexSearchResult<User>> getMultipleUsersAndVerifySuccessfulResponse() {
+    logger.info("Fetching multiple Users");
+    SCIMResponse<PagedByIndexSearchResult<User>> readUsersResponse = resourceAwareUserRequest.readMultipleUsersWithoutPaging();
+    assertAll("Verify GET Multiple Users Response", getResponseStatusAssertions(readUsersResponse, true, OK));
+
+    return readUsersResponse;
   }
 }

@@ -18,6 +18,8 @@ import static com.sap.scimono.entity.EnterpriseExtension.ENTERPRISE_URN;
 import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_START_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
+import static com.sap.scimono.scim.system.tests.conditions.BackendState.EMPTY;
+import static com.sap.scimono.scim.system.tests.conditions.BackendState.WITH_INITIAL_EXISTING_RESOURCES;
 import static com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient.USER_LIST_RESPONSE_TYPE_INDEX_PAGING;
 import static com.sap.scimono.scim.system.tests.util.TestData.buildFullUserRepresentation;
 import static com.sap.scimono.scim.system.tests.util.TestData.buildGroup;
@@ -35,6 +37,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assumptions.assumeFalse;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,12 +47,17 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import com.sap.scimono.entity.MemberRef;
+import com.sap.scimono.scim.system.tests.conditions.EnableOnUsersBackendState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
 import org.junit.jupiter.api.Test;
@@ -77,8 +86,6 @@ import com.sap.scimono.entity.base.MultiValuedAttribute;
 import com.sap.scimono.entity.base.MultiValuedAttributeType;
 import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
-import com.sap.scimono.scim.system.tests.conditions.DisableOnEmptyUsersEndpoint;
-import com.sap.scimono.scim.system.tests.conditions.EnableOnEmptyUsersEndpoint;
 import com.sap.scimono.scim.system.tests.extensions.GroupClientScimResponseExtension;
 import com.sap.scimono.scim.system.tests.extensions.GroupFailSafeClient;
 import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtension;
@@ -100,49 +107,18 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   private final GroupFailSafeClient groupFailSafeClient = resourceAwareGroupRequest.getFailSafeClient();
 
   @Test
-  @DisplayName("Test Get users and verify required attributes are fetchedNonEmptyBackend")
-  @EnableOnEmptyUsersEndpoint
-  public void testGetUsersWithRequiredAttributes() {
-    logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User1");
-    User firstUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User1").build());
-
-    logger.info("Creating User - {}", "testGetUsersWithRequiredAttributes-User2");
-    User secondUser = userFailSafeClient.create(new User.Builder("testGetUsersWithRequiredAttributes-User2").build());
-
-    // @formatter:off
-    PagedByIndexSearchResult<User> getUsersResponse = userFailSafeClient.getAllWithoutPaging();
-    assertAll("Verify both users exist in the response",
-        () -> assertEquals(2, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
-        () -> assertTrue(getUsersResponse.getItemsPerPage() >= 2, "Verify 'itemsPerPage' is greater than or equal to: 2"),
-        () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty"),
-        () -> assertAll("Verify 'Resources' attributes",
-            getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), getUsersResponse.getResources(), this::getRequiredAttributeAssertions))
-    );
-    // @formatter:on
-  }
-
-  @Test
   @DisplayName("Test Get users and verify common attributes are fetchedNonEmptyBackend")
-  @DisableOnEmptyUsersEndpoint
-  public void testGetUsersWithCommonUsedAttributesNonEmptyBackend() {
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersWithCommonUsedAttributes() {
     logger.info("Fetching all users");
-    int alreadyCreatedUsers = userFailSafeClient.getAllWithIndexPaging().size();
+    int alreadyCreatedUsers = userFailSafeClient.getAllWithoutPaging().getTotalResults();
 
-    logger.info("Creating User - {}", "testGetUsersWithCommonUsedAttributes-User1NonEmptyBackend");
-    User firstUser = userFailSafeClient.create(buildTestUser("testGetUsersWithCommonUsedAttributes-User1NonEmptyBackend"));
-
-    logger.info("Creating User - {}", "testGetUsersWithCommonUsedAttributes-User2NonEmptyBackend");
-    User secondUser = userFailSafeClient.create(buildTestUser("testGetUsersWithCommonUsedAttributes-User2NonEmptyBackend"));
-
-    int allUsers = alreadyCreatedUsers + 2;
     // @formatter:off
     PagedByIndexSearchResult<User> getUsersResponse = userFailSafeClient.getAllWithoutPaging();
     assertAll("Verify both users exist in the response",
-        () -> assertEquals(allUsers, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
+        () -> assertEquals(alreadyCreatedUsers, getUsersResponse.getTotalResults(), "Verify 'totalResults'"),
         () -> assertTrue(getUsersResponse.getItemsPerPage() >= 2, "Verify 'itemsPerPage' is greater than or equal to: 2"),
-        () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty"),
-        () -> assertAll("Verify 'Resources' attributes",
-            getMultipleUsersAssertions(Arrays.asList(firstUser, secondUser), getUsersResponse.getResources(), this::getCommonUsedAttributeAssertions))
+        () -> assertFalse(getUsersResponse.getResources().isEmpty(), "Verify 'Resources' is not empty")
     );
     // @formatter:on
   }
@@ -299,7 +275,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get users and verify empty list is received")
-  @EnableOnEmptyUsersEndpoint
+  @EnableOnUsersBackendState(state = EMPTY)
   public void testGetUsersEmptyList() {
     logger.info("Fetching all Users - without paging attributes");
     PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getAllWithoutPaging();
@@ -355,7 +331,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get User with groups and multivalue attributes")
-  public void testGetUserWithGroupsAndMultiValueAttrs() {
+  public void testCreateAndGetUserWithGroupsAndMultiValueAttrs() {
     Email workMail = TestData.buildWorkEmailWithDefaultAttrs();
     Email homeMail = TestData.buildPersonalEmailWithDefaultAttrs();
 
@@ -400,7 +376,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
 
   @Test
   @DisplayName("Test Get Users by groups filter")
-  public void testGetUsersFilteredGroups() {
+  public void testCreateAndGetUsersFilteredGroups() {
     logger.info("Creating User: FilteredGroupsUser");
     User testUser = userFailSafeClient.create(buildTestUser("FilteredGroupsUser"));
 
@@ -415,29 +391,43 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         () -> assertEquals(testUser.getId(), filteredUsers.get(0).getId(), "Verify User with same Id is fetched"));
   }
 
+  @Test
+  @DisplayName("Test Get Users by groups filter")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersFilteredGroups() {
+    Optional<Group> groupWithMembers = getGroupWithUserMemberFromBackendSystem();
+    assumeTrue(groupWithMembers.isPresent(), "Aborted! Cause: No groups with User member found");
+
+    String filterExpression = "groups.display eq \"FilteredGroups\"";
+    logger.info("Fetching Users by filter expression: {}", filterExpression);
+    List<User> filteredUsers = userFailSafeClient.getAllByFilter(filterExpression);
+
+    assertFalse(filteredUsers.isEmpty(), "Verify filtered Users response is not empty");
+  }
+
   @TestFactory
-  @DisplayName("Test Get users by filter")
-  public Collection<DynamicTest> testGetUsersFiltered() {
+  @DisplayName("Test Create and Get users by filter")
+  public Collection<DynamicTest> testCreateAndGetUsersFiltered() {
     // @formatter:off
     return Arrays.asList(
-        getGetUsersFilteredDynamicTest(
-            "Test GET Users filtered by userName",
+        createAndGetUsersFilteredDynamicTest(
+            "Test Create and GET Users filtered by userName",
             buildTestUser("FilteredUsername"),
             String.format("userName eq \"%s\"", "FilteredUsername")
         ),
-        getGetUsersFilteredDynamicTest(
-            "Test GET Users filtered by full core schema attribute path",
+        createAndGetUsersFilteredDynamicTest(
+            "Test Create and GET Users filtered by full core schema attribute path",
             buildTestUser("FilteredFullUsernamePath"),
             String.format("%s:userName eq \"%s\"", User.SCHEMA, "FilteredFullUsernamePath")
         ),
-        getGetUsersFilteredDynamicTest(
-            "Test GET Users filtered by enterprise schema attribute",
+        createAndGetUsersFilteredDynamicTest(
+            "Test Create And GET Users filtered by enterprise schema attribute",
             buildTestUserWithExtentions("FilteredFullEmpolyeeNumberPath-Username",
                 Collections.singletonList(new EnterpriseExtension.Builder().setEmployeeNumber("1110111").build())),
             String.format("%s:employeeNumber eq \"%s\"", ENTERPRISE_URN, "1110111")
         ),
-        getGetUsersFilteredDynamicTest(
-            "Test GET Users filtered by roles",
+        createAndGetUsersFilteredDynamicTest(
+            "Test Create and GET Users filtered by roles",
             buildTestUser("FilteredRoles-User").builder()
                 .addRole(new Role(null, "FilteredRoles", null, false, null, Role.Type.of("test")))
                 .build(),
@@ -447,7 +437,87 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     // @formatter:on
   }
 
-  private DynamicTest getGetUsersFilteredDynamicTest(final String testName, final User userBody, final String filterExpression) {
+  @Test
+  @DisplayName("Test GET Users filtered by userName")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersFilteredByUserName() {
+    UnaryOperator<String> usernameFilterExpressionMaker = username -> String.format("userName eq \"%s\"", username);
+    testGetUserByUsernameFilter(usernameFilterExpressionMaker);
+  }
+
+  @Test
+  @DisplayName("Test GET Users filtered by full core schema attribute path")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersFilteredByFullCoreSchemaAttribute() {
+    UnaryOperator<String> usernameFilterExpressionMaker = username -> String.format("%s:userName eq \"%s\"", User.SCHEMA, username);
+    testGetUserByUsernameFilter(usernameFilterExpressionMaker);
+  }
+
+  @Test
+  @DisplayName("Test GET Users filtered by enterprise attribute")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersFilteredByEnterpriseAttributeOrganization() {
+    // @formatter:off
+    User user = getUsersAndExtractOne(fetchedUser ->
+        fetchedUser.isExtensionPresent(ENTERPRISE_URN) &&
+        ((EnterpriseExtension)fetchedUser.getExtension(ENTERPRISE_URN)).getOrganization() != null,
+        "Unable to User with existing 'organization' value"
+    );
+    String organization = ((EnterpriseExtension) user.getExtension(ENTERPRISE_URN)).getOrganization();
+
+    String filterExpression = String.format("%s:organization eq \"%s\"", ENTERPRISE_URN, organization);
+    logger.info("Fetching Users by username filter expression: {}", filterExpression);
+    List<User> filteredUsers = userFailSafeClient.getAllByFilter(filterExpression);
+
+    assertFalse(filteredUsers.isEmpty(), "Verify fetched Users response contains any resources");
+    assertTrue(filteredUsers.stream().allMatch(filteredUser ->
+        filteredUser.isExtensionPresent(ENTERPRISE_URN)), "Verify all Filtered Users have enterprise extension");
+
+    assertTrue(filteredUsers.stream()
+        .map(filteredUser -> ((EnterpriseExtension)filteredUser.getExtension(ENTERPRISE_URN)).getOrganization())
+        .allMatch(organization::equalsIgnoreCase),
+        "Verify all Users match filter");
+    // @formatter:on
+  }
+
+  @Test
+  @DisplayName("Test GET Users filtered by emails")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersFilteredByEmail() {
+    // @formatter:off
+    User user = getUsersAndExtractOne(fetchedUser -> !fetchedUser.getEmails().isEmpty(), "Unable to find User with existing email");
+    Email userEmail = user.getEmails().stream()
+        .filter(email -> email.getValue() != null)
+        .findFirst()
+        .orElseThrow(IllegalStateException::new);
+
+    String filterExpression = String.format("emails.value eq \"%s\"", userEmail.getValue());
+    logger.info("Fetching Users by username filter expression: {}", filterExpression);
+    List<User> filteredUsers = userFailSafeClient.getAllByFilter(filterExpression);
+
+    assertFalse(filteredUsers.isEmpty(), "Verify fetched Users response contains any resources");
+    assertTrue(filteredUsers.stream().map(User::getEmails).noneMatch(List::isEmpty), "Verify all Filtered Users have enterprise extension");
+
+    assertTrue(filteredUsers.stream()
+        .map(User::getEmails)
+        .allMatch(emails -> emails.stream().map(Email::getValue).anyMatch(userEmail.getValue()::equalsIgnoreCase)),
+        "Verify all Users match filter");
+    // @formatter:on
+  }
+
+
+  private User getUsersAndExtractOne(Predicate<User> condition, String noUserFoundMessage) {
+    logger.info("Fetching multiple users");
+    List<User> users = userFailSafeClient.getAllWithoutPaging().getResources();
+    assumeFalse(users.isEmpty());
+
+    Optional<User> userOptional = users.stream().filter(condition).findFirst();
+    assumeTrue(userOptional.isPresent(), noUserFoundMessage);
+
+    return userOptional.orElseThrow(IllegalStateException::new);
+  }
+
+  private DynamicTest createAndGetUsersFilteredDynamicTest(final String testName, final User userBody, final String filterExpression) {
     // @formatter:off
     return DynamicTest.dynamicTest(testName,
         () -> {
@@ -467,47 +537,38 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
-  @DisplayName("Test Get users with Index paging and count=0")
-  public void testGetUsersTotalCountWithStartIndex() {
+  @DisplayName("Test Create and Get users with Index paging and count=0")
+  public void testCreateAndGetUsersTotalCountWithStartIndexAndZeroCount() {
     int startIndex = 1;
-    int count = 0;
 
     createMultipleUsers("testGetUsersTotalCountWithStartIndex", 3);
-
-    logger.info("Fetching multiple users with starIndex: {} and count: {}", startIndex, count);
-    PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
-
-    // @formatter:off
-    assertAll("Verify List Response",
-        () -> assertEquals(startIndex, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex"),
-        () -> assertTrue(getPagedUsersSearchResult.getItemsPerPage() >= count, "Verify 'itemsPerPage' is greater than or equal to: " + count),
-        () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is bigger 0"),
-        () -> assertTrue(getPagedUsersSearchResult.getResources().isEmpty(), "Verify 'Resources' list size is not empty")
-    );
-    // @formatter:on
+    testGetUsersTotalCountWithStartIndex(startIndex, 0);
   }
 
   @Test
-  @DisplayName("Test Get users with index paging and startIndex=totalResults")
-  @EnableOnEmptyUsersEndpoint
-  public void testGetUsersWithStarIndexEqualTotalResults() {
+  @DisplayName("Test Get users with Index paging and count=0")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersTotalCountWithStartIndexAndZeroCount() {
+    int startIndex = 1;
+    testGetUsersTotalCountWithStartIndex(startIndex, 0);
+  }
+
+  @Test
+  @DisplayName("Test Create and Get users with index paging and startIndex=totalResults")
+  @EnableOnUsersBackendState(state = EMPTY)
+  public void testCreateAndGetUsersWithStarIndexEqualTotalResults() {
     String displayName = "testGetUsersWithStarIndexEqualTotalResults-User";
     int usersCount = 3;
+    int readCount = 100;
 
     List<User> createdUsers = createMultipleUsers(displayName, usersCount);
 
-    int readCount = 100;
-    int startIndex = usersCount;
-
-    logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, readCount);
-    PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getPagedByIndex(startIndex, readCount);
+    logger.info("Fetching Users with startIndex: {} and count: {}", usersCount, readCount);
+    PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getPagedByIndex(usersCount, readCount);
 
     // @formatter:off
-    assertAll("Verify Correct ListResponse values",
-        () -> assertEquals(startIndex, usersPage.getStartIndex(), "Verify 'startIndex"),
-        () -> assertEquals(usersCount, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
-        () -> assertTrue(usersPage.getItemsPerPage() <= readCount, "Verify 'itemsPerPage' is less than or equal to count param: " + readCount),
-        () -> assertEquals(1, usersPage.getResources().size(), "Verify 'Resources' list size is equal to 'ItemsPerPage'"),
+    assertAll(
+        getResourcesWithStartIndexEqualTotalResultsAssertions(usersCount, readCount, usersPage),
         () -> {
           String firstUserIdFromGetResponse = usersPage.getResources().get(0).getId();
           assertTrue(createdUsers.stream().map(User::getId).anyMatch(firstUserIdFromGetResponse::equals), "Verify fetched user is part of previously created Users");
@@ -516,19 +577,21 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
+  @DisplayName("Test Create and Get users with index paging and startIndex out of range (more than total results)")
+  public void testCreateAndGetUsersWithStarIndexOutOfRange() {
+    createMultipleUsers("testCreateAndGetUsersWithStarIndexOutOfRange-User", 3);
+    testGetUsersWithStarIndexOutOfRange();
+  }
+
+  @Test
   @DisplayName("Test Get users with index paging and startIndex out of range (more than total results)")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersWithStarIndexOutOfRange() {
     logger.info("Fetching all users");
     int alreadyCreatedUsers = userFailSafeClient.getAllWithIndexPaging().size();
-    String displayName = "testGetUsersWithStarIndexOutOfRange-User";
-    int usersCount = 3;
-
-    createMultipleUsers(displayName, usersCount);
-
-    int allUsers = alreadyCreatedUsers + usersCount;
 
     int readCount = 100;
-    int startIndex = allUsers + 1;
+    int startIndex = alreadyCreatedUsers + 1;
 
     logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, readCount);
     PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getPagedByIndex(startIndex, readCount);
@@ -536,19 +599,41 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     // @formatter:off
     assertAll("Verify Correct ListResponse values",
         () -> assertEquals(startIndex, usersPage.getStartIndex(), "Verify 'startIndex"),
-        () -> assertEquals(allUsers, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
+        () -> assertEquals(alreadyCreatedUsers, usersPage.getTotalResults(), "Verify 'totalResults' is equal to created Users"),
         () -> assertTrue(usersPage.getItemsPerPage() <= readCount, "Verify 'count' is equal or less to 'itemsPerPage'"),
         () -> assertTrue(usersPage.getResources().isEmpty(), "Verify 'Resources' list size is empty'"));
     // @formatter:on
   }
 
   @Test
+  @DisplayName("Test Get users with index paging and startIndex=totalResults")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersWithStarIndexEqualTotalResults() {
+    PagedByIndexSearchResult<User> usersWithoutPaging = userFailSafeClient.getAllWithoutPaging();
+    assertTrue(usersWithoutPaging.getTotalResults() > 0, "Verify 'totalResult' is not 0");
+
+    int readCount = 100;
+    int startIndex = usersWithoutPaging.getTotalResults();
+
+    logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, readCount);
+    PagedByIndexSearchResult<User> usersPage = userFailSafeClient.getPagedByIndex(startIndex, readCount);
+
+    assertAll(getResourcesWithStartIndexEqualTotalResultsAssertions(startIndex, readCount, usersPage));
+  }
+
+  @Test
+  @DisplayName("Test Create and Get users with Id paging and count=0")
+  public void testCreateAndGetUsersTotalCountWithStartId() {
+    createMultipleUsers("testGetUsersWithStarIdEqualTotalResults", 3);
+    testGetUsersTotalCountWithStartId();
+  }
+
+  @Test
   @DisplayName("Test Get users with Id paging and count=0")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersTotalCountWithStartId() {
     String startId = PAGINATION_BY_ID_START_PARAM;
     int count = 0;
-
-    createMultipleUsers("testGetUsersWithStarIndexEqualTotalResults", 3);
 
     logger.info("Fetching Users with startId: {} and count: {}", startId, count);
     PagedByIdentitySearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedById(startId, count);
@@ -566,34 +651,32 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
-  @DisplayName("Test Get users with index paging and negative count")
-  public void testGetUsersNegativeCountAndStartIndex() {
-    int startIndex = 1;
-    int count = -10;
-
+  @DisplayName("Test Create and Get users with index paging and negative count")
+  public void testCreateAndGetUsersNegativeCountAndStartIndex() {
     createMultipleUsers("testGetUsersNegativeCountAndStartIndex", 3);
+    testGetUsersNegativeCountAndStartIndex(1, -10);
+  }
 
-    logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, count);
-    PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
+  @Test
+  @DisplayName("Test Get users with index paging and negative count")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetUsersNegativeCountAndStartIndex() {
+    testGetUsersNegativeCountAndStartIndex(1, -10);
+  }
 
-    // @formatter:off
-    assertAll("Verify List response",
-        () -> assertEquals(startIndex, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
-        () -> assertTrue(0 <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'ItemsPerPage' is greater or equal to 0"),
-        () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
-        () -> assertTrue(getPagedUsersSearchResult.getResources().size() <= getPagedUsersSearchResult.getItemsPerPage(),
-            "Verify 'Resources' list size is less than or equal to 'itemsPerPage''")
-    );
-    // @formatter:on
+  @Test
+  @DisplayName("Test Create and Get users with Id paging and negative count")
+  public void testCreateAndGetUsersNegativeCountAndStartId() {
+    createMultipleUsers("testCreateAndGetUsersNegativeCountAndStartId", 3);
+    testGetUsersNegativeCountAndStartId();
   }
 
   @Test
   @DisplayName("Test Get users with Id paging and negative count")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersNegativeCountAndStartId() {
     String startId = PAGINATION_BY_ID_START_PARAM;
     int count = -10;
-
-    createMultipleUsers("testGetUsersNegativeCountAndStartIndex", 3);
 
     logger.info("Fetching Users with startId: {} and count: {}", startId, count);
     PagedByIdentitySearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedById(startId, count);
@@ -610,30 +693,24 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
+  @DisplayName("Test Create and Get users with default startIndex")
+  public void testCreateAndGetUsersDefaultStartIndex() {
+    createMultipleUsers("testCreateAndGetUsersDefaultStartIndex", 3);
+    testGetUsersDefaultStartIndex(1);
+  }
+
+  @Test
   @DisplayName("Test Get users with default startIndex")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersDefaultStartIndex() {
-    int count = 1;
-
-    createMultipleUsers("testGetUsersDefaultStartIndex", 3);
-    PagedByIndexSearchResult<User> getPagedUsersSearchResult = CustomTargetSystemRestClient.INSTANCE
-        .getEntitiesHttpResponse(USERS, singletonMap(COUNT_PARAM, count)).readEntity(USER_LIST_RESPONSE_TYPE_INDEX_PAGING);
-
-    // @formatter:off
-    assertAll("Verify List Response",
-        () -> assertEquals(1, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
-        () -> assertTrue(count <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'count' is equal or less to 'itemsPerPage'"),
-        () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
-        () -> assertEquals(1, getPagedUsersSearchResult.getResources().size(), "Verify 'Resources' list size")
-    );
-    // @formatter:on
+    testGetUsersDefaultStartIndex(1);
   }
 
   @Test
   @DisplayName("Test Get users with default count")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersDefaultCountWithStartIndex() {
     int startIndex = 1;
-
-    createMultipleUsers("testGetUsersDefaultCountWithStartIndex", 3);
 
     logger.info("Fetching Multiple Users with startIndex: {}, and default count", startIndex);
     SCIMResponse<PagedByIndexSearchResult<User>> pagedUsersResponse = resourceAwareUserRequest
@@ -651,10 +728,24 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
+  @DisplayName("Test Create and Get users with default count")
+  public void testCreateAndGetUsersDefaultCountWithStartIndex() {
+    createMultipleUsers("testGetUsersDefaultCountWithStartIndex", 3);
+    testGetUsersDefaultCountWithStartIndex();
+  }
+
+  @Test
+  @DisplayName("Test Create And Get users with default count and Id paging")
+  public void testCreateAndGetUsersDefaultCountWithStartId() {
+    createMultipleUsers("testCreateAndGetUsersDefaultCountWithStartId", 6);
+    testGetUsersDefaultCountWithStartId();
+  }
+
+  @Test
   @DisplayName("Test Get users with default count and Id paging")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersDefaultCountWithStartId() {
     String startId = PAGINATION_BY_ID_START_PARAM;
-    createMultipleUsers("testGetUsersDefaultCountWithStartId", 6);
 
     logger.info("Fetching Multiple Users with startId: {}, and default count", startId);
     SCIMResponse<PagedByIdentitySearchResult<User>> pagedUsersResponse = resourceAwareUserRequest
@@ -683,21 +774,16 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
+  @DisplayName("Test Create And Get users with Id paging and startId=end")
+  public void testCreateAndGetUsersPagingStartIdEqEnd() {
+    createMultipleUsers("testCreateAndGetUsersPagingStartIdEqEnd", 10);
+    testGetUsersPagingStartIdEqEnd();
+  }
+
+  @Test
   @DisplayName("Test Get users with Id paging and startId=end")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersPagingStartIdEqEnd() {
-    String testUserName = "testGetUsersPagingStartIdEqEnd";
-    String testUserId;
-    int userNameUniquenessCounter = 1;
-
-    do {
-      String currentUserName = testUserName + userNameUniquenessCounter;
-      logger.info("Creating User: {}", currentUserName);
-      User createdTestUser = userFailSafeClient.create(buildTestUser(currentUserName));
-      testUserId = createdTestUser.getId();
-      userNameUniquenessCounter++;
-
-    } while (!testUserId.startsWith("f"));
-
     String startId = PAGINATION_BY_ID_END_PARAM;
 
     logger.info("Fetching Multiple users with startId: {}, and default count", startId);
@@ -717,17 +803,22 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
+  @DisplayName("Test Create and Get users with Id paging and startId in upper case")
+  public void testCreateAndGetUsersPagingStartIdWithUpperCase() {
+    createMultipleUsers("testCreateAndGetUsersPagingStartIdWithUpperCase", 6);
+    testGetUsersPagingStartIdWithUpperCase();
+  }
+
+  @Test
   @DisplayName("Test Get users with Id paging and startId in upper case")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersPagingStartIdWithUpperCase() {
-    createMultipleUsers("testGetUsersPagingStartIdWithUpperCase", 6);
+    logger.info("Fetching multiple Users");
+    User user = userFailSafeClient.getAllWithoutPaging().getResources().stream().findFirst().orElseThrow(IllegalStateException::new);
 
-    String testUsername = "testGetUsersPagingStartIdWithUpperCase";
-    logger.info("Creating User: {}", testUsername);
-    User createdTestUser = userFailSafeClient.create(buildTestUser(testUsername));
-
-    logger.info("Fetching Multiple Users with startId: {}, and default count", createdTestUser.getId());
+    logger.info("Fetching Multiple Users with startId: {}, and default count", user.getId());
     SCIMResponse<PagedByIdentitySearchResult<User>> pagedUsersResponse = resourceAwareUserRequest
-        .readMultipleUsers(identityPageQuery().withStartId(createdTestUser.getId()));
+        .readMultipleUsers(identityPageQuery().withStartId(user.getId().toUpperCase()));
 
     assertTrue(pagedUsersResponse.isSuccess(), "Verify GET response is success");
 
@@ -737,41 +828,27 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     assertAll("Verify first GET Users response",
         () -> assertTrue(firstPagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
         () -> assertTrue(firstPagedUsersResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
-        () -> assertEquals(createdTestUser.getId(), firstPagedUsersResult.getStartId(), "Verify 'startId'")
-    );
-    // @formatter:on
-
-    String biggestValidUUID = "FFFFFFFF-FFFF-1FFF-BFFF-FFFFFFFFFFFF";
-    logger.info("Fetching Multiple Users with startId: {}, and default count", biggestValidUUID);
-    pagedUsersResponse = resourceAwareUserRequest.readMultipleUsers(identityPageQuery().withStartId(biggestValidUUID));
-
-    assertTrue(pagedUsersResponse.isSuccess(), "Verify GET response is success");
-    final PagedByIdentitySearchResult<User> secondPagedUsersResult = pagedUsersResponse.get();
-
-    // @formatter:off
-    assertAll("Verify first GET Users response",
-        () -> assertTrue(secondPagedUsersResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
-        () -> assertTrue(secondPagedUsersResult.getItemsPerPage() > 0, "Verify 'itemsPerPage' is greater than 0"),
-        () -> assertEquals(biggestValidUUID, secondPagedUsersResult.getStartId(), "Verify 'startId'"),
-        () -> assertEquals(PAGINATION_BY_ID_END_PARAM, secondPagedUsersResult.getNextId(), "Verify 'nextId'")
+        () -> assertEquals(user.getId().toLowerCase(), firstPagedUsersResult.getStartId().toLowerCase(), "Verify 'startId'")
     );
     // @formatter:on
   }
 
   @Test
   @DisplayName("Test Get users all pages with index paging")
-  @EnableOnEmptyUsersEndpoint
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersSeveralPagesUsingIndex() {
     int startIndex = 1;
     int count = 3;
     long totalResults = 0;
-    createMultipleUsers("testGetUsersSeveralPagesUsingIndex", 10);
 
     List<User> usersFromAllPages = new LinkedList<>();
 
     logger.info("Fetching Users without paging");
-    List<User> allUsers = userFailSafeClient.getAllWithoutPaging().getResources();
+    PagedByIndexSearchResult<User> usersWithoutPaging = userFailSafeClient.getAllWithoutPaging();
+    assumeTrue(usersWithoutPaging.getTotalResults() > count,
+        "Aborted: It is required more than " + count + " Users to exist in the backend, in order to execute this test");
 
+    List<User> allUsers = usersWithoutPaging.getResources();
     do {
       logger.info("Fetching Multiple Users with startIndex: {}, and count: {}", startIndex, count);
       PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
@@ -798,59 +875,19 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
-  @DisplayName("Test Get users all pages with index pagingNonEmptyBackend")
-  @DisableOnEmptyUsersEndpoint
-  public void testGetUsersSeveralPagesUsingIndexNonEmptyBackend() {
-    logger.info("Fetching Users without paging");
-    List<User> allUsers = userFailSafeClient.getAllWithoutPaging().getResources();
-    if (allUsers.size() < 2) {
-      allUsers.addAll(createMultipleUsers("testGetUsersSeveralPagesUsingIndexNonEmptyBackend", 1));
-    }
-
-    int startIndex = 1;
-    // read on at least 2 pages
-    int count = allUsers.size() / 2;
-    long totalResults = 0;
-
-    List<User> usersFromAllPages = new LinkedList<>();
-
-    do {
-      logger.info("Fetching Multiple Users with startIndex: {}, and count: {}", startIndex, count);
-      PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
-
-      final int startIndexCopy = startIndex;
-
-      // @formatter:off
-      assertAll("Verify List Response", () -> assertEquals(startIndexCopy, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
-          () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
-          () -> assertEquals(allUsers.size(), getPagedUsersSearchResult.getTotalResults(), "Verify 'totalResult' size")
-      );
-      // @formatter:on
-      totalResults = getPagedUsersSearchResult.getTotalResults();
-
-      List<User> usersPerPage = getPagedUsersSearchResult.getResources();
-      usersFromAllPages.addAll(usersPerPage);
-
-      startIndex = startIndex + count;
-    } while (startIndex <= totalResults);
-
-    assertEquals(allUsers.size(), usersFromAllPages.size(), "Verify all Users count is equal to sum of those extracted from all pages");
-
-    List<String> userIdsFromAllPages = extractUserIds(usersFromAllPages);
-    List<String> allUsersIds = extractUserIds(allUsers);
-    userIdsFromAllPages.removeAll(allUsersIds);
-
-    assertEquals(0, userIdsFromAllPages.size(), "Verify paged Users are same sa All users");
+  @DisplayName("Test Create and Get users all pages with index paging")
+  public void testCreateAndGetUsersSeveralPagesUsingIndex() {
+    createMultipleUsers("testCreateAndGetUsersSeveralPagesUsingIndex", 10);
+    testGetUsersSeveralPagesUsingIndex();
   }
 
   @Test
   @DisplayName("Test Get users all pages with Id paging")
-  @EnableOnEmptyUsersEndpoint
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetUsersSeveralPagesUsingId() {
     String startId = PAGINATION_BY_ID_START_PARAM;
     int count = 3;
 
-    createMultipleUsers("testGetUsersSeveralPagesUsingId", 10);
     List<User> usersFromAllPages = new LinkedList<>();
 
     logger.info("Fetching Users without paging");
@@ -885,122 +922,80 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
-  @DisplayName("Test Get users all pages with Id pagingNonEmptyBackend")
-  @DisableOnEmptyUsersEndpoint
-  public void testGetUsersSeveralPagesUsingIdNonEmptyBackend() {
-    logger.info("Fetching Users without paging");
-    List<User> allUsers = userFailSafeClient.getAllWithoutPaging().getResources();
-    if (allUsers.size() < 2) {
-      allUsers.addAll(createMultipleUsers("testGetUsersSeveralPagesUsingIdNonEmptyBackend", 1));
-    }
+  @DisplayName("Test Create And Get users all pages with Id paging")
+  public void testCreateAndGetUsersSeveralPagesUsingId() {
+    createMultipleUsers("testCreateAndGetUsersSeveralPagesUsingId", 10);
+    testGetUsersSeveralPagesUsingId();
+  }
 
-    String startId = PAGINATION_BY_ID_START_PARAM;
-    // read on at least 2 pages
-    int count = allUsers.size() / 2;
-
-    createMultipleUsers("testGetUsersSeveralPagesUsingId", 10);
-    List<User> usersFromAllPages = new LinkedList<>();
-
-    do {
-      logger.info("Fetching Multiple Users with startId: {}, and count: {}", startId, count);
-      PagedByIdentitySearchResult<User> pagedUsers = userFailSafeClient.getPagedById(startId, count);
-
-      final String startIdCopy = startId;
-
-      // @formatter:off
-      assertAll("Verify List Response", () -> assertEquals(startIdCopy, pagedUsers.getStartId(), "Verify 'startId'"),
-          () -> assertTrue(pagedUsers.getTotalResults() > 0, "Verify 'totalResults' is greater that 0"),
-          () -> assertEquals(allUsers.size(), pagedUsers.getTotalResults(), "Verify 'totalResult' size")
-      );
-      // @formatter:off
-
-      List<User> usersPerPage = pagedUsers.getResources();
-      usersFromAllPages.addAll(usersPerPage);
-
-      startId = pagedUsers.getNextId();
-    } while (!startId.equals(PAGINATION_BY_ID_END_PARAM));
-
-    assertEquals(allUsers.size(), usersFromAllPages.size(), "Verify all Users count is equal to sum of those extracted from all pages");
-
-    List<String> userIdsFromAllPages = extractUserIds(usersFromAllPages);
-    List<String> allUsersIds = extractUserIds(allUsers);
-
-    userIdsFromAllPages.removeAll(allUsersIds);
-    assertEquals(0, userIdsFromAllPages.size(), "Verify paged Users are same sa All users");
+  @Test
+  @DisplayName("Test Create and Get users with userName filter")
+  public void testCreateAndGetPagedUsersWithFiltering() {
+    String testUserName = "pagedUserTest";
+    logger.info("Creating User: {}", testUserName);
+    User user = userFailSafeClient.create(buildTestUser(testUserName));
+    testGetPagedUsersWithFiltering(user);
   }
 
   @Test
   @DisplayName("Test Get users with userName filter")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetPagedUsersWithFiltering() {
-    String testUserName = "pagedUserTest";
-    logger.info("Creating User: {}", testUserName);
-    userFailSafeClient.create(buildTestUser(testUserName));
-
-    String filterExpression = String.format("userName eq \"%s\"", testUserName);
-
-    logger.info("Fetching all Users by filter: {}", filterExpression);
-    List<User> filteredUsers = userFailSafeClient.getAllByFilter(filterExpression);
-
-    logger.info("Fetching all Users by filter: {}, with paging", filterExpression);
-    List<User> pagedFilteredUsers = userFailSafeClient.getByFilteredAndPagedByIndex(1, RESOURCES_PER_PAGE, filterExpression).getResources();
-
-    List<String> userIdsFromFilteredUsers = extractUserIds(filteredUsers);
-    List<String> userIdsFromFilteredUsersWithPaging = extractUserIds(pagedFilteredUsers);
-
-    assertTrue(userIdsFromFilteredUsers.containsAll(userIdsFromFilteredUsersWithPaging), "Verify user Ids");
+    logger.info("Fetching all Users without paging");
+    PagedByIndexSearchResult<User> usersFetchedWithoutPaging = userFailSafeClient.getAllWithoutPaging();
+    User user = usersFetchedWithoutPaging.getResources().stream().findFirst().orElseThrow(IllegalStateException::new);
+    testGetPagedUsersWithFiltering(user);
   }
 
+
   @Test
-  @DisplayName("Test Get users with userName filter and id paging")
-  public void testGetFilteredPagedByIdUsersTotalCount() {
+  @DisplayName("Test Create and Get users with userName filter and id paging")
+  public void testCreateGetFilteredPagedByIdUsersTotalCount() {
     createMultipleUsers("testGetFilteredPagedByIdUsersTotalCount", 3);
 
     String testUserName = "uniqueName1543258";
     logger.info("Creating User: {}", testUserName);
-    userFailSafeClient.create(buildTestUser(testUserName));
+    User user = userFailSafeClient.create(buildTestUser(testUserName));
 
-    String filterExpression = String.format("userName eq \"%s\"", testUserName);
+    testGetFilteredPagedByIdUsersTotalCount(user);
+  }
 
-    logger.info("Fetching Multiple Users with startId: {}, and count: {}", PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE);
-    PagedByIdentitySearchResult<User> allUsers = userFailSafeClient.getPagedById(PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE);
 
-    logger.info("Fetching Multiple Users with startId: {}, and count: {} and filter expression: {}", PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE,
-        filterExpression);
-    PagedByIdentitySearchResult<User> filteredUsers = userFailSafeClient.getByFilteredAndPagedById(PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE,
-        filterExpression);
+  @Test
+  @DisplayName("Test Get users with userName filter and id paging")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
+  public void testGetFilteredPagedByIdUsersTotalCount() {
+    logger.info("Fetching multiple users without paging");
+    PagedByIndexSearchResult<User> userFetchedWithoutPaging = userFailSafeClient.getAllWithoutPaging();
+    assumeTrue(userFetchedWithoutPaging.getTotalResults() > 1,
+        "Aborted: Min 2 Users must be present in the backend, in order to execute this test");
 
-    // @formatter:off
-    assertAll("Verify GET Responses", () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
-        () -> assertEquals(1, filteredUsers.getTotalResults(), "Verify 'totalResults' of Users fetched with filter"),
-        () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of Users fetched without filter is bigger than 1")
-    );
-    // @formatter:on
+    User user = userFetchedWithoutPaging.getResources().stream().findFirst().orElseThrow(IllegalAccessError::new);
+    testGetFilteredPagedByIdUsersTotalCount(user);
+  }
+
+  @Test
+  @DisplayName("Test Create and Get users with userName filter and index paging")
+  public void testCreateAndGetFilteredPagedByIndexUsersTotalCount() {
+    createMultipleUsers("testCreateAndGetFilteredPagedByIndexUsersTotalCount", 3);
+
+    String testUserName = "uniqueName1543258";
+    logger.info("Creating User: {}", testUserName);
+    User user = userFailSafeClient.create(buildTestUser(testUserName));
+    testGetFilteredPagedByIndexUsersTotalCount(user);
   }
 
   @Test
   @DisplayName("Test Get users with userName filter and index paging")
+  @EnableOnUsersBackendState(state = WITH_INITIAL_EXISTING_RESOURCES)
   public void testGetFilteredPagedByIndexUsersTotalCount() {
-    createMultipleUsers("testGetFilteredPagedByIndexUsersTotalCount", 3);
+    logger.info("Fetching multiple users without paging");
+    PagedByIndexSearchResult<User> userFetchedWithoutPaging = userFailSafeClient.getAllWithoutPaging();
+    assumeTrue(userFetchedWithoutPaging.getTotalResults() > 1,
+        "Aborted: Min 2 Users must be present in the backend, in order to execute this test");
 
-    String testUserName = "uniqueName1543258";
-    logger.info("Creating User: {}", testUserName);
-    userFailSafeClient.create(buildTestUser(testUserName));
-
-    String filterExpression = String.format("userName eq \"%s\"", testUserName);
-
-    logger.info("Fetching Multiple Users with startIndex: {}, and count: {}", 1, RESOURCES_PER_PAGE);
-    PagedByIndexSearchResult<User> allUsers = userFailSafeClient.getPagedByIndex(1, RESOURCES_PER_PAGE);
-
-    logger.info("Fetching Multiple Users with startIndex: {}, and count: {} and filter expression: {}", PAGINATION_BY_ID_START_PARAM,
-        RESOURCES_PER_PAGE, filterExpression);
-    PagedByIndexSearchResult<User> filteredUsers = userFailSafeClient.getByFilteredAndPagedByIndex(1, RESOURCES_PER_PAGE, filterExpression);
-
-    // @formatter:off
-    assertAll("Verify GET Responses", () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
-        () -> assertEquals(1, filteredUsers.getTotalResults(), "Verify 'totalResults' of User fetched with filter"),
-        () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of User fetched without filter is bigger than 1")
-    );
-    // @formatter:on
+    User user = userFetchedWithoutPaging.getResources().stream().findFirst().orElseThrow(IllegalAccessError::new);
+    testGetFilteredPagedByIndexUsersTotalCount(user);
   }
 
   @Test
@@ -1034,8 +1029,10 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     final String managerUserId = managerUserCreated.getId();
 
     // @formatter:off
-    assertAll("Verify GET User by Id response", () -> assertEquals(1, fetchedEmployeeUser.getAddresses().size(), "Verify addresses size"),
-        () -> assertEquals(defaultAddress, fetchedEmployeeUser.getAddresses().get(0), "Verify address"), () -> assertEquals(managerUserId,
+    assertAll("Verify GET User by Id response",
+        () -> assertEquals(1, fetchedEmployeeUser.getAddresses().size(), "Verify addresses size"),
+        () -> assertEquals(defaultAddress, fetchedEmployeeUser.getAddresses().get(0), "Verify address"),
+        () -> assertEquals(managerUserId,
             ((EnterpriseExtension) fetchedEmployeeUser.getExtension(ENTERPRISE_URN)).getManager().getValue(), "Verify manager 'value'")
     );
     // @formatter:on
@@ -1138,43 +1135,46 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     return Collections.singletonList(() -> assertEquals(expected.getValue(), actual.getValue(), "Verify manager 'value' attribute"));
   }
 
-  private <T extends MultiValuedAttribute, S extends MultiValuedAttributeType> Collection<Executable> getMultivaluedAttrAssertions(
-      final Collection<T> expectedCollection, final Collection<T> actualCollection, final Function<T, S> attributeTypeRetriever) {
+  // @formatter:off
+  private <T extends MultiValuedAttribute, S extends MultiValuedAttributeType> Collection<Executable> getMultivaluedAttrAssertions(Collection<T> expectedCollection,
+      Collection<T> actualCollection, Function<T, S> attributeTypeRetriever) {
 
-    // @formatter:off
-    Collection<Executable> executables = expectedCollection.stream()
-        .map(mattr -> (Executable) () -> assertAll("Verify assertions for current multivalue attribute: " + mattr.getClass().getSimpleName(),
-            () -> assertTrue(actualCollection.stream().map(MultiValuedAttribute::getValue).anyMatch(mattr.getValue()::equals),
-                "Verify multivalued attribute exist"),
+    Collection<Executable> executables = expectedCollection.stream().map(
+        mattr -> (Executable) () -> assertAll("Verify assertions for current multivalue attribute: " + mattr.getClass().getSimpleName(),
+            () -> assertTrue(actualCollection.stream().map(MultiValuedAttribute::getValue).anyMatch(mattr.getValue()::equals), "Verify multivalued attribute exist"),
             () -> {
-              T currentActualAttribute = actualCollection.stream().filter(currentAttr -> mattr.getValue().equals(currentAttr.getValue())).findFirst()
+              T currentActualAttribute = actualCollection.stream()
+                  .filter(currentAttr -> mattr.getValue().equals(currentAttr.getValue()))
+                  .findFirst()
                   .orElseThrow(() -> new RuntimeException("Multivalued attribute was not found"));
 
               assertAll(String.format("Verify Multivalued attribute - %s, sub-attributes", currentActualAttribute.getClass().getSimpleName()),
-                  getMultivaluedAttrAssertions(mattr, attributeTypeRetriever.apply(mattr), currentActualAttribute,
-                      attributeTypeRetriever.apply(currentActualAttribute)));
-            }))
-        .collect(Collectors.toList());
+                  getMultivaluedAttrAssertions(mattr, attributeTypeRetriever.apply(mattr), currentActualAttribute, attributeTypeRetriever.apply(currentActualAttribute)));
+            })
+    ).collect(Collectors.toList());
 
-    return Arrays.asList(() -> assertEquals(expectedCollection.size(), actualCollection.size()),
-        () -> assertAll("Verify multivalued attribute existence", executables));
-    // @formatter:on
+    return Arrays.asList(
+        () -> assertEquals(expectedCollection.size(), actualCollection.size()),
+        () -> assertAll("Verify multivalued attribute existence", executables)
+    );
   }
 
-  private Collection<Executable> getMultipleUsersAssertions(final Collection<User> expectedUsers, final Collection<User> actualUsers,
-      final BiFunction<User, User, Collection<Executable>> singleUserAssertions) {
-    // @formatter:off
+  private Collection<Executable> getMultipleUsersAssertions(Collection<User> expectedUsers, Collection<User> actualUsers,
+      BiFunction<User, User, Collection<Executable>> singleUserAssertions) {
     return expectedUsers.stream()
         .map(createdUser -> (Executable) () -> assertAll("Verify assertions for current '" + createdUser.getUserName() + "' user",
-            () -> assertTrue(isUserExistInCollection(createdUser, actualUsers), "Verify existence in GET Users response"), () -> {
-              User fetchedUser = actualUsers.stream().filter(currentUser -> createdUser.getId().equals(currentUser.getId())).findFirst()
+            () -> assertTrue(isUserExistInCollection(createdUser, actualUsers), "Verify existence in GET Users response"),
+            () -> {
+              User fetchedUser = actualUsers.stream()
+                  .filter(currentUser -> createdUser.getId().equals(currentUser.getId()))
+                  .findFirst()
                   .orElseThrow(() -> new RuntimeException("User was not found"));
 
               assertAll(singleUserAssertions.apply(createdUser, fetchedUser));
-            }))
-        .collect(Collectors.toList());
-    // @formatter:on
+            })
+        ).collect(Collectors.toList());
   }
+  // @formatter:on
 
   private boolean isUserExistInCollection(final User user, final Collection<User> userCollection) {
     return userCollection.stream().map(User::getId).anyMatch(user.getId()::equals);
@@ -1217,5 +1217,121 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     return IntStream.rangeClosed(1, count).mapToObj(number -> commonUserNamePart + number)
         .peek(currentDisplayName -> logger.info("Creating User -{}-", currentDisplayName)).map(TestData::buildTestUser)
         .map(userFailSafeClient::create).collect(Collectors.toList());
+  }
+
+  private Optional<Group> getGroupWithUserMemberFromBackendSystem() {
+    logger.info("Fetching Groups");
+    return groupFailSafeClient.getAllWithoutPaging()
+        .getResources()
+        .stream()
+        .filter(group -> !group.getMembers().isEmpty() && group.getDisplayName() != null)
+        .filter(group -> group.getMembers().stream().anyMatch(member -> MemberRef.Type.USER == member.getType()))
+        .findFirst();
+  }
+
+  private void testGetUserByUsernameFilter(UnaryOperator<String> usernameFilterExpressionMaker) {
+    User user = getUsersAndExtractOne(fetchedUser -> fetchedUser.getUserName() != null, "Unable to find user with existing 'userName' value");
+
+    String usernameFilterExpression = usernameFilterExpressionMaker.apply(user.getUserName());
+    logger.info("Fetching Users by username filter expression: {}", usernameFilterExpression);
+    List<User> filteredUsers = userFailSafeClient.getAllByFilter(usernameFilterExpression);
+
+    // @formatter:off
+    assertEquals(1, filteredUsers.size(), "Verify exact number of Users is fetched");
+    assertTrue(filteredUsers.stream()
+        .map(User::getUserName)
+        .allMatch(user.getUserName()::equalsIgnoreCase),
+        "Verify all Users match filter");
+    // @formatter:on
+  }
+
+  private void testGetUsersTotalCountWithStartIndex(int startIndex, int count) {
+    logger.info("Fetching multiple users with starIndex: {} and count: {}", startIndex, count);
+    PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
+
+    // @formatter:off
+    assertAll("Verify List Response",
+        () -> assertEquals(startIndex, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex"),
+        () -> assertTrue(getPagedUsersSearchResult.getItemsPerPage() >= count, "Verify 'itemsPerPage' is greater than or equal to: " + count),
+        () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is bigger 0"),
+        () -> assertTrue(getPagedUsersSearchResult.getResources().isEmpty(), "Verify 'Resources' list size is not empty")
+    );
+    // @formatter:on
+  }
+
+  private void testGetUsersNegativeCountAndStartIndex(int startIndex, int count) {
+    logger.info("Fetching Users with startIndex: {} and count: {}", startIndex, count);
+    PagedByIndexSearchResult<User> getPagedUsersSearchResult = userFailSafeClient.getPagedByIndex(startIndex, count);
+
+    // @formatter:off
+    assertAll("Verify List response",
+        () -> assertEquals(startIndex, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
+        () -> assertTrue(0 <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'ItemsPerPage' is greater or equal to 0"),
+        () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
+        () -> assertTrue(getPagedUsersSearchResult.getResources().size() <= getPagedUsersSearchResult.getItemsPerPage(),
+            "Verify 'Resources' list size is less than or equal to 'itemsPerPage''")
+    );
+    // @formatter:on
+  }
+
+  private void testGetUsersDefaultStartIndex(int count) {
+    // @formatter:off
+    PagedByIndexSearchResult<User> getPagedUsersSearchResult = CustomTargetSystemRestClient.INSTANCE
+        .getEntitiesHttpResponse(USERS, singletonMap(COUNT_PARAM, count))
+        .readEntity(USER_LIST_RESPONSE_TYPE_INDEX_PAGING);
+
+    assertAll("Verify List Response",
+        () -> assertEquals(1, getPagedUsersSearchResult.getStartIndex(), "Verify 'startIndex'"),
+        () -> assertTrue(count <= getPagedUsersSearchResult.getItemsPerPage(), "Verify 'count' is equal or less to 'itemsPerPage'"),
+        () -> assertTrue(getPagedUsersSearchResult.getTotalResults() > 0, "Verify 'totalResults' is greater than 0"),
+        () -> assertEquals(count, getPagedUsersSearchResult.getResources().size(), "Verify 'Resources' list size")
+    );
+    // @formatter:on
+  }
+
+  private void testGetPagedUsersWithFiltering(User userToFilter) {
+    String filterExpression = String.format("userName eq \"%s\"", userToFilter.getUserName());
+
+    logger.info("Fetching all Users by filter: {}", filterExpression);
+    List<User> filteredUsers = userFailSafeClient.getAllByFilter(filterExpression);
+
+    logger.info("Fetching all Users by filter: {}, with paging", filterExpression);
+    List<User> pagedFilteredUsers = userFailSafeClient.getByFilteredAndPagedByIndex(1, RESOURCES_PER_PAGE, filterExpression).getResources();
+
+    List<String> userIdsFromFilteredUsers = extractUserIds(filteredUsers);
+    List<String> userIdsFromFilteredUsersWithPaging = extractUserIds(pagedFilteredUsers);
+
+    assertTrue(userIdsFromFilteredUsers.containsAll(userIdsFromFilteredUsersWithPaging), "Verify user Ids");
+  }
+
+  private void testGetFilteredPagedByIdUsersTotalCount(User userToFilter) {
+    String filterExpression = String.format("userName eq \"%s\"", userToFilter.getUserName());
+
+    logger.info("Fetching Multiple Users with startId: {}, and count: {}", PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE);
+    PagedByIdentitySearchResult<User> allUsers = userFailSafeClient.getPagedById(PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE);
+
+    logger.info("Fetching Multiple Users with startId: {}, and count: {} and filter expression: {}", PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE,
+        filterExpression);
+    PagedByIdentitySearchResult<User> filteredUsers = userFailSafeClient.getByFilteredAndPagedById(PAGINATION_BY_ID_START_PARAM, RESOURCES_PER_PAGE,
+        filterExpression);
+
+    assertAll("Verify GET Responses", () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
+        () -> assertEquals(1, filteredUsers.getTotalResults(), "Verify 'totalResults' of Users fetched with filter"),
+        () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of Users fetched without filter is bigger than 1"));
+  }
+
+  private void testGetFilteredPagedByIndexUsersTotalCount(User userToFilter) {
+    String filterExpression = String.format("userName eq \"%s\"", userToFilter.getUserName());
+
+    logger.info("Fetching Multiple Users with startIndex: {}, and count: {}", 1, RESOURCES_PER_PAGE);
+    PagedByIndexSearchResult<User> allUsers = userFailSafeClient.getPagedByIndex(1, RESOURCES_PER_PAGE);
+
+    logger.info("Fetching Multiple Users with startIndex: {}, and count: {} and filter expression: {}", PAGINATION_BY_ID_START_PARAM,
+        RESOURCES_PER_PAGE, filterExpression);
+    PagedByIndexSearchResult<User> filteredUsers = userFailSafeClient.getByFilteredAndPagedByIndex(1, RESOURCES_PER_PAGE, filterExpression);
+
+    assertAll("Verify GET Responses", () -> assertEquals(1, filteredUsers.getResources().size(), "Verify filtered Users list size"),
+        () -> assertEquals(1, filteredUsers.getTotalResults(), "Verify 'totalResults' of User fetched with filter"),
+        () -> assertTrue(allUsers.getTotalResults() > 1, "Verify 'totalResults' of User fetched without filter is bigger than 1"));
   }
 }
