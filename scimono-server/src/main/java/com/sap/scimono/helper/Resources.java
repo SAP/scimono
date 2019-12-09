@@ -75,7 +75,9 @@ public class Resources {
   public static User addRelationalEntitiesLocation(User user, UriInfo uriInfo) {
     User.Builder userBuilder = new User.Builder(user);
 
-    addAssignedGroupsLocation(userBuilder, user.getGroups(), uriInfo);
+    if (user.getGroups() != null) {
+      addAssignedGroupsLocation(userBuilder, user.getGroups(), uriInfo);
+    }
 
     if (user.isExtensionPresent(EnterpriseExtension.ENTERPRISE_URN)) {
       EnterpriseExtension enterpriseExtension = (EnterpriseExtension) user.getExtension(EnterpriseExtension.ENTERPRISE_URN);
