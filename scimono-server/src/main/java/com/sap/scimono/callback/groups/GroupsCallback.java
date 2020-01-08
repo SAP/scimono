@@ -41,7 +41,7 @@ public interface GroupsCallback {
    *
    * @param group
    */
-  void updateGroup(final Group group);
+  Group updateGroup(final Group group);
 
   /**
    * Updates a group with the provided attributes. The group object must have all mandatory attributes available,

@@ -52,6 +52,10 @@ public class Resources {
         .map(memberRef -> {
           MemberRef.Type memberType = memberRef.getType();
 
+          if (memberType == null) {
+            return memberRef;
+          }
+
           String resourceEnpoint = "";
           if(MemberRef.Type.USER.equals(memberType)){
             resourceEnpoint = API.USERS;

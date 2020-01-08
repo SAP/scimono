@@ -48,7 +48,7 @@ public interface UsersCallback {
    *
    * @param user
    */
-  void updateUser(final User user);
+  User updateUser(final User user);
 
   /**
    * Updates a user with the provided attributes. The user object must have all mandatory attributes available,

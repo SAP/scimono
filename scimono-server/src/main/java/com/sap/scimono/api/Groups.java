@@ -147,6 +147,7 @@ public class Groups {
     groupAPI.generateId().ifPresent(groupWithMeta::setId);
 
     Group createdGroup = groupAPI.createGroup(groupWithMeta.build());
+    createdGroup = addMembersLocation(createdGroup, uriInfo);
 
     UriBuilder location = uriInfo.getAbsolutePathBuilder().path(createdGroup.getId());
     createdGroup = addLocation(createdGroup, location);
@@ -163,7 +164,8 @@ public class Groups {
     lastUpdatedMeta.setLastModified(Instant.now()).setVersion(newVersion);
 
     Group updatedGroup = groupToUpdate.builder().setId(groupId).setMeta(lastUpdatedMeta.build()).build();
-    groupAPI.updateGroup(updatedGroup);
+    updatedGroup = groupAPI.updateGroup(updatedGroup);
+    updatedGroup = addMembersLocation(updatedGroup, uriInfo);
 
     logger.trace("Updated group {}, new version is {}", groupId, newVersion);
     return Response.ok(updatedGroup).tag(newVersion).location(uriInfo.getAbsolutePath()).build();
