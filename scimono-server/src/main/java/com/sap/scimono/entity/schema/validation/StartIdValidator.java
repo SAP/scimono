@@ -20,7 +20,7 @@ class StartIdValidator implements ConstraintValidator<ValidStartId, String> {
 
   @Override
   public boolean isValid(String startId, ConstraintValidatorContext context) {
-    if (isNullOrEmpty(startId) || isValidStartId(startId, context)) {
+    if (isNullOrEmpty(startId) || isValidStartId(startId)) {
       return true;
     }
 
@@ -32,11 +32,11 @@ class StartIdValidator implements ConstraintValidator<ValidStartId, String> {
     return String.format("\"%s\" is not a valid startId!", resourceId);
   }
 
-  private boolean isValidStartId(String startId, ConstraintValidatorContext context) {
+  private boolean isValidStartId(String startId) {
     // @formatter:off
     return PAGINATION_BY_ID_START_PARAM.equalsIgnoreCase(startId)
         || PAGINATION_BY_ID_END_PARAM.equalsIgnoreCase(startId)
-        || resourceIdValidator.isValid(startId, context);
+        || resourceIdValidator.isValid(startId);
     // @formatter:on
   }
 }

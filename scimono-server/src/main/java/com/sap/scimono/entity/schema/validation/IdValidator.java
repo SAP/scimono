@@ -28,27 +28,24 @@ public class IdValidator implements ConstraintValidator<ValidId, Object> {
 
   @Override
   public boolean isValid(Object resourceId, ConstraintValidatorContext constraintValidatorContext) {
-    if (uriInfo.getPath().startsWith(API.GROUPS) && customValidators.containsKey(GROUP_ID)) {
-      return validate(customValidators.get(GROUP_ID), resourceId, constraintValidatorContext);
-    }
-
-    if (uriInfo.getPath().startsWith(API.USERS) && customValidators.containsKey(USER_ID)) {
-      return validate(customValidators.get(USER_ID), resourceId, constraintValidatorContext);
-    }
-
-    if (customValidators.containsKey(RESOURCE_ID)) {
-      return validate(customValidators.get(RESOURCE_ID), resourceId, constraintValidatorContext);
+    if (!isValid(resourceId)) {
+      ValidationUtil.interpolateErrorMessage(constraintValidatorContext, generateViolationMessage(resourceId));
+      return false;
     }
 
     return true;
   }
 
-  private boolean validate(CustomInputValidator delegate, Object validatebleObject, ConstraintValidatorContext context) {
-    if (delegate.isValid(validatebleObject)) {
-      return true;
+  public boolean isValid(Object resourceId) {
+    if (uriInfo.getPath().startsWith(API.GROUPS) && customValidators.containsKey(GROUP_ID)) {
+      return  customValidators.get(GROUP_ID).isValid(resourceId);
+    } else if (uriInfo.getPath().startsWith(API.USERS) && customValidators.containsKey(USER_ID)) {
+      return customValidators.get(USER_ID).isValid(resourceId);
+    } else if (customValidators.containsKey(RESOURCE_ID)) {
+      return customValidators.get(RESOURCE_ID).isValid(resourceId);
     }
-    ValidationUtil.interpolateErrorMessage(context, generateViolationMessage(validatebleObject));
-    return false;
+
+    return true;
   }
 
   private String generateViolationMessage(Object resourceId) {
