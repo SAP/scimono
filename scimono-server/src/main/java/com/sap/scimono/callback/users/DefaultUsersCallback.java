@@ -34,7 +34,7 @@ public class DefaultUsersCallback implements UsersCallback {
   }
 
   @Override
-  public void updateUser(User user) {
+  public User updateUser(User user) {
     throw new WebApplicationException(Response.Status.NOT_IMPLEMENTED);
   }
 

@@ -31,7 +31,7 @@ public class DefaultGroupsCallback implements GroupsCallback {
   }
 
   @Override
-  public void updateGroup(Group group) {
+  public Group updateGroup(Group group) {
     throw new WebApplicationException(Response.Status.NOT_IMPLEMENTED);
   }
 
