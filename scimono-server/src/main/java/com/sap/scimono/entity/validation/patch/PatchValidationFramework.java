@@ -4,6 +4,7 @@ package com.sap.scimono.entity.validation.patch;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.sap.scimono.callback.schemas.SchemasCallback;
+import com.sap.scimono.entity.EnterpriseExtension;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.patch.PatchBody;
@@ -108,17 +110,15 @@ public class PatchValidationFramework {
 
   public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI) {
     String coreSchemaId = User.SCHEMA;
-    Map<String, Schema> requiredSchemas = getRequredSchemas(schemaAPI, Collections.singleton(coreSchemaId));
+    Map<String, Schema> requiredSchemas = getRequredSchemas(schemaAPI, new HashSet<>(Arrays.asList(coreSchemaId, EnterpriseExtension.ENTERPRISE_URN)));
     return new PatchValidationFramework(schemaAPI, requiredSchemas, coreSchemaId);
   }
 
   private static Map<String, Schema> getRequredSchemas(final SchemasCallback schemaAPI, final Set<String> requiredSchemaIds) {
     // @formatter:off
-    Map<String, Schema> requiredSchemas = schemaAPI.getCustomSchemas().stream()
+    return schemaAPI.getCustomSchemas().stream()
         .filter(schema -> schema.getId().startsWith(Schema.EXTENSION_SCHEMA_URN) || requiredSchemaIds.contains(schema.getId()))
-        .collect(Collectors.toMap(schema -> schema.getId(), schema -> schema));
-
-    return requiredSchemas;
+        .collect(Collectors.toMap(Schema::getId, schema -> schema));
     // @formatter:on
   }
 
