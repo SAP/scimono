@@ -47,12 +47,17 @@ public interface SchemasCallback {
   void createCustomSchema(final Schema schema);
 
   /**
+   * Returns list of all custom created schemas (with urn starting with <strong>urn:sap:cloud:scim:schemas:extension:custom:2.0:</strong>) available in the system
+   * @return list of schemas or empty list if none exist
+   */
+  List<Schema> getCustomSchemas();
+
+  /**
    * Returns a list of all schemas available in the system.
    * Must also return SCIM-defined core schemas (User, Group, Enterprise, etc.)
    *
    * @return list of schemas or empty list if none exist
    */
-  List<Schema> getCustomSchemas();
 
   default List<Schema> getSchemas() {
     Map<String, Schema> coreSchemas = SchemaCSVReader.getImportedSchemasFromCSVs();
