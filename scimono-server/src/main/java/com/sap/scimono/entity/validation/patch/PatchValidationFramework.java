@@ -116,7 +116,7 @@ public class PatchValidationFramework {
 
   private static Map<String, Schema> getRequredSchemas(final SchemasCallback schemaAPI, final Set<String> requiredSchemaIds) {
     // @formatter:off
-    return schemaAPI.getCustomSchemas().stream()
+    return schemaAPI.getSchemas().stream()
         .filter(schema -> schema.getId().startsWith(Schema.EXTENSION_SCHEMA_URN) || requiredSchemaIds.contains(schema.getId()))
         .collect(Collectors.toMap(Schema::getId, schema -> schema));
     // @formatter:on

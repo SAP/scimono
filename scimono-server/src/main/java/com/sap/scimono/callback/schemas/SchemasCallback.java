@@ -46,13 +46,14 @@ public interface SchemasCallback {
    */
   void createCustomSchema(final Schema schema);
 
+  List<Schema> getCustomSchemas();
+
   /**
    * Returns a list of all schemas available in the system.
    * Must also return SCIM-defined core schemas (User, Group, Enterprise, etc.)
    *
    * @return list of schemas or empty list if none exist
    */
-  List<Schema> getCustomSchemas();
 
   default List<Schema> getSchemas() {
     Map<String, Schema> coreSchemas = SchemaCSVReader.getImportedSchemasFromCSVs();
