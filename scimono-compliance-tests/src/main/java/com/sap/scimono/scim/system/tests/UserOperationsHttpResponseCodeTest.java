@@ -64,6 +64,17 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
 
     assertAll("Verify GET Response", getResponseStatusAssertions(readUserResponse, true, OK));
   }
+  
+  @Test
+  @DisplayName("Test Create user without userName and verify Http status code: 400")
+  @EnableOnUsersBackendState(state = EMPTY)
+  public void testCreateUserWithoutUserName400() {
+    final User userToCreate = userFailSafeClient.create(new User.Builder().setDisplayName("testCreatUserWithoutUserName400").build());
+
+    logger.info("Creating User without userName");
+    final SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(userToCreate);
+    assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
+  }
 
   @Test
   @DisplayName("Test Get user and verify Http status code: 200")
