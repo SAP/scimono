@@ -104,17 +104,17 @@ public class PatchValidationFramework {
 
   public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI) {
     String coreSchemaId = Group.SCHEMA;
-    Map<String, Schema> requiredSchemas = getRequredSchemas(schemaAPI, Collections.singleton(coreSchemaId));
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, Collections.singleton(coreSchemaId));
     return new PatchValidationFramework(schemaAPI, requiredSchemas, coreSchemaId);
   }
 
   public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI) {
     String coreSchemaId = User.SCHEMA;
-    Map<String, Schema> requiredSchemas = getRequredSchemas(schemaAPI, new HashSet<>(Arrays.asList(coreSchemaId, EnterpriseExtension.ENTERPRISE_URN)));
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, new HashSet<>(Arrays.asList(coreSchemaId, EnterpriseExtension.ENTERPRISE_URN)));
     return new PatchValidationFramework(schemaAPI, requiredSchemas, coreSchemaId);
   }
 
-  private static Map<String, Schema> getRequredSchemas(final SchemasCallback schemaAPI, final Set<String> requiredSchemaIds) {
+  private static Map<String, Schema> getRequiredSchemas(final SchemasCallback schemaAPI, final Set<String> requiredSchemaIds) {
     // @formatter:off
     return schemaAPI.getSchemas().stream()
         .filter(schema -> schema.getId().startsWith(Schema.EXTENSION_SCHEMA_URN) || requiredSchemaIds.contains(schema.getId()))
