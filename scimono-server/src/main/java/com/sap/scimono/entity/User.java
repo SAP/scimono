@@ -113,7 +113,7 @@ public final class User extends Resource<User> {
 
   @JsonCreator
   private User(@JsonProperty(ID_FIELD) final String id, @JsonProperty(EXTERNAL_ID_FIELD) final String externalId, @JsonProperty(META_FIELD) final Meta meta,
-      @JsonProperty(value = SCHEMAS_FIELD, required = true) final Set<String> schemas, @JsonProperty(value = USER_NAME_FIELD) final String userName,
+      @JsonProperty(value = SCHEMAS_FIELD, required = true) final Set<String> schemas, @JsonProperty(value = USER_NAME_FIELD, required = true) final String userName,
       @JsonProperty(NAME_FIELD) final Name name, @JsonProperty(DISPLAY_NAME_FIELD) final String displayName, @JsonProperty(NICK_NAME_FIELD) final String nickName,
       @JsonProperty(PROFILE_URL_FIELD) final String profileUrl, @JsonProperty(TITLE_FIELD) final String title, @JsonProperty(USER_TYPE_FIELD) final String userType,
       @JsonProperty(PREFERRED_LANGUAGE_FIELD) final String preferredLanguage, @JsonProperty(LOCALE_FIELD) final String locale,
