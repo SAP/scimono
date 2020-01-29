@@ -128,7 +128,7 @@ public interface SchemasCallback {
       return attrHierarchy;
     }
 
-    List<Attribute> subAttributes = getCustomSchema(schemaId).getAttributes();
+    List<Attribute> subAttributes = getSchema(schemaId).getAttributes();
 
     String[] attrPathSequence = attrPath.split(COMPLEX_ATTRIBUTE_DELIMETER_REGEX);
     for (String token : attrPathSequence) {
@@ -164,7 +164,7 @@ public interface SchemasCallback {
 
   default String appendSubAttributeToPath(final String fullAttributePath, final String subAttribute) {
     String combinedAttributePath;
-    if (getCustomSchema(fullAttributePath) == null) {
+    if (getSchema(fullAttributePath) == null) {
       combinedAttributePath = String.join(COMPLEX_ATTRIBUTE_DELIMETER, fullAttributePath, subAttribute);
     } else {
       combinedAttributePath = String.join(SCHEMA_URN_DELIMETER, fullAttributePath, subAttribute);
