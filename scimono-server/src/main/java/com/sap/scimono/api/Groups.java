@@ -161,7 +161,7 @@ public class Groups {
   public Response updateGroup(@PathParam("id") @ValidId final String groupId, final Group groupToUpdate) {
     String newVersion = UUID.randomUUID().toString();
     Meta.Builder lastUpdatedMeta = new Meta.Builder(groupToUpdate.getMeta());
-    lastUpdatedMeta.setLastModified(Instant.now()).setVersion(newVersion);
+    lastUpdatedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(uriInfo.getAbsolutePath().toString());
 
     Group updatedGroup = groupToUpdate.builder().setId(groupId).setMeta(lastUpdatedMeta.build()).build();
     updatedGroup = groupAPI.updateGroup(updatedGroup);
