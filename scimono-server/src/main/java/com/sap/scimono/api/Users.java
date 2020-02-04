@@ -199,7 +199,7 @@ public class Users {
     lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(uriInfo.getAbsolutePath().toString())
         .setResourceType(RESOURCE_TYPE_USER);
     User updatedUser = userToUpdate.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
-    usersAPI.updateUser(updatedUser);
+    updatedUser = usersAPI.updateUser(updatedUser);
 
     logger.trace("Updated user {}, new version is {}", userId, newVersion);
     return Response.ok(updatedUser).tag(newVersion).location(uriInfo.getAbsolutePath()).build();
