@@ -13,6 +13,7 @@ import com.sap.scimono.entity.schema.ResourceType;
 import com.sap.scimono.entity.schema.ResourceType.Builder;
 import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.exception.ResourceNotFoundException;
+import com.sap.scimono.helper.ResourceLocationService;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -27,9 +28,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
-import static com.sap.scimono.helper.Resources.addLocation;
+import static com.sap.scimono.api.API.RESOURCE_TYPES;
 
-@Path(API.RESOURCE_TYPES)
+@Path(RESOURCE_TYPES)
 @Produces(APPLICATION_JSON_SCIM)
 @Consumes(APPLICATION_JSON_SCIM)
 public class ResourceTypes {
@@ -67,34 +68,33 @@ public class ResourceTypes {
       .build();
   //@formatter:on
 
-  @Context
-  private UriInfo uriInfo;
-
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceTypesCallback resourceTypesCallback;
+  private final ResourceLocationService resourceLocationService;
 
-  public ResourceTypes(@Context Application appContext) {
+  public ResourceTypes(@Context Application appContext, @Context UriInfo uriInfo) {
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
 
     resourceTypesCallback = scimApplication.getResourceTypesCallback();
     scimConfig = scimApplication.getConfigurationCallback();
+    resourceLocationService = new ResourceLocationService(uriInfo, scimApplication.getConfigurationCallback(), RESOURCE_TYPES);
   }
 
   @GET
   public PagedByIndexSearchResult<ResourceType> getResourceTypes() {
     List<ResourceType> resources = new ArrayList<>();
 
-    ResourceType userResourceType = addLocation(RESOURCE_TYPE_USER, uriInfo.getAbsolutePathBuilder().path(User.RESOURCE_TYPE_USER));
+    ResourceType userResourceType = resourceLocationService.addLocation(RESOURCE_TYPE_USER, User.RESOURCE_TYPE_USER);
     resources.add(userResourceType);
 
-    ResourceType groupResourceType = addLocation(RESOURCE_TYPE_GROUP, uriInfo.getAbsolutePathBuilder().path(Group.RESOURCE_TYPE_GROUP));
+    ResourceType groupResourceType = resourceLocationService.addLocation(RESOURCE_TYPE_GROUP, Group.RESOURCE_TYPE_GROUP);
     resources.add(groupResourceType);
 
-    ResourceType schemaResourceType = addLocation(RESOURCE_TYPE_SCHEMA, uriInfo.getAbsolutePathBuilder().path(Schema.RESOURCE_TYPE_SCHEMA));
+    ResourceType schemaResourceType = resourceLocationService.addLocation(RESOURCE_TYPE_SCHEMA, Schema.RESOURCE_TYPE_SCHEMA);
     resources.add(schemaResourceType);
 
     PagedResult<ResourceType> customResourceTypes = resourceTypesCallback.getCustomResourceTypes();
-    addLocation(customResourceTypes, uriInfo);
+    resourceLocationService.addLocation(customResourceTypes);
 
     resources.addAll(customResourceTypes.getResources());
 
@@ -127,6 +127,6 @@ public class ResourceTypes {
       throw new ResourceNotFoundException(ResourceType.RESOURCE_TYPE_RESOURCE_TYPE, typeId);
     }
 
-    return addLocation(resourceType, uriInfo.getAbsolutePath());
+    return resourceLocationService.addLocation(resourceType, typeId);
   }
 }
