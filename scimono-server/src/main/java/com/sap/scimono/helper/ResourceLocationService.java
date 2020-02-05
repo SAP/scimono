@@ -1,42 +1,69 @@
 
 package com.sap.scimono.helper;
 
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
-
 import com.sap.scimono.api.API;
-import com.sap.scimono.entity.*;
+import com.sap.scimono.callback.config.SCIMConfigurationCallback;
+import com.sap.scimono.entity.EnterpriseExtension;
+import com.sap.scimono.entity.Group;
+import com.sap.scimono.entity.GroupRef;
+import com.sap.scimono.entity.Manager;
+import com.sap.scimono.entity.MemberRef;
+import com.sap.scimono.entity.Meta;
+import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.Resource.Builder;
+import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PagedResult;
 
+import javax.ws.rs.core.UriBuilder;
+import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class Resources {
+public class ResourceLocationService {
+  private final UriInfo uriInfo;
+  private final URI redirectApiRoot;
+  private final String endpoint;
 
-  private Resources() {
+
+  public ResourceLocationService(UriInfo uriInfo, SCIMConfigurationCallback scimConfigurationAPI, String endpoint) {
+    this.uriInfo = uriInfo;
+    this.redirectApiRoot = scimConfigurationAPI.getRedirectApiRoot();
+    this.endpoint = endpoint;
   }
 
-  public static <T> T addLocation(final Resource<T> resource, final URI resourceLocation) {
-    return addLocation(resource, resourceLocation.toString());
+  public URI getLocation(String path) {
+    return rootUriBuilder().path(endpoint).path(path).build();
   }
 
-  public static <T extends Resource<T>> void addLocation(final PagedResult<T> pagedResources, final UriInfo uriInfo) {
+  public URI getLocation() {
+    return rootUriBuilder().path(endpoint).build();
+  }
+
+  public <T> T addLocation(final Resource<T> resource, final URI resourceLocation) {
+    return addMetaLocation(resource, resourceLocation.toString());
+  }
+
+  public <T> T addLocation(final Resource<T> resource) {
+    return addLocation(resource, rootUriBuilder().path(endpoint).build());
+  }
+
+  public <T extends Resource<T>> void addLocation(final PagedResult<T> pagedResources) {
     List<T> resources = pagedResources.getResources();
     for (int i = 0; i < resources.size(); ++i) {
       T resource = resources.get(i);
-      resource = addLocation(resource, uriInfo.getAbsolutePathBuilder().path(resource.getId()));
+      resource = addLocation(resource, resource.getId());
       resources.set(i, resource);
     }
   }
 
-  public static <T> T addLocation(final Resource<T> resource, final UriBuilder resourceLocationBuilder) {
-    return addLocation(resource, resourceLocationBuilder.build());
+  public <T> T addLocation(final Resource<T> resource, final String path) {
+    return addLocation(resource, rootUriBuilder().path(endpoint).path(path).build());
   }
 
-  private static <T> T addLocation(final Resource<T> resource, final String resourceLocation) {
+
+  private static <T> T addMetaLocation(final Resource<T> resource, final String resourceLocation) {
     Meta.Builder locationMeta = new Meta.Builder(resource.getMeta());
     locationMeta.setLocation(resourceLocation);
 
@@ -46,7 +73,7 @@ public class Resources {
     return resourceWithLocation.build();
   }
 
-  public static Group addMembersLocation(Group group, UriInfo uriInfo) {
+  public Group addMembersLocation(Group group) {
     // @formatter:off
     Set<MemberRef> memberRefsWithLocation = group.getMembers().stream()
         .map(memberRef -> {
@@ -64,7 +91,7 @@ public class Resources {
           }
 
           return new MemberRef.Builder(memberRef)
-            .setReference(uriInfo.getBaseUriBuilder()
+            .setReference(rootUriBuilder()
                 .path(resourceEnpoint)
                 .path(memberRef.getValue())
                 .build()
@@ -76,32 +103,36 @@ public class Resources {
     return new Group.Builder(group).setMembers(memberRefsWithLocation).build();
   }
 
-  public static User addRelationalEntitiesLocation(User user, UriInfo uriInfo) {
+  public User addRelationalEntitiesLocation(User user) {
     User.Builder userBuilder = new User.Builder(user);
 
     if (user.getGroups() != null) {
-      addAssignedGroupsLocation(userBuilder, user.getGroups(), uriInfo);
+      addAssignedGroupsLocation(userBuilder, user.getGroups());
     }
 
     if (user.isExtensionPresent(EnterpriseExtension.ENTERPRISE_URN)) {
       EnterpriseExtension enterpriseExtension = (EnterpriseExtension) user.getExtension(EnterpriseExtension.ENTERPRISE_URN);
-      addManagerLocation(userBuilder, enterpriseExtension, uriInfo);
+      addManagerLocation(userBuilder, enterpriseExtension);
     }
 
     return userBuilder.build();
   }
 
-  private static void addAssignedGroupsLocation(User.Builder userBuilder, List<GroupRef> groupRefs, UriInfo uriInfo) {
+  private UriBuilder rootUriBuilder() {
+    return redirectApiRoot == null ? uriInfo.getBaseUriBuilder() : UriBuilder.fromUri(redirectApiRoot);
+  }
+
+  private void addAssignedGroupsLocation(User.Builder userBuilder, List<GroupRef> groupRefs) {
     // @formatter:off
     List<GroupRef> groupRefsWithLocation = groupRefs.stream().map(groupRef -> new GroupRef.Builder(groupRef)
-        .setReference(uriInfo.getBaseUriBuilder().path(API.GROUPS).path(groupRef.getValue()).build().toString()).build())
+        .setReference(rootUriBuilder().path(API.GROUPS).path(groupRef.getValue()).build().toString()).build())
         .collect(Collectors.toList());
     // @formatter:on
 
     userBuilder.setGroups(groupRefsWithLocation);
   }
 
-  private static void addManagerLocation(User.Builder userBuilder, EnterpriseExtension enterpriseExtension, UriInfo uriInfo) {
+  private void addManagerLocation(User.Builder userBuilder, EnterpriseExtension enterpriseExtension) {
     Manager manager = enterpriseExtension.getManager();
     if (manager == null) {
       return;
@@ -109,7 +140,7 @@ public class Resources {
 
     // @formatter:off
     Manager managerWithLocation = new Manager.Builder(manager)
-        .setReference(uriInfo.getBaseUriBuilder().path(API.USERS).path(manager.getValue()).toString()).build();
+        .setReference(rootUriBuilder().path(API.USERS).path(manager.getValue()).toString()).build();
     // @formatter:on
 
     userBuilder.removeExtension(EnterpriseExtension.ENTERPRISE_URN);
