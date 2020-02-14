@@ -19,6 +19,7 @@
 
     <modules>
         <module>simple-server</module>
+        <module>spring-boot-server</module>
     </modules>
 
 
