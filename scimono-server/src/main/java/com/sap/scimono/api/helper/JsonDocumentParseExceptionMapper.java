@@ -8,7 +8,8 @@ import com.fasterxml.jackson.core.JsonParseException;
 import com.sap.scimono.api.API;
 import com.sap.scimono.entity.ErrorResponse;
 
-public class JsonParseExceptionMapper implements ExceptionMapper<JsonParseException> {
+public class JsonDocumentParseExceptionMapper implements ExceptionMapper<JsonParseException> {
+
   private static final String JSON_PARSE_EXCEPTION_MSG = "Parsing error in sent JSON.";
 
   @Override

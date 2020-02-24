@@ -8,7 +8,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sap.scimono.api.API;
 import com.sap.scimono.entity.ErrorResponse;
 
-public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingException> {
+public class JsonFieldMappingExceptionMapper implements ExceptionMapper<JsonMappingException> {
 
   private static final String INVALID_FIELDS_MSG = "Invalid fields.";
 

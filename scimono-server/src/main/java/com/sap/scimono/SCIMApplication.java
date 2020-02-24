@@ -20,8 +20,8 @@ import com.sap.scimono.api.ServletRequestProviderFilter;
 import com.sap.scimono.api.Users;
 import com.sap.scimono.api.helper.InternalExceptionMapper;
 import com.sap.scimono.api.helper.JacksonResolver;
-import com.sap.scimono.api.helper.JsonMappingExceptionMapper;
-import com.sap.scimono.api.helper.JsonParseExceptionMapper;
+import com.sap.scimono.api.helper.JsonDocumentParseExceptionMapper;
+import com.sap.scimono.api.helper.JsonFieldMappingExceptionMapper;
 import com.sap.scimono.api.helper.JsonProcessingExceptionMapper;
 import com.sap.scimono.api.helper.ScimExceptionMapper;
 import com.sap.scimono.api.helper.ValidationExceptionMapper;
@@ -67,10 +67,9 @@ public abstract class SCIMApplication extends Application {
 
     // internal providers
     scimResources.add(InternalExceptionMapper.class);
-//    scimResources.add(InvalidInputExceptionMapper.class);
     scimResources.add(JacksonResolver.class);
-    scimResources.add(JsonMappingExceptionMapper.class);
-    scimResources.add(JsonParseExceptionMapper.class);
+    scimResources.add(JsonFieldMappingExceptionMapper.class);
+    scimResources.add(JsonDocumentParseExceptionMapper.class);
     scimResources.add(JsonProcessingExceptionMapper.class);
     scimResources.add(ScimExceptionMapper.class);
 
