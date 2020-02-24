@@ -74,7 +74,11 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
   }
 
   private static List<ErrorResponse> constraintViolationToErrorResponses(final ConstraintViolationException violations) {
-    return violations.getConstraintViolations().stream()
-        .map(violation -> new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), null, violation.getMessage())).collect(Collectors.toList());
+    // @formatter:off
+    return violations.getConstraintViolations()
+        .stream()
+        .map(violation -> new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), null, violation.getMessage()))
+        .collect(Collectors.toList());
+   // @formatter:on
   }
 }
