@@ -1,9 +1,9 @@
 
 package com.sap.scimono.api.helper;
 
-import com.sap.scimono.entity.ErrorResponse;
-import com.sap.scimono.entity.validation.patch.PatchValidationException;
-import com.sap.scimono.exception.SCIMException;
+import java.util.Iterator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.ConstraintViolation;
 import javax.validation.ConstraintViolationException;
@@ -15,15 +15,17 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
-import java.util.Iterator;
-import java.util.List;
-import java.util.stream.Collectors;
+
+import com.sap.scimono.api.API;
+import com.sap.scimono.entity.ErrorResponse;
+import com.sap.scimono.entity.validation.patch.PatchValidationException;
+import com.sap.scimono.exception.SCIMException;
 
 public class ValidationExceptionMapper implements ExceptionMapper<ValidationException> {
 
   @Override
   public Response toResponse(final ValidationException exception) {
-    return buildValidationResponse(exception, MediaType.APPLICATION_JSON_TYPE);
+    return buildValidationResponse(exception, MediaType.valueOf(API.APPLICATION_JSON_SCIM));
   }
 
   private Response buildValidationResponse(final ValidationException exception, final MediaType mediaType) {
@@ -32,7 +34,7 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
     } else if (exception instanceof PatchValidationException) {
       return buildPatchValidationResponse((PatchValidationException) exception, mediaType);
     } else {
-      return Response.serverError().entity(exception.getMessage()).build();
+      return Response.serverError().entity(exception.getMessage()).type(mediaType).build();
     }
   }
 
@@ -72,9 +74,11 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
   }
 
   private static List<ErrorResponse> constraintViolationToErrorResponses(final ConstraintViolationException violations) {
+    // @formatter:off
     return violations.getConstraintViolations()
         .stream()
         .map(violation -> new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), null, violation.getMessage()))
         .collect(Collectors.toList());
+   // @formatter:on
   }
 }

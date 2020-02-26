@@ -5,6 +5,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
+import com.sap.scimono.api.API;
 import com.sap.scimono.entity.ErrorResponse;
 import com.sap.scimono.exception.SCIMException;
 
@@ -22,7 +23,7 @@ public class ScimExceptionMapper implements ExceptionMapper<WebApplicationExcept
     }
 
     ErrorResponse scimError = new ErrorResponse(exception.getResponse().getStatus(), scimType, exception.getMessage());
-    return Response.fromResponse(exception.getResponse()).entity(scimError).build();
+    return Response.fromResponse(exception.getResponse()).entity(scimError).type(API.APPLICATION_JSON_SCIM).build();
   }
 
 }
