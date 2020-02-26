@@ -11,6 +11,10 @@
     <packaging>jar</packaging>
     <artifactId>scimono-client</artifactId>
 
+    <properties>
+        <jetty.version>9.4.26.v20200117</jetty.version>
+    </properties>
+
     <build>
         <plugins>
             <plugin>
@@ -24,6 +28,20 @@
             </plugin>
         </plugins>
     </build>
+
+    <dependencyManagement>
+        <dependencies>
+            <!-- Jetty dependencies come transitively from WireMock -->
+            <!-- The version is fixed here because of vulnerabilities in older versions -->
+            <dependency>
+                <groupId>org.eclipse.jetty</groupId>
+                <artifactId>jetty-bom</artifactId>
+                <version>${jetty.version}</version>
+                <scope>import</scope>
+                <type>pom</type>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
 
     <dependencies>
         <dependency>

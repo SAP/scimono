@@ -41,8 +41,8 @@ public class Users implements UsersCallback {
     }
 
     @Override
-    public void updateUser(User user) {
-
+    public User updateUser(User user) {
+        return user;
     }
 
     @Override
