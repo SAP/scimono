@@ -10,7 +10,7 @@ import com.sap.scimono.entity.ErrorResponse;
 
 public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProcessingException> {
 
-  private static final String JSON_PROCESSING_EXCEPTION_MSG = "One of the request inputs is not valid.";
+  private static final String JSON_PROCESSING_EXCEPTION_MSG = "Error parsing request body.";
 
   @Override
   public Response toResponse(final JsonProcessingException exception) {

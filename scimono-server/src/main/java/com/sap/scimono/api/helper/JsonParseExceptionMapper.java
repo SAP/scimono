@@ -10,7 +10,7 @@ import com.sap.scimono.entity.ErrorResponse;
 
 public class JsonParseExceptionMapper implements ExceptionMapper<JsonParseException> {
 
-  private static final String JSON_PARSE_EXCEPTION_MSG = "Parsing error in sent JSON.";
+  private static final String JSON_PARSE_EXCEPTION_MSG = "Error parsing request body.";
 
   @Override
   public Response toResponse(final JsonParseException exception) {
