@@ -1,12 +1,11 @@
 
 package com.sap.scimono.entity.validation;
 
-import static com.sap.scimono.entity.schema.AttributeDataType.COMPLEX;
-
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +31,7 @@ public class AttributeAndValueValidator implements Validator<Object> {
   }
 
   public AttributeAndValueValidator(final Schema schema, final Map<String, Schema> permittedSchemas, final boolean isOperationReplacing) {
-    this(schemaToAttribute(schema), permittedSchemas, isOperationReplacing);
+    this(schema.toAttribute(), permittedSchemas, isOperationReplacing);
   }
 
   @Override
@@ -80,14 +79,14 @@ public class AttributeAndValueValidator implements Validator<Object> {
 
       // @formatter:off
       Attribute targetAttribute = null;
-      if (permittedSchemas.keySet().stream().anyMatch(attrName::equalsIgnoreCase)) {
+      Optional<String> schemaName = permittedSchemas.keySet().stream().filter(attrName::equalsIgnoreCase).findAny();
+      if (schemaName.isPresent()) {
         targetAttribute = new Attribute.Builder()
             .multiValued(false)
             .type(AttributeDataType.COMPLEX.toString())
-            .addSubAttributes(permittedSchemas.get(attrName).getAttributes())
+            .addSubAttributes(permittedSchemas.get(schemaName.get()).getAttributes())
             .build();
       } else {
-
         targetAttribute = permittedAttributes.stream()
           .filter(attr -> attrName.equalsIgnoreCase(attr.getName()))
           .findAny()
@@ -107,18 +106,6 @@ public class AttributeAndValueValidator implements Validator<Object> {
       validators.add(new PatchAttributeMutabilityValidator(isOperationReplacing));
     }
     validators.forEach(v -> v.validate(аttribute));
-  }
-
-  private static Attribute schemaToAttribute(final Schema schema) {
-    // @formatter:off
-    return new Attribute.Builder()
-        .name(schema.getId())
-        .multiValued(false)
-        .type(COMPLEX.toString())
-        .mutability("readWrite")
-        .addSubAttributes(schema.getAttributes())
-        .build();
-    // @formatter:on
   }
 
 }

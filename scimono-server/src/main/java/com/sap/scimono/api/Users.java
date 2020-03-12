@@ -11,13 +11,15 @@ import static com.sap.scimono.entity.User.RESOURCE_TYPE_USER;
 import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
+import static com.sap.scimono.entity.schema.AttributeDataType.COMPLEX;
 
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -46,19 +48,25 @@ import com.sap.scimono.api.patch.PATCH;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.callback.users.UsersCallback;
+import com.sap.scimono.entity.EnterpriseExtension;
+import com.sap.scimono.entity.Manager;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.User;
+import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
+import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
-import com.sap.scimono.entity.validation.AttributeAndValueValidator;
+import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
+import com.sap.scimono.entity.validation.patch.PatchValidationException;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
+import com.sap.scimono.exception.SCIMException;
 import com.sap.scimono.helper.ResourceLocationService;
 
 @Path(USERS)
@@ -177,14 +185,15 @@ public class Users {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
 
-    newUser.getExtensions().values()
-        .forEach(extension -> new AttributeAndValueValidator(schemaAPI.getSchema(extension.getUrn()), Collections.emptyMap(), false)
-            .validate(extension.getAttributes()));
+    User userWithoutReadOnlyAttributes = removeReadOnlyAttributesFromUser(newUser);
+
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI, false);
+    userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
 
     String version = UUID.randomUUID().toString();
     Meta userMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_USER).build();
 
-    User.Builder userWithMeta = newUser.builder().setMeta(userMeta);
+    User.Builder userWithMeta = userWithoutReadOnlyAttributes.builder().setMeta(userMeta);
     usersAPI.generateId().ifPresent(userWithMeta::setId);
 
     User createdUser = usersAPI.createUser(userWithMeta.build());
@@ -199,9 +208,10 @@ public class Users {
   @Path("{id}")
   public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
 
-    userToUpdate.getExtensions().values()
-        .forEach(extension -> new AttributeAndValueValidator(schemaAPI.getSchema(extension.getUrn()), Collections.emptyMap(), false)
-            .validate(extension.getAttributes()));
+    User userWithoutReadOnlyAttributes = removeReadOnlyAttributesFromUser(userToUpdate);
+
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI, true);
+    userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
 
     String newVersion = UUID.randomUUID().toString();
 
@@ -209,7 +219,7 @@ public class Users {
 
     URI userLocation = resourceLocationService.getLocation(userId);
     lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(userLocation.toString()).setResourceType(RESOURCE_TYPE_USER);
-    User updatedUser = userToUpdate.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
+    User updatedUser = userWithoutReadOnlyAttributes.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
     updatedUser = usersAPI.updateUser(updatedUser);
 
     logger.trace("Updated user {}, new version is {}", userId, newVersion);
@@ -245,4 +255,48 @@ public class Users {
     return getUsers(0, 0, null, null);
   }
 
+  private User removeReadOnlyAttributesFromUser(final User user) {
+
+    List<Extension> extensions = user.getExtensions().values().stream().map(extension -> {
+      if (extension instanceof EnterpriseExtension) {
+        EnterpriseExtension enterpriseExtension = (EnterpriseExtension) extension;
+        Manager managerWithoutDisplayName = new Manager.Builder(enterpriseExtension.getManager()).setDisplayName(null).build();
+        return new EnterpriseExtension.Builder(enterpriseExtension).setManager(managerWithoutDisplayName).build();
+      }
+      Map<String, Object> attributes = extension.getAttributes();
+      removeReadOnlyAttributes(schemaAPI.getSchema(extension.getUrn()).toAttribute(), attributes);
+      return new Extension.Builder(extension).setAttributes(attributes).build();
+    }).collect(Collectors.toList());
+
+    return user.builder().removeExtensions().addExtensions(extensions).build();
+  }
+
+  private boolean removeReadOnlyAttributes(final Attribute targetAttribute, final Object value) {
+    if ("readOnly".equals(targetAttribute.getMutability())) {
+      return true;
+    }
+
+    if (!COMPLEX.toString().equals(targetAttribute.getType())) {
+      return false;
+    }
+
+    if (value instanceof Map) {
+      @SuppressWarnings("unchecked")
+      Map<String, Object> valueMap = (Map<String, Object>) value;
+
+      for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
+        // @formatter:off
+        Attribute subAttribute = targetAttribute.getSubAttributes().stream()
+            .filter(attribute -> entry.getKey().equalsIgnoreCase(attribute.getName()))
+            .findAny()
+            .orElseThrow(() -> new PatchValidationException(SCIMException.Type.INVALID_SYNTAX, String.format("Value attribute with name %s does not exist", entry.getKey())));
+        // @formatter:on
+        if (removeReadOnlyAttributes(subAttribute, entry.getValue())) {
+          valueMap.remove(entry.getKey());
+        }
+      }
+    }
+
+    return false;
+  }
 }

@@ -1,6 +1,7 @@
 
 package com.sap.scimono.entity.schema;
 
+import static com.sap.scimono.entity.schema.AttributeDataType.COMPLEX;
 import static java.util.Objects.hash;
 
 import java.util.ArrayList;
@@ -181,6 +182,18 @@ public class Schema extends Resource<Schema> {
         .append(", attributes=").append(attributes)
         .append("]").toString();
     //@formatter:on
+  }
+
+  public Attribute toAttribute() {
+    // @formatter:off
+    return new Attribute.Builder()
+        .name(this.getId())
+        .multiValued(false)
+        .type(COMPLEX.toString())
+        .mutability("readWrite")
+        .addSubAttributes(attributes)
+        .build();
+    // @formatter:on
   }
 
 }

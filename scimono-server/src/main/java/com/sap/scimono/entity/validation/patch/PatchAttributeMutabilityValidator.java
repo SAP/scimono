@@ -28,7 +28,7 @@ public class PatchAttributeMutabilityValidator implements Validator<Attribute> {
 
   private void validateForImmutable(final Attribute attribute) {
     if (isOperationReplacing && (attribute.getMutability().equals("immutable"))) {
-      throw new PatchValidationException(SCIMException.Type.UNIQUENESS,
+      throw new PatchValidationException(SCIMException.Type.MUTABILITY,
           String.format("Attribute with name '%s' cannot be modified because it is immutable", attribute.getName()));
     }
   }
