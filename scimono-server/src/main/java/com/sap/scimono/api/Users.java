@@ -15,6 +15,7 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_STA
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
 
@@ -37,7 +38,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import com.sap.scimono.helper.ResourceLocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +55,11 @@ import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
+import com.sap.scimono.entity.validation.AttributeAndValueValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
+import com.sap.scimono.helper.ResourceLocationService;
 
 @Path(USERS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -175,6 +177,10 @@ public class Users {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
 
+    newUser.getExtensions().values()
+        .forEach(extension -> new AttributeAndValueValidator(schemaAPI.getSchema(extension.getUrn()), Collections.emptyMap(), false)
+            .validate(extension.getAttributes()));
+
     String version = UUID.randomUUID().toString();
     Meta userMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_USER).build();
 
@@ -192,13 +198,17 @@ public class Users {
   @PUT
   @Path("{id}")
   public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
+
+    userToUpdate.getExtensions().values()
+        .forEach(extension -> new AttributeAndValueValidator(schemaAPI.getSchema(extension.getUrn()), Collections.emptyMap(), false)
+            .validate(extension.getAttributes()));
+
     String newVersion = UUID.randomUUID().toString();
 
     Meta.Builder lastModifiedMeta = new Meta.Builder();
 
     URI userLocation = resourceLocationService.getLocation(userId);
-    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(userLocation.toString())
-        .setResourceType(RESOURCE_TYPE_USER);
+    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(userLocation.toString()).setResourceType(RESOURCE_TYPE_USER);
     User updatedUser = userToUpdate.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
     updatedUser = usersAPI.updateUser(updatedUser);
 
