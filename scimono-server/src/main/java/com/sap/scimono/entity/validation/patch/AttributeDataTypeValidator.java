@@ -10,7 +10,6 @@ import com.sap.scimono.entity.schema.AttributeDataType;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.exception.SCIMException;
 
-
 public class AttributeDataTypeValidator implements Validator<Attribute> {
 
   private static final String BASE_64_PERMITTED_CHARACTERS_PATTERN = "^[A-Za-z0-9+\\/=]+$";
@@ -20,12 +19,12 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
 
   private JsonNode value;
 
-  public AttributeDataTypeValidator(JsonNode value) {
+  public AttributeDataTypeValidator(final JsonNode value) {
     this.value = value;
   }
 
   @Override
-  public void validate(Attribute attribute) {
+  public void validate(final Attribute attribute) {
     if (attribute.isMultiValued()) {
       validateMultivaluedValueDataType(attribute, value);
       return;
@@ -33,14 +32,14 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
     validateSingleValueDataType(attribute, value);
   }
 
-  private void validateSingleValueDataType(Attribute attribute, JsonNode value) {
+  private void validateSingleValueDataType(final Attribute attribute, final JsonNode value) {
     if (!isValueDataTypeCorrect(attribute.getType(), value)) {
       throw new PatchValidationException(ERROR_TYPE, ERROR_MESSAGE);
     }
   }
 
-  private void validateMultivaluedValueDataType(Attribute attribute, JsonNode value) {
-    if (!value.isContainerNode()) {
+  private void validateMultivaluedValueDataType(final Attribute attribute, final JsonNode value) {
+    if (!value.isArray()) {
       throw new PatchValidationException(ERROR_TYPE, ERROR_MESSAGE);
     }
 
@@ -51,7 +50,7 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
     }
   }
 
-  private boolean isValueDataTypeCorrect(String type, JsonNode value) {
+  private boolean isValueDataTypeCorrect(final String type, final JsonNode value) {
     switch (AttributeDataType.of(type)) {
       case STRING:
         return value.isTextual();

@@ -6,7 +6,7 @@ import java.util.Collections;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.Resource;
 
-public class ResourceCustomAttributesValidator<T extends Resource<?>> implements Validator<T> {
+public class ResourceCustomAttributesValidator<T extends Resource<T>> implements Validator<T> {
 
   private final SchemasCallback schemaAPI;
   private final boolean isOperationReplacing;

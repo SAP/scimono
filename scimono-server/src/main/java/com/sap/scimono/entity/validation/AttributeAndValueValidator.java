@@ -47,8 +47,18 @@ public class AttributeAndValueValidator implements Validator<Object> {
 
   private void validateValueAttributes(final Attribute attribute, final JsonNode value, final boolean isArrayFound) {
     if (attribute.isMultiValued() && value.isArray()) {
+      // @formatter:off
+      Attribute singleValuedAttribute = new Attribute.Builder()
+          .name(attribute.getName())
+          .multiValued(false)
+          .type(attribute.getType())
+          .mutability(attribute.getMutability())
+          .addSubAttributes(attribute.getSubAttributes())
+          .build();
+      // @formatter:on
+
       for (JsonNode valueElement : value) {
-        validateValueAttributes(attribute, valueElement, true);
+        validateValueAttributes(singleValuedAttribute, valueElement, true);
       }
     } else {
       validateAttribute(attribute, value, isArrayFound);
@@ -94,7 +104,7 @@ public class AttributeAndValueValidator implements Validator<Object> {
       }
 
       validateValueAttributes(targetAttribute, attrValue, isArrayFound);
-   // @formatter:on
+      // @formatter:on
     }
   }
 
