@@ -17,7 +17,7 @@ public class ResourceCustomAttributesValidator<T extends Resource<T>> implements
   @Override
   public void validate(final T resource) {
     resource.getExtensions().values()
-        .forEach(extension -> new AttributeAndValueValidator(schemaAPI.getSchema(extension.getUrn()), Collections.emptyMap())
+        .forEach(extension -> new AttributeAndValueValidator(schemaAPI.getSchema(extension.getUrn()).toAttribute(), Collections.emptyMap())
             .validate(extension.getAttributes()));
   }
 

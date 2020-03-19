@@ -10,7 +10,6 @@ import java.util.stream.Collectors;
 
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.EnterpriseExtension;
-import com.sap.scimono.entity.Manager;
 import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Attribute;
@@ -30,11 +29,11 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
     List<Extension> extensions = resource.getExtensions().values().stream().map(extension -> {
       if (extension instanceof EnterpriseExtension) {
         EnterpriseExtension enterpriseExtension = (EnterpriseExtension) extension;
-        Manager manager = enterpriseExtension.getManager();
-        if (manager != null) {
-          Manager managerWithoutDisplayName = new Manager.Builder().setDisplayName(null).build();
-          return new EnterpriseExtension.Builder(enterpriseExtension).setManager(managerWithoutDisplayName).build();
-        }
+//        Manager manager = enterpriseExtension.getManager();
+//        if (manager != null) {
+//          Manager managerWithoutDisplayName = new Manager.Builder().setDisplayName(null).build();
+//          return new EnterpriseExtension.Builder(enterpriseExtension).setManager(managerWithoutDisplayName).build();
+//        }
 
         return enterpriseExtension;
       }
