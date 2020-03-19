@@ -51,13 +51,13 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
   }
 
   private boolean isValueDataTypeCorrect(final String type, final JsonNode value) {
-    if (value.isTextual() && value.toString().isEmpty()) {
+    if (value.isTextual() && value.asText().isEmpty()) {
       return true;
     }
 
     switch (AttributeDataType.of(type)) {
       case STRING:
-        return value.isTextual();
+        return true;
       case INTEGER:
         return value.isIntegralNumber();
       case BOOLEAN:
@@ -65,7 +65,7 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
       case COMPLEX:
         return value.isObject();
       case DECIMAL:
-        return value.isDouble();
+        return value.isBigDecimal() || value.isDouble() || value.isIntegralNumber();
       case REFERENCE:
         return value.isTextual() && value.asText().matches(URI_PATTERN);
       case BINARY:

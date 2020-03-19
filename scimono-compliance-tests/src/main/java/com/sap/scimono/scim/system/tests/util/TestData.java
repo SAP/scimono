@@ -1,6 +1,21 @@
 
 package com.sap.scimono.scim.system.tests.util;
 
+import static com.sap.scimono.entity.definition.CoreGroupAttributes.MEMBERS_TYPE;
+import static com.sap.scimono.entity.definition.CoreGroupAttributes.MEMBERS_VALUE;
+import static com.sap.scimono.entity.definition.ResourceConstants.DISPLAY_NAME_FIELD;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -26,21 +41,6 @@ import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
-
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.stream.Collectors;
-
-import static com.sap.scimono.entity.definition.CoreGroupAttributes.MEMBERS_TYPE;
-import static com.sap.scimono.entity.definition.CoreGroupAttributes.MEMBERS_VALUE;
-import static com.sap.scimono.entity.definition.ResourceConstants.DISPLAY_NAME_FIELD;
 
 public class TestData {
   public static final JsonNodeFactory JACKSON_NODE_FACTORY = JsonNodeFactory.instance;
@@ -305,7 +305,7 @@ public class TestData {
     attrNameToType.put("integerAttribute", ExtensionFieldType.INTEGER);
     attrNameToType.put("decimalAttribute", ExtensionFieldType.DECIMAL);
     attrNameToType.put("stringAttribute", ExtensionFieldType.STRING);
-    attrNameToType.put("datetimeAttribute", ExtensionFieldType.DATETIME);
+    attrNameToType.put("dateTimeAttribute", ExtensionFieldType.DATETIME);
     attrNameToType.put("binaryAttribute", ExtensionFieldType.BINARY);
     attrNameToType.put("referenceAttribute", ExtensionFieldType.REFERENCE);
 
