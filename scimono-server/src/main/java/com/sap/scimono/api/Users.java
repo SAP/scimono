@@ -180,7 +180,7 @@ public class Users {
     ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.clean(newUser);
 
-    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI, false);
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
 
     String version = UUID.randomUUID().toString();
@@ -204,7 +204,7 @@ public class Users {
     ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.clean(userToUpdate);
 
-    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI, true);
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
 
     String newVersion = UUID.randomUUID().toString();

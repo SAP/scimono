@@ -1,9 +1,9 @@
 
-package com.sap.scimono.entity.validation.patch;
+package com.sap.scimono.entity.validation;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;
-import com.sap.scimono.entity.validation.Validator;
+import com.sap.scimono.entity.validation.patch.PatchValidationException;
 import com.sap.scimono.exception.SCIMException;
 import com.sap.scimono.helper.Strings;
 

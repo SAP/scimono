@@ -30,11 +30,18 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
     List<Extension> extensions = resource.getExtensions().values().stream().map(extension -> {
       if (extension instanceof EnterpriseExtension) {
         EnterpriseExtension enterpriseExtension = (EnterpriseExtension) extension;
-        Manager managerWithoutDisplayName = new Manager.Builder(enterpriseExtension.getManager()).setDisplayName(null).build();
-        return new EnterpriseExtension.Builder(enterpriseExtension).setManager(managerWithoutDisplayName).build();
+        Manager manager = enterpriseExtension.getManager();
+        if (manager != null) {
+          Manager managerWithoutDisplayName = new Manager.Builder().setDisplayName(null).build();
+          return new EnterpriseExtension.Builder(enterpriseExtension).setManager(managerWithoutDisplayName).build();
+        }
+
+        return enterpriseExtension;
       }
+
       Map<String, Object> attributes = extension.getAttributes();
       removeReadOnlyAttributes(schemaAPI.getSchema(extension.getUrn()).toAttribute(), attributes);
+
       return new Extension.Builder(extension).setAttributes(attributes).build();
     }).collect(Collectors.toList());
 

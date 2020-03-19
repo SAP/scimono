@@ -12,9 +12,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.AttributeDataType;
 import com.sap.scimono.entity.schema.Schema;
-import com.sap.scimono.entity.validation.patch.AttributeDataTypeValidator;
-import com.sap.scimono.entity.validation.patch.CanonicalValuesValidator;
-import com.sap.scimono.entity.validation.patch.PatchAttributeMutabilityValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationException;
 import com.sap.scimono.exception.SCIMException;
 
@@ -22,16 +19,14 @@ public class AttributeAndValueValidator implements Validator<Object> {
 
   private final Attribute targetAttribute;
   private final Map<String, Schema> permittedSchemas;
-  private final boolean isOperationReplacing;
 
-  public AttributeAndValueValidator(final Attribute targetAttribute, final Map<String, Schema> permittedSchemas, final boolean isOperationReplacing) {
+  public AttributeAndValueValidator(final Attribute targetAttribute, final Map<String, Schema> permittedSchemas) {
     this.targetAttribute = targetAttribute;
     this.permittedSchemas = permittedSchemas;
-    this.isOperationReplacing = isOperationReplacing;
   }
 
-  public AttributeAndValueValidator(final Schema schema, final Map<String, Schema> permittedSchemas, final boolean isOperationReplacing) {
-    this(schema.toAttribute(), permittedSchemas, isOperationReplacing);
+  public AttributeAndValueValidator(final Schema schema, final Map<String, Schema> permittedSchemas) {
+    this(schema.toAttribute(), permittedSchemas);
   }
 
   @Override
@@ -42,15 +37,16 @@ public class AttributeAndValueValidator implements Validator<Object> {
     } else {
       jsonNodeValue = new ObjectMapper().valueToTree(value);
     }
-    validateValueAttributes(targetAttribute, jsonNodeValue, false);
+    validateValueAttributes(targetAttribute, jsonNodeValue);
   }
 
-  private void validateValueAttributes(final Attribute attribute, final JsonNode value, final boolean isArrayFound) {
+  private void validateValueAttributes(final Attribute attribute, final JsonNode value) {
     if (attribute.isMultiValued() && value.isArray()) {
       // @formatter:off
       Attribute singleValuedAttribute = new Attribute.Builder()
           .name(attribute.getName())
           .multiValued(false)
+          .required(false)
           .type(attribute.getType())
           .mutability(attribute.getMutability())
           .addSubAttributes(attribute.getSubAttributes())
@@ -58,12 +54,12 @@ public class AttributeAndValueValidator implements Validator<Object> {
       // @formatter:on
 
       for (JsonNode valueElement : value) {
-        validateValueAttributes(singleValuedAttribute, valueElement, true);
+        validateValueAttributes(singleValuedAttribute, valueElement);
       }
     } else {
-      validateAttribute(attribute, value, isArrayFound);
+      validateAttribute(attribute, value);
       if (AttributeDataType.COMPLEX.toString().equals(attribute.getType())) {
-        validateComplexAttribute(value, attribute.getSubAttributes(), isArrayFound);
+        validateComplexAttribute(value, attribute.getSubAttributes());
       } else {
         validateSimpleAttribute(attribute, value);
       }
@@ -76,7 +72,7 @@ public class AttributeAndValueValidator implements Validator<Object> {
     }
   }
 
-  private void validateComplexAttribute(final JsonNode value, final List<Attribute> permittedAttributes, final boolean isArrayFound) {
+  private void validateComplexAttribute(final JsonNode value, final List<Attribute> permittedAttributes) {
     if (!value.isObject()) {
       throw new PatchValidationException(SCIMException.Type.INVALID_SYNTAX, "value is not object");
     }
@@ -93,6 +89,7 @@ public class AttributeAndValueValidator implements Validator<Object> {
       if (schemaName.isPresent()) {
         targetAttribute = new Attribute.Builder()
             .multiValued(false)
+            .required(false)
             .type(AttributeDataType.COMPLEX.toString())
             .addSubAttributes(permittedSchemas.get(schemaName.get()).getAttributes())
             .build();
@@ -102,19 +99,17 @@ public class AttributeAndValueValidator implements Validator<Object> {
           .findAny()
           .orElseThrow(() -> new PatchValidationException(SCIMException.Type.INVALID_PATH, String.format("Value attribute with name %s does not exist", attrName)));
       }
-
-      validateValueAttributes(targetAttribute, attrValue, isArrayFound);
       // @formatter:on
+
+      validateValueAttributes(targetAttribute, attrValue);
     }
   }
 
-  private void validateAttribute(final Attribute аttribute, final JsonNode value, final boolean isArrayFound) {
+  private void validateAttribute(final Attribute аttribute, final JsonNode value) {
     List<Validator<Attribute>> validators = new LinkedList<>();
     validators.add(new CanonicalValuesValidator(value));
     validators.add(new AttributeDataTypeValidator(value));
-    if (!isArrayFound) {
-      validators.add(new PatchAttributeMutabilityValidator(isOperationReplacing));
-    }
+    validators.add(new RequiredAttributeValidator(value));
     validators.forEach(v -> v.validate(аttribute));
   }
 

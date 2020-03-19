@@ -1,5 +1,5 @@
 
-package com.sap.scimono.entity.validation.patch;
+package com.sap.scimono.entity.validation;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -7,7 +7,7 @@ import java.time.format.DateTimeParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.AttributeDataType;
-import com.sap.scimono.entity.validation.Validator;
+import com.sap.scimono.entity.validation.patch.PatchValidationException;
 import com.sap.scimono.exception.SCIMException;
 
 public class AttributeDataTypeValidator implements Validator<Attribute> {
@@ -51,6 +51,10 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
   }
 
   private boolean isValueDataTypeCorrect(final String type, final JsonNode value) {
+    if (value.isTextual() && value.toString().isEmpty()) {
+      return true;
+    }
+
     switch (AttributeDataType.of(type)) {
       case STRING:
         return value.isTextual();

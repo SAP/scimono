@@ -32,13 +32,13 @@ public class PatchOperationAttributeAndValueValidator implements Validator<Patch
 
     AttributeAndValueValidator attributeAndValueValidator;
     if (Strings.isNullOrEmpty(path)) {
-      attributeAndValueValidator = new AttributeAndValueValidator(schemaAPI.getSchema(coreSchemaId), permittedSchemas, true);
+      attributeAndValueValidator = new AttributeAndValueValidator(schemaAPI.getSchema(coreSchemaId), permittedSchemas);
     } else if (schemaAPI.getSchema(path) != null) {
-      attributeAndValueValidator = new AttributeAndValueValidator(schemaAPI.getSchema(path), permittedSchemas, true);
+      attributeAndValueValidator = new AttributeAndValueValidator(schemaAPI.getSchema(path), permittedSchemas);
     } else {
       String pathWithoutFilter = schemaAPI.removeValueFilterFromAttributeNotation(path);
       Attribute targetAttribute = schemaAPI.getAttribute(pathWithoutFilter);
-      attributeAndValueValidator = new AttributeAndValueValidator(targetAttribute, permittedSchemas, true);
+      attributeAndValueValidator = new AttributeAndValueValidator(targetAttribute, permittedSchemas);
     }
 
     attributeAndValueValidator.validate(value);
