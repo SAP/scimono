@@ -25,10 +25,6 @@ public class AttributeAndValueValidator implements Validator<Object> {
     this.permittedSchemas = permittedSchemas;
   }
 
-  public AttributeAndValueValidator(final Schema schema, final Map<String, Schema> permittedSchemas) {
-    this(schema.toAttribute(), permittedSchemas);
-  }
-
   @Override
   public void validate(final Object value) {
     JsonNode jsonNodeValue;
