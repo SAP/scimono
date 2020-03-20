@@ -13,6 +13,7 @@ import com.sap.scimono.entity.EnterpriseExtension;
 import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Attribute;
+import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.entity.validation.patch.PatchValidationException;
 import com.sap.scimono.exception.SCIMException;
 
@@ -39,7 +40,11 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
       }
 
       Map<String, Object> attributes = extension.getAttributes();
-      removeReadOnlyAttributes(schemaAPI.getSchema(extension.getUrn()).toAttribute(), attributes);
+      Schema customSchema = schemaAPI.getSchema(extension.getUrn());
+      if (customSchema == null) {
+        throw new PatchValidationException(SCIMException.Type.INVALID_SYNTAX, String.format("Schema %s does not exist.", extension.getUrn()));
+      }
+      removeReadOnlyAttributes(customSchema.toAttribute(), attributes);
 
       return new Extension.Builder(extension).setAttributes(attributes).build();
     }).collect(Collectors.toList());
