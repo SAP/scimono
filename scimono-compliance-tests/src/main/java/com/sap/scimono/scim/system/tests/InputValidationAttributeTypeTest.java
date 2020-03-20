@@ -101,8 +101,8 @@ public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
         Arguments.of(201, "decimalAttribute", null),
 
         Arguments.of(201, "stringAttribute", ""),
-        Arguments.of(201, "stringAttribute", -12.12),
-        Arguments.of(201, "stringAttribute", -3),
+        Arguments.of(400, "stringAttribute", -12.12),
+        Arguments.of(400, "stringAttribute", -3),
         Arguments.of(201, "stringAttribute", "validString1"),
         Arguments.of(201, "stringAttribute", "null"),
         Arguments.of(201, "stringAttribute", null),

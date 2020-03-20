@@ -57,7 +57,7 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
 
     switch (AttributeDataType.of(type)) {
       case STRING:
-        return true;
+        return value.isTextual();
       case INTEGER:
         return value.isIntegralNumber();
       case BOOLEAN:

@@ -105,7 +105,9 @@ public class AttributeAndValueValidator implements Validator<Object> {
     List<Validator<Attribute>> validators = new LinkedList<>();
     validators.add(new CanonicalValuesValidator(value));
     validators.add(new AttributeDataTypeValidator(value));
-    validators.add(new RequiredAttributeValidator(value));
+    if (!аttribute.getName().startsWith("urn:ietf:params:scim:schemas:core:2.0:")) {
+      validators.add(new RequiredAttributeValidator(value));
+    }
     validators.forEach(v -> v.validate(аttribute));
   }
 
