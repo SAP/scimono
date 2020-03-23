@@ -648,6 +648,7 @@ public final class User extends Resource<User> {
      * @param userName the new userName of the user
      * @param user a existing user
      */
+    @SuppressWarnings("unchecked")
     Builder(final String userName, final User user) {
       super(user);
       addSchema(SCHEMA);
@@ -664,15 +665,15 @@ public final class User extends Resource<User> {
         timezone = user.timezone;
         active = user.active;
         password = user.password;
-        emails = firstNonNull(user.emails, emails);
-        phoneNumbers = firstNonNull(user.phoneNumbers, phoneNumbers);
-        ims = firstNonNull(user.ims, ims);
-        photos = firstNonNull(user.photos, photos);
-        addresses = firstNonNull(user.addresses, addresses);
-        groups = firstNonNull(user.groups, groups);
-        entitlements = firstNonNull(user.entitlements, entitlements);
-        roles = firstNonNull(user.roles, roles);
-        x509Certificates = firstNonNull(user.x509Certificates, x509Certificates);
+        emails = new ArrayList<>(firstNonNull(user.emails, emails));
+        phoneNumbers = new ArrayList<>(firstNonNull(user.phoneNumbers, phoneNumbers));
+        ims = new ArrayList<>(firstNonNull(user.ims, ims));
+        photos = new ArrayList<>(firstNonNull(user.photos, photos));
+        addresses = new ArrayList<>(firstNonNull(user.addresses, addresses));
+        groups = new ArrayList<>(firstNonNull(user.groups, groups));
+        entitlements = new ArrayList<>(firstNonNull(user.entitlements, entitlements));
+        roles = new ArrayList<>(firstNonNull(user.roles, roles));
+        x509Certificates = new ArrayList<>(firstNonNull(user.x509Certificates, x509Certificates));
       }
       if (!Strings.isNullOrEmpty(userName)) {
         this.userName = userName;
