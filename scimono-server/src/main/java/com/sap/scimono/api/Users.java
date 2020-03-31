@@ -178,7 +178,7 @@ public class Users {
     }
 
     ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
-    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.clean(newUser);
+    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(newUser);
 
     ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
@@ -202,7 +202,7 @@ public class Users {
   public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
 
     ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
-    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.clean(userToUpdate);
+    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(userToUpdate);
 
     ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);

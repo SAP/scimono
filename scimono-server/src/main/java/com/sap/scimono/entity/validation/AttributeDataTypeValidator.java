@@ -7,7 +7,6 @@ import java.time.format.DateTimeParseException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.AttributeDataType;
-import com.sap.scimono.entity.validation.patch.PatchValidationException;
 import com.sap.scimono.exception.SCIMException;
 
 public class AttributeDataTypeValidator implements Validator<Attribute> {
@@ -34,18 +33,18 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
 
   private void validateSingleValueDataType(final Attribute attribute, final JsonNode value) {
     if (!isValueDataTypeCorrect(attribute.getType(), value)) {
-      throw new PatchValidationException(ERROR_TYPE, ERROR_MESSAGE);
+      throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE);
     }
   }
 
   private void validateMultivaluedValueDataType(final Attribute attribute, final JsonNode value) {
     if (!value.isArray()) {
-      throw new PatchValidationException(ERROR_TYPE, ERROR_MESSAGE);
+      throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE);
     }
 
     for (JsonNode valueElement : value) {
       if (!isValueDataTypeCorrect(attribute.getType(), valueElement)) {
-        throw new PatchValidationException(ERROR_TYPE, ERROR_MESSAGE);
+        throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE);
       }
     }
   }

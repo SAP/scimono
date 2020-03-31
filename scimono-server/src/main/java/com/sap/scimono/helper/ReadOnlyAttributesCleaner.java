@@ -14,7 +14,6 @@ import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
-import com.sap.scimono.entity.validation.patch.PatchValidationException;
 import com.sap.scimono.exception.SCIMException;
 
 public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
@@ -25,24 +24,24 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
     this.schemaAPI = schemaAPI;
   }
 
-  public T clean(final T resource) {
+  public T cleanCustomExtensions(final T resource) {
 
     List<Extension> extensions = resource.getExtensions().values().stream().map(extension -> {
       if (extension instanceof EnterpriseExtension) {
-        EnterpriseExtension enterpriseExtension = (EnterpriseExtension) extension;
+//        EnterpriseExtension enterpriseExtension = (EnterpriseExtension) extension;
 //        Manager manager = enterpriseExtension.getManager();
 //        if (manager != null) {
 //          Manager managerWithoutDisplayName = new Manager.Builder().setDisplayName(null).build();
 //          return new EnterpriseExtension.Builder(enterpriseExtension).setManager(managerWithoutDisplayName).build();
 //        }
 
-        return enterpriseExtension;
+        return extension;
       }
 
       Map<String, Object> attributes = extension.getAttributes();
       Schema customSchema = schemaAPI.getSchema(extension.getUrn());
       if (customSchema == null) {
-        throw new PatchValidationException(SCIMException.Type.INVALID_SYNTAX, String.format("Schema %s does not exist.", extension.getUrn()));
+        throw new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Schema '%s' does not exist.", extension.getUrn()));
       }
       removeReadOnlyAttributes(customSchema.toAttribute(), attributes);
 
@@ -80,8 +79,7 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
             .collect(Collectors.toList()));
         // @formatter:on
       } else {
-        throw new PatchValidationException(SCIMException.Type.INVALID_SYNTAX,
-            String.format("Value attribute with name %s is array", targetAttribute.getName()));
+        throw new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Value attribute with name %s is array", targetAttribute.getName()));
       }
     }
 
@@ -94,7 +92,7 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
         Attribute subAttribute = targetAttribute.getSubAttributes().stream()
             .filter(attribute -> entry.getKey().equalsIgnoreCase(attribute.getName()))
             .findAny()
-            .orElseThrow(() -> new PatchValidationException(SCIMException.Type.INVALID_SYNTAX, String.format("Value attribute with name %s does not exist", entry.getKey())));
+            .orElseThrow(() -> new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Value attribute with name %s does not exist", entry.getKey())));
         // @formatter:on
         if (removeReadOnlyAttributes(subAttribute, entry.getValue())) {
           valueMap.remove(entry.getKey());

@@ -9,9 +9,10 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
+import org.junit.runner.RunWith;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.MockitoJUnitRunner;
 
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.User;
@@ -19,6 +20,7 @@ import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
 
+@RunWith(MockitoJUnitRunner.class)
 class ReadOnlyAttributesCleanerTest {
 
   private static final String TEST_SCHEMA_NAME = "testSchema";
@@ -31,7 +33,6 @@ class ReadOnlyAttributesCleanerTest {
 
   @Test
   public void testClean() {
-    MockitoAnnotations.initMocks(this);
 
     Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
         .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
@@ -56,8 +57,8 @@ class ReadOnlyAttributesCleanerTest {
     Extension expectedExtension = new Extension.Builder(TEST_SCHEMA_NAME).setAttributes(expectedAttributes).build();
     User expectedUser = new User.Builder("vladi").addExtension(expectedExtension).build();
 
-    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<User>(schemaAPI);
-    User actualUser = readOnlyAttributesCleaner.clean(user);
+    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
+    User actualUser = readOnlyAttributesCleaner.cleanCustomExtensions(user);
 
     assertEquals(expectedUser, actualUser);
   }

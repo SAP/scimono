@@ -9,18 +9,18 @@ import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
-import com.sap.scimono.entity.validation.AttributeAndValueValidator;
+import com.sap.scimono.entity.validation.SchemaBasedAttributeValueValidator;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.exception.SCIMException;
 import com.sap.scimono.helper.Strings;
 
-public class PatchOperationAttributeAndValueValidator implements Validator<PatchOperation> {
+public class PatchOperationSchemaBasedAttributeValueValidator implements Validator<PatchOperation> {
 
   private final SchemasCallback schemaAPI;
   private final String coreSchemaId;
   private final Map<String, Schema> permittedSchemas;
 
-  public PatchOperationAttributeAndValueValidator(final SchemasCallback schemaAPI, final String coreSchemaId,
+  public PatchOperationSchemaBasedAttributeValueValidator(final SchemasCallback schemaAPI, final String coreSchemaId,
       final Map<String, Schema> permittedSchemas) {
     this.schemaAPI = schemaAPI;
     this.coreSchemaId = coreSchemaId;
@@ -32,20 +32,20 @@ public class PatchOperationAttributeAndValueValidator implements Validator<Patch
     String path = operation.getPath();
     JsonNode value = operation.getValue();
 
-    AttributeAndValueValidator attributeAndValueValidator;
+    SchemaBasedAttributeValueValidator attributeAndValueValidator;
     if (Strings.isNullOrEmpty(path)) {
       Attribute coreSchemaAttribute = schemaAPI.getSchema(coreSchemaId).toAttribute();
       validateSchemaAttributes(coreSchemaAttribute, operation);
-      attributeAndValueValidator = new AttributeAndValueValidator(coreSchemaAttribute, permittedSchemas);
+      attributeAndValueValidator = new SchemaBasedAttributeValueValidator(coreSchemaAttribute, permittedSchemas);
     } else if (schemaAPI.getSchema(path) != null) {
       Attribute schemaAttribute = schemaAPI.getSchema(path).toAttribute();
       validateSchemaAttributes(schemaAttribute, operation);
-      attributeAndValueValidator = new AttributeAndValueValidator(schemaAttribute, permittedSchemas);
+      attributeAndValueValidator = new SchemaBasedAttributeValueValidator(schemaAttribute, permittedSchemas);
     } else {
       String pathWithoutFilter = schemaAPI.removeValueFilterFromAttributeNotation(path);
       Attribute targetAttribute = schemaAPI.getAttribute(pathWithoutFilter);
       validatePathAttribute(targetAttribute, operation);
-      attributeAndValueValidator = new AttributeAndValueValidator(targetAttribute, permittedSchemas);
+      attributeAndValueValidator = new SchemaBasedAttributeValueValidator(targetAttribute, permittedSchemas);
     }
 
     attributeAndValueValidator.validate(value);
