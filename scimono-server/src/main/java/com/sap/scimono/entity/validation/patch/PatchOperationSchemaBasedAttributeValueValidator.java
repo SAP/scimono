@@ -9,7 +9,7 @@ import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
-import com.sap.scimono.entity.validation.AttributeImmutabilityValidator;
+import com.sap.scimono.entity.validation.AttributeImmutableValueValidator;
 import com.sap.scimono.entity.validation.SchemaBasedAttributeValueValidator;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.exception.SCIMException;
@@ -55,7 +55,7 @@ public class PatchOperationSchemaBasedAttributeValueValidator implements Validat
   private void validatePathAttribute(final Attribute attribute, final PatchOperation operation) {
     JsonNode value = operation.getValue();
 
-    Validator<Attribute> mutabilityValidator = new AttributeImmutabilityValidator();
+    Validator<Attribute> mutabilityValidator = new AttributeImmutableValueValidator();
     if (!value.isArray() && PatchOperation.Type.REPLACE.equals(operation.getOp())) {
       mutabilityValidator.validate(attribute);
     }
@@ -68,7 +68,7 @@ public class PatchOperationSchemaBasedAttributeValueValidator implements Validat
 
     JsonNode value = operation.getValue();
 
-    Validator<Attribute> mutabilityValidator = new AttributeImmutabilityValidator();
+    Validator<Attribute> mutabilityValidator = new AttributeImmutableValueValidator();
     Iterator<Map.Entry<String, JsonNode>> fieldsIterator = value.fields();
 
     while (fieldsIterator.hasNext()) {

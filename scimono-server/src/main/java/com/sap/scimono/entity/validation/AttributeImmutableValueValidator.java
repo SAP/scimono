@@ -6,7 +6,7 @@ import javax.ws.rs.core.Response;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.exception.SCIMException;
 
-public class AttributeImmutabilityValidator implements Validator<Attribute> {
+public class AttributeImmutableValueValidator implements Validator<Attribute> {
 
   @Override
   public void validate(final Attribute attribute) {

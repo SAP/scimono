@@ -35,16 +35,15 @@ public class ResourceCustomAttributesValidator<T extends Resource<T>> implements
       Attribute schemaAttribute = schemaAPI.getSchema(extension.getUrn()).toAttribute();
       new SchemaBasedAttributeValueValidator(schemaAttribute, Collections.emptyMap()).validate(extension.getAttributes());
       if (isOperationPut) {
-        validateForImmutability(extension, schemaAttribute);
+        validateForImmutableValue(extension, schemaAttribute);
       }
     });
   }
 
-  private void validateForImmutability(final Extension extension, final Attribute schemaAttribute) {
-    Validator<Attribute> mutabilityValidator = new AttributeImmutabilityValidator();
+  private void validateForImmutableValue(final Extension extension, final Attribute schemaAttribute) {
+    Validator<Attribute> mutabilityValidator = new AttributeImmutableValueValidator();
 
-    extension.getAttributes().entrySet().forEach(entry -> {
-      String subAtrributeName = entry.getKey();
+    extension.getAttributes().keySet().forEach(subAtrributeName -> {
 
       // @formatter:off
       Attribute subAttribute = schemaAttribute.getSubAttributes().stream()
