@@ -68,7 +68,7 @@ public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
   private static Stream<Arguments> provideCustomAttributeTestParameters() {
     // @formatter:off
     return Stream.of(
-        Arguments.of(201, "booleanAttribute", ""),
+        Arguments.of(400, "booleanAttribute", ""),
         Arguments.of(400, "booleanAttribute", "true1"),
         Arguments.of(400, "booleanAttribute", -1),
         Arguments.of(400, "booleanAttribute", 12.12),
@@ -80,7 +80,7 @@ public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
         Arguments.of(400, "booleanAttribute", "true"),
         Arguments.of(400, "booleanAttribute", "false"),
 
-        Arguments.of(201, "integerAttribute", ""),
+        Arguments.of(400, "integerAttribute", ""),
         Arguments.of(400, "integerAttribute", "true1"),
         Arguments.of(400, "integerAttribute", true),
         Arguments.of(400, "integerAttribute", false),
@@ -90,7 +90,7 @@ public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
         Arguments.of(400, "integerAttribute", "-1"),
         Arguments.of(201, "integerAttribute", null),
 
-        Arguments.of(201, "decimalAttribute", ""),
+        Arguments.of(400, "decimalAttribute", ""),
         Arguments.of(400, "decimalAttribute", "true1"),
         Arguments.of(400, "decimalAttribute", true),
         Arguments.of(400, "decimalAttribute", false),
@@ -107,7 +107,7 @@ public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
         Arguments.of(201, "stringAttribute", "null"),
         Arguments.of(201, "stringAttribute", null),
 
-        Arguments.of(201, "dateTimeAttribute", ""),
+        Arguments.of(400, "dateTimeAttribute", ""),
         Arguments.of(400, "dateTimeAttribute", -12.12),
         Arguments.of(400, "dateTimeAttribute", "https://www.facebook.com/joro.ivanov"),
         Arguments.of(400, "dateTimeAttribute", "12"),
@@ -120,7 +120,7 @@ public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
         Arguments.of(400, "dateTimeAttribute", "2016-03-0112:22:33"),
         Arguments.of(201, "dateTimeAttribute", null),
 
-        Arguments.of(201, "binaryAttribute", ""),
+        Arguments.of(400, "binaryAttribute", ""),
         Arguments.of(400, "binaryAttribute", "-12.1"),
         Arguments.of(400, "binaryAttribute", -12.1),
         Arguments.of(400, "binaryAttribute", 1),

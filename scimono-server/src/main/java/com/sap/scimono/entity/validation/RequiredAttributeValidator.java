@@ -1,6 +1,8 @@
 
 package com.sap.scimono.entity.validation;
 
+import javax.ws.rs.core.Response;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.exception.SCIMException;
@@ -22,7 +24,7 @@ public class RequiredAttributeValidator implements Validator<Attribute> {
     .findAny()
     .ifPresent(requiredSubAttribute -> {
       throw new SCIMException(SCIMException.Type.INVALID_VALUE,
-          String.format("Attribute with name %s is required.", requiredSubAttribute.getName()));
+          String.format("Attribute with name %s is required.", requiredSubAttribute.getName()), Response.Status.BAD_REQUEST);
     });
     // @formatter:on
   }

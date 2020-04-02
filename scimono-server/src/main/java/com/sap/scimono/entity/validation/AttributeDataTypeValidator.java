@@ -4,6 +4,8 @@ package com.sap.scimono.entity.validation;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+import javax.ws.rs.core.Response;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.AttributeDataType;
@@ -33,27 +35,23 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
 
   private void validateSingleValueDataType(final Attribute attribute, final JsonNode value) {
     if (!isValueDataTypeCorrect(attribute.getType(), value)) {
-      throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE);
+      throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE, Response.Status.BAD_REQUEST);
     }
   }
 
   private void validateMultivaluedValueDataType(final Attribute attribute, final JsonNode value) {
     if (!value.isArray()) {
-      throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE);
+      throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE, Response.Status.BAD_REQUEST);
     }
 
     for (JsonNode valueElement : value) {
       if (!isValueDataTypeCorrect(attribute.getType(), valueElement)) {
-        throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE);
+        throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE, Response.Status.BAD_REQUEST);
       }
     }
   }
 
   private boolean isValueDataTypeCorrect(final String type, final JsonNode value) {
-    if (value.isTextual() && value.asText().isEmpty()) {
-      return true;
-    }
-
     switch (AttributeDataType.of(type)) {
       case STRING:
         return value.isTextual();
@@ -73,11 +71,12 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
         if (value.isTextual()) {
           try {
             DateTimeFormatter.ISO_INSTANT.parse(value.asText());
+            return true;
           } catch (DateTimeParseException e) {
             return false;
           }
         }
-        return true;
+        return false;
       default:
         return false;
     }

@@ -180,7 +180,7 @@ public class Users {
     ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(newUser);
 
-    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI);
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
 
     String version = UUID.randomUUID().toString();
@@ -200,11 +200,10 @@ public class Users {
   @PUT
   @Path("{id}")
   public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
-
     ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(userToUpdate);
 
-    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = new ResourceCustomAttributesValidator<>(schemaAPI);
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
 
     String newVersion = UUID.randomUUID().toString();

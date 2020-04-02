@@ -1,6 +1,8 @@
 
 package com.sap.scimono.entity.validation;
 
+import javax.ws.rs.core.Response;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.exception.SCIMException;
@@ -21,7 +23,7 @@ public class CanonicalValuesValidator implements Validator<Attribute> {
     }
     if (!isComplexValue(value) && !attribute.getCanonicalValues().contains(value.asText())) {
       throw new SCIMException(SCIMException.Type.INVALID_VALUE,
-          String.format("Provided value is not part of '%s' canonical values", attribute.getName()));
+          String.format("Provided value is not part of '%s' canonical values", attribute.getName()), Response.Status.BAD_REQUEST);
     }
   }
 

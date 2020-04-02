@@ -28,6 +28,8 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
 
     List<Extension> extensions = resource.getExtensions().values().stream().map(extension -> {
       if (extension instanceof EnterpriseExtension) {
+//        https://github.com/SAP/scimono/issues/77
+
 //        EnterpriseExtension enterpriseExtension = (EnterpriseExtension) extension;
 //        Manager manager = enterpriseExtension.getManager();
 //        if (manager != null) {
@@ -79,7 +81,8 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
             .collect(Collectors.toList()));
         // @formatter:on
       } else {
-        throw new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Value attribute with name %s is array", targetAttribute.getName()));
+        throw new SCIMException(SCIMException.Type.INVALID_SYNTAX,
+            String.format("Provided attribute with name '%s' is array according to the schema", targetAttribute.getName()));
       }
     }
 
@@ -92,7 +95,7 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
         Attribute subAttribute = targetAttribute.getSubAttributes().stream()
             .filter(attribute -> entry.getKey().equalsIgnoreCase(attribute.getName()))
             .findAny()
-            .orElseThrow(() -> new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Value attribute with name %s does not exist", entry.getKey())));
+            .orElseThrow(() -> new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Provided attribute with name '%s' does not exist according to the schema", entry.getKey())));
         // @formatter:on
         if (removeReadOnlyAttributes(subAttribute, entry.getValue())) {
           valueMap.remove(entry.getKey());

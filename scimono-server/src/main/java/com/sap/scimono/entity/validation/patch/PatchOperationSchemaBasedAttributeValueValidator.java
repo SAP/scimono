@@ -9,6 +9,7 @@ import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
+import com.sap.scimono.entity.validation.AttributeImmutabilityValidator;
 import com.sap.scimono.entity.validation.SchemaBasedAttributeValueValidator;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.exception.SCIMException;
@@ -54,16 +55,20 @@ public class PatchOperationSchemaBasedAttributeValueValidator implements Validat
   private void validatePathAttribute(final Attribute attribute, final PatchOperation operation) {
     JsonNode value = operation.getValue();
 
-    Validator<Attribute> mutabilityValidator = new PatchAttributeMutabilityValidator(false);
-    if (!value.isArray()) {
+    Validator<Attribute> mutabilityValidator = new AttributeImmutabilityValidator();
+    if (!value.isArray() && PatchOperation.Type.REPLACE.equals(operation.getOp())) {
       mutabilityValidator.validate(attribute);
     }
   }
 
   private void validateSchemaAttributes(final Attribute schemaAttribute, final PatchOperation operation) {
+    if (!PatchOperation.Type.REPLACE.equals(operation.getOp())) {
+      return;
+    }
+
     JsonNode value = operation.getValue();
 
-    Validator<Attribute> mutabilityValidator = new PatchAttributeMutabilityValidator(false);
+    Validator<Attribute> mutabilityValidator = new AttributeImmutabilityValidator();
     Iterator<Map.Entry<String, JsonNode>> fieldsIterator = value.fields();
 
     while (fieldsIterator.hasNext()) {
@@ -73,10 +78,12 @@ public class PatchOperationSchemaBasedAttributeValueValidator implements Validat
       Attribute subAttribute = schemaAttribute.getSubAttributes().stream()
           .filter(attr -> subAttrName.equalsIgnoreCase(attr.getName()))
           .findAny()
-          .orElseThrow(() -> new PatchValidationException(SCIMException.Type.INVALID_PATH, String.format("Value attribute with name %s does not exist", subAttrName)));
+          .orElseThrow(() -> new PatchValidationException(SCIMException.Type.INVALID_PATH, String.format("Provided attribute with name '%s' does not exist according to the schema", subAttrName)));
       // @formatter:on
 
-      mutabilityValidator.validate(subAttribute);
+      if (!subAttribute.isMultiValued()) {
+        mutabilityValidator.validate(subAttribute);
+      }
     }
   }
 
