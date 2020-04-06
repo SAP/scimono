@@ -17,11 +17,6 @@
 
 package com.sap.scimono.entity.base;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import com.sap.scimono.exception.InvalidInputException;
-
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -36,6 +31,10 @@ import java.time.format.DateTimeParseException;
 import java.util.Base64;
 import java.util.Date;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.sap.scimono.exception.InvalidInputException;
 
 /**
  * This enum like class represents the valid extension field types. Instances of this class also define methods for converting these types from and to
@@ -267,7 +266,7 @@ public abstract class ExtensionFieldType<T> implements Serializable {
    * ExtensionFieldType for the Scim type DateTime (actual type is {@link Date}). Valid values are in ISO DateTimeFormat with the timeZone UTC like
    * '2011-08-01T18:29:49.000Z'
    */
-  public static final ExtensionFieldType<Date> DATETIME = new ExtensionFieldType<Date>("datetime") {
+  public static final ExtensionFieldType<Date> DATETIME = new ExtensionFieldType<Date>("dateTime") {
     private static final long serialVersionUID = 1L;
 
     @Override
@@ -276,7 +275,7 @@ public abstract class ExtensionFieldType<T> implements Serializable {
 
         return java.sql.Timestamp.from(ZonedDateTime.from(dateTimeFormatter.parse(stringValue)).toInstant());
       } catch (DateTimeParseException e) {
-        logger.error("Cannot parse datetime", e);
+        logger.error("Cannot parse dateTime", e);
         throw createValidationException(stringValue, "Date");
       }
     }
@@ -325,7 +324,7 @@ public abstract class ExtensionFieldType<T> implements Serializable {
         return DECIMAL;
       case "boolean":
         return BOOLEAN;
-      case "datetime":
+      case "dateTime":
         return DATETIME;
       case "binary":
         return BINARY;

@@ -72,7 +72,7 @@ public class PatchValidationFramework {
     validators.addAll(getPathValidators(operation.getPath()));
 
     if (!PatchOperation.Type.REMOVE.equals(operation.getOp())) {
-        validators.add(new AttributeAndValueValidator(schemaAPI, coreSchemaId, requiredSchemas));
+        validators.add(new PatchOperationSchemaBasedAttributeValueValidator(schemaAPI, coreSchemaId, requiredSchemas));
     }
 
     validators.forEach(v -> v.validate(operation));

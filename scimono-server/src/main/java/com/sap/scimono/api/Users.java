@@ -37,7 +37,6 @@ import javax.ws.rs.core.SecurityContext;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
-import com.sap.scimono.helper.ResourceLocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,9 +54,12 @@ import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
+import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
+import com.sap.scimono.helper.ReadOnlyAttributesCleaner;
+import com.sap.scimono.helper.ResourceLocationService;
 
 @Path(USERS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -175,10 +177,16 @@ public class Users {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
 
+    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
+    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(newUser);
+
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI);
+    userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
+
     String version = UUID.randomUUID().toString();
     Meta userMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_USER).build();
 
-    User.Builder userWithMeta = newUser.builder().setMeta(userMeta);
+    User.Builder userWithMeta = userWithoutReadOnlyAttributes.builder().setMeta(userMeta);
     usersAPI.generateId().ifPresent(userWithMeta::setId);
 
     User createdUser = usersAPI.createUser(userWithMeta.build());
@@ -192,14 +200,19 @@ public class Users {
   @PUT
   @Path("{id}")
   public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
+    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
+    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(userToUpdate);
+
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI);
+    userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
+
     String newVersion = UUID.randomUUID().toString();
 
     Meta.Builder lastModifiedMeta = new Meta.Builder();
 
     URI userLocation = resourceLocationService.getLocation(userId);
-    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(userLocation.toString())
-        .setResourceType(RESOURCE_TYPE_USER);
-    User updatedUser = userToUpdate.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
+    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(userLocation.toString()).setResourceType(RESOURCE_TYPE_USER);
+    User updatedUser = userWithoutReadOnlyAttributes.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
     updatedUser = usersAPI.updateUser(updatedUser);
 
     logger.trace("Updated user {}, new version is {}", userId, newVersion);
@@ -234,5 +247,4 @@ public class Users {
   public Response queryUsers() {
     return getUsers(0, 0, null, null);
   }
-
 }
