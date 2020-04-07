@@ -1,13 +1,9 @@
 
 package com.sap.scimono.entity.validation.patch;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.patch.PatchOperation;
 import com.sap.scimono.entity.schema.Attribute;
-import com.sap.scimono.entity.validation.AttributeImmutableValueValidator;
 import com.sap.scimono.entity.validation.AttributeReadOnlyValidator;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.helper.Strings;
@@ -30,10 +26,8 @@ public class PathMutabilityValidator implements Validator<PatchOperation> {
 
     Attribute targetAttribute = schemaAPI.getAttribute(path);
 
-    List<Validator<Attribute>> mutabilityValidators = new ArrayList<>();
-    mutabilityValidators.add(new AttributeReadOnlyValidator());
-    mutabilityValidators.add(new AttributeImmutableValueValidator());
-    mutabilityValidators.forEach(validator -> validator.validate(targetAttribute));
+    AttributeReadOnlyValidator mutabilityValidators = new AttributeReadOnlyValidator();
+    mutabilityValidators.validate(targetAttribute);
   }
 
   private boolean isPathRepresentSchema(final String path) {
