@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.ws.rs.core.Response;
+
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.EnterpriseExtension;
 import com.sap.scimono.entity.Resource;
@@ -43,7 +45,8 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
       Map<String, Object> attributes = extension.getAttributes();
       Schema customSchema = schemaAPI.getSchema(extension.getUrn());
       if (customSchema == null) {
-        throw new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Schema '%s' does not exist.", extension.getUrn()));
+        throw new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Schema '%s' does not exist.", extension.getUrn()),
+            Response.Status.BAD_REQUEST);
       }
       removeReadOnlyAttributes(customSchema.toAttribute(), attributes);
 
@@ -82,7 +85,8 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
         // @formatter:on
       } else {
         throw new SCIMException(SCIMException.Type.INVALID_SYNTAX,
-            String.format("Provided attribute with name '%s' is array according to the schema", targetAttribute.getName()));
+            String.format("Provided attribute with name '%s' is array according to the schema", targetAttribute.getName()),
+            Response.Status.BAD_REQUEST);
       }
     }
 
@@ -95,7 +99,9 @@ public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
         Attribute subAttribute = targetAttribute.getSubAttributes().stream()
             .filter(attribute -> entry.getKey().equalsIgnoreCase(attribute.getName()))
             .findAny()
-            .orElseThrow(() -> new SCIMException(SCIMException.Type.INVALID_SYNTAX, String.format("Provided attribute with name '%s' does not exist according to the schema", entry.getKey())));
+            .orElseThrow(() -> new SCIMException(SCIMException.Type.INVALID_SYNTAX,
+                String.format("Provided attribute with name '%s' does not exist according to the schema", entry.getKey()),
+                Response.Status.BAD_REQUEST));
         // @formatter:on
         if (removeReadOnlyAttributes(subAttribute, entry.getValue())) {
           valueMap.remove(entry.getKey());
