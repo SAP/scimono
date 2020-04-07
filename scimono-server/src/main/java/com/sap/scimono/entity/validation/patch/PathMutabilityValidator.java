@@ -32,7 +32,9 @@ public class PathMutabilityValidator implements Validator<PatchOperation> {
 
     List<Validator<Attribute>> mutabilityValidators = new ArrayList<>();
     mutabilityValidators.add(new AttributeReadOnlyValidator());
-    mutabilityValidators.add(new AttributeImmutableValueValidator());
+    if (PatchOperation.Type.REPLACE.equals(operation.getOp())) {
+      mutabilityValidators.add(new AttributeImmutableValueValidator());
+    }
     mutabilityValidators.forEach(validator -> validator.validate(targetAttribute));
   }
 
