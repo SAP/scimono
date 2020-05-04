@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -172,7 +173,7 @@ public class Users {
   }
 
   @POST
-  public Response createUser(final User newUser) {
+  public Response createUser(@Valid final User newUser) {
     if (newUser == null) {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
