@@ -200,7 +200,7 @@ public class Users {
 
   @PUT
   @Path("{id}")
-  public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
+  public Response updateUser(@PathParam("id") @ValidId final String userId, @Valid final User userToUpdate) {
     ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(userToUpdate);
 
