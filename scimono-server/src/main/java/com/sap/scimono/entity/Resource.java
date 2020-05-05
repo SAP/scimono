@@ -57,7 +57,7 @@ import java.util.*;
  */
 public abstract class Resource<T> implements Serializable {
 
-  protected static final String CORE_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:";
+  public static final String CORE_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:";
   private static final long serialVersionUID = 1726103518645055449L;
   private static final Predicate<Map.Entry<String, Extension>> CUSTOM_EXTENSION_FILTER = extension -> extension.getKey()
       .startsWith(Schema.EXTENSION_SCHEMA_URN);

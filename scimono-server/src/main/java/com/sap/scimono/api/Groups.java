@@ -18,6 +18,7 @@ import com.sap.scimono.entity.schema.validation.ValidStartId;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
+import com.sap.scimono.helper.ResourceLocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,8 +35,8 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -44,14 +45,13 @@ import java.util.UUID;
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
 import static com.sap.scimono.api.API.COUNT_PARAM;
 import static com.sap.scimono.api.API.FILTER_PARAM;
+import static com.sap.scimono.api.API.GROUPS;
 import static com.sap.scimono.api.API.START_ID_PARAM;
 import static com.sap.scimono.api.API.START_INDEX_PARAM;
 import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
 import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
-import static com.sap.scimono.helper.Resources.addLocation;
-import static com.sap.scimono.helper.Resources.addMembersLocation;
 import static com.sap.scimono.helper.Strings.isNotNullOrEmpty;
 
 @Path(API.GROUPS)
@@ -61,19 +61,18 @@ import static com.sap.scimono.helper.Strings.isNotNullOrEmpty;
 public class Groups {
   private static final Logger logger = LoggerFactory.getLogger(Groups.class);
 
-  @Context
-  private UriInfo uriInfo;
-
   private final GroupsCallback groupAPI;
   private final SchemasCallback schemaAPI;
   private final SCIMConfigurationCallback scimConfig;
+  private final ResourceLocationService resourceLocationService;
 
-  public Groups(@Context Application appContext) {
+  public Groups(@Context Application appContext, @Context UriInfo uriInfo) {
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
 
     groupAPI = scimApplication.getGroupsCallback();
     schemaAPI = scimApplication.getSchemasCallback();
     scimConfig = scimApplication.getConfigurationCallback();
+    resourceLocationService = new ResourceLocationService(uriInfo, scimApplication.getConfigurationCallback(), GROUPS);
   }
 
   @GET
@@ -84,9 +83,9 @@ public class Groups {
     Group groupFromDb = groupAPI.getGroup(groupId);
 
     if (groupFromDb != null) {
-      Group group = addLocation(groupFromDb, uriInfo.getAbsolutePath());
-      group = addMembersLocation(group, uriInfo);
-      return Response.ok(group).tag(group.getMeta().getVersion()).location(uriInfo.getAbsolutePath()).build();
+      Group group = resourceLocationService.addLocation(groupFromDb, groupId);
+      group = resourceLocationService.addMembersLocation(group);
+      return Response.ok(group).tag(group.getMeta().getVersion()).location(resourceLocationService.getLocation(groupId)).build();
     }
 
     throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);
@@ -116,8 +115,8 @@ public class Groups {
 
     List<Group> groupsToReturn = new ArrayList<>();
     for (Group group : groups.getResources()) {
-      group = addLocation(group, uriInfo.getAbsolutePathBuilder().path(group.getId()));
-      group = addMembersLocation(group, uriInfo);
+      group = resourceLocationService.addLocation(group, group.getId());
+      group = resourceLocationService.addMembersLocation(group);
       groupsToReturn.add(group);
     }
 
@@ -147,13 +146,11 @@ public class Groups {
     groupAPI.generateId().ifPresent(groupWithMeta::setId);
 
     Group createdGroup = groupAPI.createGroup(groupWithMeta.build());
-    createdGroup = addMembersLocation(createdGroup, uriInfo);
-
-    UriBuilder location = uriInfo.getAbsolutePathBuilder().path(createdGroup.getId());
-    createdGroup = addLocation(createdGroup, location);
+    createdGroup = resourceLocationService.addMembersLocation(createdGroup);
+    createdGroup = resourceLocationService.addLocation(createdGroup, createdGroup.getId());
 
     logger.trace("Created group {} with version {}", createdGroup.getId(), version);
-    return Response.created(location.build()).tag(version).entity(createdGroup).build();
+    return Response.created(resourceLocationService.getLocation(createdGroup.getId())).tag(version).entity(createdGroup).build();
   }
 
   @PUT
@@ -161,14 +158,16 @@ public class Groups {
   public Response updateGroup(@PathParam("id") @ValidId final String groupId, final Group groupToUpdate) {
     String newVersion = UUID.randomUUID().toString();
     Meta.Builder lastUpdatedMeta = new Meta.Builder(groupToUpdate.getMeta());
-    lastUpdatedMeta.setLastModified(Instant.now()).setVersion(newVersion);
+
+    URI groupLocation = resourceLocationService.getLocation(groupId);
+    lastUpdatedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(groupLocation.toString());
 
     Group updatedGroup = groupToUpdate.builder().setId(groupId).setMeta(lastUpdatedMeta.build()).build();
     updatedGroup = groupAPI.updateGroup(updatedGroup);
-    updatedGroup = addMembersLocation(updatedGroup, uriInfo);
+    updatedGroup = resourceLocationService.addMembersLocation(updatedGroup);
 
     logger.trace("Updated group {}, new version is {}", groupId, newVersion);
-    return Response.ok(updatedGroup).tag(newVersion).location(uriInfo.getAbsolutePath()).build();
+    return Response.ok(updatedGroup).tag(newVersion).location(groupLocation).build();
   }
 
   @DELETE

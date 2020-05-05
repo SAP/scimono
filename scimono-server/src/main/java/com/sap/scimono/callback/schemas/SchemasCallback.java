@@ -4,7 +4,11 @@ package com.sap.scimono.callback.schemas;
 import static com.sap.scimono.helper.Strings.isNullOrEmpty;
 import static com.sap.scimono.helper.Strings.stripStart;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import com.sap.scimono.entity.Resource;
@@ -39,20 +43,26 @@ public interface SchemasCallback {
   }
 
   /**
-   * Creates a schema with the provided attributes. The schema object must have all mandatory attributes available,
-   * including metadata (id, version, etc.).
+   * Creates a schema with the provided attributes. The schema object must have all mandatory attributes available, including metadata (id, version,
+   * etc.).
    *
    * @param schema
    */
   void createCustomSchema(final Schema schema);
 
   /**
-   * Returns a list of all schemas available in the system.
-   * Must also return SCIM-defined core schemas (User, Group, Enterprise, etc.)
+   * Returns list of all custom created schemas (with urn starting with <strong>urn:sap:cloud:scim:schemas:extension:custom:2.0:</strong>) available
+   * in the system
    *
    * @return list of schemas or empty list if none exist
    */
   List<Schema> getCustomSchemas();
+
+  /**
+   * Returns a list of all schemas available in the system. Must also return SCIM-defined core schemas (User, Group, Enterprise, etc.)
+   *
+   * @return list of schemas or empty list if none exist
+   */
 
   default List<Schema> getSchemas() {
     Map<String, Schema> coreSchemas = SchemaCSVReader.getImportedSchemasFromCSVs();
@@ -85,7 +95,7 @@ public interface SchemasCallback {
    * @param path represents full attribute notation starting with schema name (eg. urn:ietf:params:scim:schemas:core:2.0:Schema:description)
    * @return @{@link Attribute} if exists with specified schema or null
    */
-  default Attribute getAttribute(String path) {
+  default Attribute getAttribute(final String path) {
     List<Attribute> attrHierarchy = getComplexAttributePath(path);
     if (attrHierarchy.isEmpty()) {
       return null;
@@ -93,8 +103,9 @@ public interface SchemasCallback {
     return attrHierarchy.get(attrHierarchy.size() - 1);
   }
 
-  //TODO this could probably be optimized (e.g. it reads all schemas then returns only an id, which is used to read the schema again in getComplexAttributePath)
-  default String getSchemaIdFromAttributeNotation(String attrNotation) {
+  // TODO this could probably be optimized (e.g. it reads all schemas then returns only an id, which is used to read the schema again in
+  // getComplexAttributePath)
+  default String getSchemaIdFromAttributeNotation(final String attrNotation) {
     if (attrNotation.matches(SCHEMA_PATTERN.toString())) {
       // @formatter:off
       return getSchemas().stream()
@@ -107,13 +118,13 @@ public interface SchemasCallback {
     return null;
   }
 
-  //TODO needs javadoc
+  // TODO needs javadoc
   default String removeSchemaFromAttributeNotation(final String attrNotation, final String schemaId) {
     String attrName = attrNotation.substring(attrNotation.indexOf(schemaId) + schemaId.length());
     return stripStart(attrName, SCHEMA_URN_DELIMETER);
   }
 
-  //TODO needs javadoc
+  // TODO needs javadoc
   default List<Attribute> getComplexAttributePath(final String fullAttrNotation) {
     String schemaId = getSchemaIdFromAttributeNotation(fullAttrNotation);
     String attrPath = removeSchemaFromAttributeNotation(fullAttrNotation, schemaId);
@@ -123,7 +134,7 @@ public interface SchemasCallback {
       return attrHierarchy;
     }
 
-    List<Attribute> subAttributes = getCustomSchema(schemaId).getAttributes();
+    List<Attribute> subAttributes = getSchema(schemaId).getAttributes();
 
     String[] attrPathSequence = attrPath.split(COMPLEX_ATTRIBUTE_DELIMETER_REGEX);
     for (String token : attrPathSequence) {
@@ -159,7 +170,7 @@ public interface SchemasCallback {
 
   default String appendSubAttributeToPath(final String fullAttributePath, final String subAttribute) {
     String combinedAttributePath;
-    if (getCustomSchema(fullAttributePath) == null) {
+    if (getSchema(fullAttributePath) == null) {
       combinedAttributePath = String.join(COMPLEX_ATTRIBUTE_DELIMETER, fullAttributePath, subAttribute);
     } else {
       combinedAttributePath = String.join(SCHEMA_URN_DELIMETER, fullAttributePath, subAttribute);
@@ -182,5 +193,9 @@ public interface SchemasCallback {
 
   static boolean isCustomSchema(final String schemaId) {
     return schemaId.startsWith(Schema.EXTENSION_SCHEMA_URN);
+  }
+
+  static boolean isCoreSchema(final String schemaId) {
+    return schemaId.startsWith(Resource.CORE_SCHEMA);
   }
 }

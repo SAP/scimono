@@ -5,52 +5,37 @@
     <parent>
         <artifactId>scimono-examples</artifactId>
         <groupId>com.sap.scimono.examples</groupId>
-        <version>0.0.5-SNAPSHOT</version>
+        <version>0.0.10-SNAPSHOT</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>simple-server</artifactId>
     <packaging>war</packaging>
 
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>1.8</maven.compiler.source>
-        <maven.compiler.target>1.8</maven.compiler.target>
-
-        <jackson-2-version>2.9.6</jackson-2-version>
-        <jersey-2-version>2.27</jersey-2-version>
-    </properties>
-
     <dependencies>
-
         <dependency>
             <groupId>com.sap.scimono</groupId>
             <artifactId>scimono-server</artifactId>
-            <version>0.0.1</version>
+            <version>${project.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.glassfish.jersey.containers</groupId>
             <artifactId>jersey-container-servlet</artifactId>
-            <version>${jersey-2-version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>
-            <version>${jersey-2-version}</version>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
-            <version>${jersey-2-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
-            <version>1.7.25</version>
         </dependency>
-
     </dependencies>
 
     <build>

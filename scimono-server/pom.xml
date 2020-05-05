@@ -6,15 +6,11 @@
     <parent>
         <artifactId>scimono-parent</artifactId>
         <groupId>com.sap.scimono</groupId>
-        <version>0.0.5-SNAPSHOT</version>
+        <version>0.0.10-SNAPSHOT</version>
     </parent>
 
     <artifactId>scimono-server</artifactId>
     <packaging>jar</packaging>
-
-    <properties>
-        <jersey-2-version>2.28</jersey-2-version>
-    </properties>
 
     <build>
         <plugins>
@@ -33,7 +29,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>2.22.1</version>
                 <configuration>
                     <includes>
                         <include>**/*Test.java</include>
@@ -51,28 +46,23 @@
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
-            <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>javax.ws.rs</groupId>
-            <artifactId>javax.ws.rs-api</artifactId>
-            <scope>compile</scope>
+            <groupId>jakarta.ws.rs</groupId>
+            <artifactId>jakarta.ws.rs-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>javax.validation</groupId>
-            <artifactId>validation-api</artifactId>
-            <scope>compile</scope>
+            <groupId>jakarta.validation</groupId>
+            <artifactId>jakarta.validation-api</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.fasterxml.jackson.module</groupId>
             <artifactId>jackson-module-parameter-names</artifactId>
-            <version>2.9.9</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
             <artifactId>jackson-datatype-jdk8</artifactId>
-            <version>2.9.9</version>
         </dependency>
         <dependency>
             <!-- This dependency brings the full Jackson annotation/marshalling runtime, along with the necessary data types -->
@@ -101,13 +91,11 @@
         <dependency>
             <groupId>org.glassfish.jersey.test-framework</groupId>
             <artifactId>jersey-test-framework-core</artifactId>
-            <version>${jersey-2-version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.test-framework.providers</groupId>
             <artifactId>jersey-test-framework-provider-external</artifactId>
-            <version>${jersey-2-version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

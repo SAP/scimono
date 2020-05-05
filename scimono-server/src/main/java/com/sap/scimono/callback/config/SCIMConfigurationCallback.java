@@ -6,6 +6,8 @@ import com.sap.scimono.entity.config.BulkSetting;
 import com.sap.scimono.entity.config.FilterSetting;
 import com.sap.scimono.entity.config.PagingSetting;
 
+import java.net.URI;
+
 public interface SCIMConfigurationCallback {
 
   /**
@@ -32,4 +34,8 @@ public interface SCIMConfigurationCallback {
   boolean getETagSupportedSetting();
 
   String getServiceProviderConfigVersion();
+
+  default URI getRedirectApiRoot() {
+    return null;
+  }
 }

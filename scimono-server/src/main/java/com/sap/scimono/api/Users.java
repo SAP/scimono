@@ -11,14 +11,14 @@ import static com.sap.scimono.entity.User.RESOURCE_TYPE_USER;
 import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
-import static com.sap.scimono.helper.Resources.addLocation;
-import static com.sap.scimono.helper.Resources.addRelationalEntitiesLocation;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -55,9 +55,12 @@ import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
+import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
+import com.sap.scimono.helper.ReadOnlyAttributesCleaner;
+import com.sap.scimono.helper.ResourceLocationService;
 
 @Path(USERS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -66,19 +69,20 @@ import com.sap.scimono.exception.ResourceNotFoundException;
 public class Users {
   private static final Logger logger = LoggerFactory.getLogger(Users.class);
 
-  @Context
-  private UriInfo uriInfo;
-
+  private final UriInfo uriInfo;
   private final UsersCallback usersAPI;
   private final SchemasCallback schemaAPI;
   private final SCIMConfigurationCallback scimConfig;
+  private final ResourceLocationService resourceLocationService;
 
-  public Users(@Context final Application appContext) {
+  public Users(@Context final Application appContext, @Context final UriInfo uriInfo) {
+    this.uriInfo = uriInfo;
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
 
     usersAPI = scimApplication.getUsersCallback();
     schemaAPI = scimApplication.getSchemasCallback();
     scimConfig = scimApplication.getConfigurationCallback();
+    resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, USERS);
   }
 
   @GET
@@ -97,8 +101,8 @@ public class Users {
       }
       location.path(userFromDb.getId());
 
-      User user = addLocation(userFromDb, location);
-      user = addRelationalEntitiesLocation(user, uriInfo);
+      User user = resourceLocationService.addLocation(userFromDb, location.build());
+      user = resourceLocationService.addRelationalEntitiesLocation(user);
       return Response.ok(user).tag(user.getMeta().getVersion()).location(location.build()).build();
     }
 
@@ -112,9 +116,9 @@ public class Users {
     User userFromDb = usersAPI.getUser(userId);
 
     if (userFromDb != null) {
-      User user = addLocation(userFromDb, uriInfo.getAbsolutePath());
-      user = addRelationalEntitiesLocation(user, uriInfo);
-      return Response.ok(user).tag(user.getMeta().getVersion()).location(uriInfo.getAbsolutePath()).build();
+      User user = resourceLocationService.addLocation(userFromDb, userId);
+      user = resourceLocationService.addRelationalEntitiesLocation(user);
+      return Response.ok(user).tag(user.getMeta().getVersion()).location(resourceLocationService.getLocation(userId)).build();
     }
 
     throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
@@ -147,8 +151,8 @@ public class Users {
 
     List<User> usersToReturn = new ArrayList<>();
     for (User user : users.getResources()) {
-      user = addLocation(user, uriInfo.getAbsolutePathBuilder().path(user.getId()));
-      user = addRelationalEntitiesLocation(user, uriInfo);
+      user = resourceLocationService.addLocation(user, user.getId());
+      user = resourceLocationService.addRelationalEntitiesLocation(user);
       usersToReturn.add(user);
     }
 
@@ -169,40 +173,51 @@ public class Users {
   }
 
   @POST
-  public Response createUser(final User newUser) {
+  public Response createUser(@Valid final User newUser) {
     if (newUser == null) {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
 
+    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
+    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(newUser);
+
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI);
+    userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
+
     String version = UUID.randomUUID().toString();
     Meta userMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_USER).build();
 
-    User.Builder userWithMeta = newUser.builder().setMeta(userMeta);
+    User.Builder userWithMeta = userWithoutReadOnlyAttributes.builder().setMeta(userMeta);
     usersAPI.generateId().ifPresent(userWithMeta::setId);
 
     User createdUser = usersAPI.createUser(userWithMeta.build());
 
-    UriBuilder location = uriInfo.getAbsolutePathBuilder().path(createdUser.getId());
-    createdUser = addLocation(createdUser, location);
+    createdUser = resourceLocationService.addLocation(createdUser, createdUser.getId());
 
     logger.trace("Created user {} with version {}", createdUser.getId(), version);
-    return Response.created(location.build()).tag(version).entity(createdUser).build();
+    return Response.created(resourceLocationService.getLocation(createdUser.getId())).tag(version).entity(createdUser).build();
   }
 
   @PUT
   @Path("{id}")
   public Response updateUser(@PathParam("id") @ValidId final String userId, final User userToUpdate) {
+    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
+    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(userToUpdate);
+
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI);
+    userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
+
     String newVersion = UUID.randomUUID().toString();
 
     Meta.Builder lastModifiedMeta = new Meta.Builder();
 
-    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(uriInfo.getAbsolutePath().toString())
-        .setResourceType(RESOURCE_TYPE_USER);
-    User updatedUser = userToUpdate.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
-    usersAPI.updateUser(updatedUser);
+    URI userLocation = resourceLocationService.getLocation(userId);
+    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(userLocation.toString()).setResourceType(RESOURCE_TYPE_USER);
+    User updatedUser = userWithoutReadOnlyAttributes.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
+    updatedUser = usersAPI.updateUser(updatedUser);
 
     logger.trace("Updated user {}, new version is {}", userId, newVersion);
-    return Response.ok(updatedUser).tag(newVersion).location(uriInfo.getAbsolutePath()).build();
+    return Response.ok(updatedUser).tag(newVersion).location(userLocation).build();
   }
 
   @DELETE
@@ -233,5 +248,4 @@ public class Users {
   public Response queryUsers() {
     return getUsers(0, 0, null, null);
   }
-
 }

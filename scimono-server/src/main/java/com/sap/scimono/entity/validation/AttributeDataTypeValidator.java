@@ -1,15 +1,15 @@
 
-package com.sap.scimono.entity.validation.patch;
+package com.sap.scimono.entity.validation;
 
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
+import javax.ws.rs.core.Response;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.AttributeDataType;
-import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.exception.SCIMException;
-
 
 public class AttributeDataTypeValidator implements Validator<Attribute> {
 
@@ -20,12 +20,12 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
 
   private JsonNode value;
 
-  public AttributeDataTypeValidator(JsonNode value) {
+  public AttributeDataTypeValidator(final JsonNode value) {
     this.value = value;
   }
 
   @Override
-  public void validate(Attribute attribute) {
+  public void validate(final Attribute attribute) {
     if (attribute.isMultiValued()) {
       validateMultivaluedValueDataType(attribute, value);
       return;
@@ -33,25 +33,25 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
     validateSingleValueDataType(attribute, value);
   }
 
-  private void validateSingleValueDataType(Attribute attribute, JsonNode value) {
+  private void validateSingleValueDataType(final Attribute attribute, final JsonNode value) {
     if (!isValueDataTypeCorrect(attribute.getType(), value)) {
-      throw new PatchValidationException(ERROR_TYPE, ERROR_MESSAGE);
+      throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE, Response.Status.BAD_REQUEST);
     }
   }
 
-  private void validateMultivaluedValueDataType(Attribute attribute, JsonNode value) {
-    if (!value.isContainerNode()) {
-      throw new PatchValidationException(ERROR_TYPE, ERROR_MESSAGE);
+  private void validateMultivaluedValueDataType(final Attribute attribute, final JsonNode value) {
+    if (!value.isArray()) {
+      throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE, Response.Status.BAD_REQUEST);
     }
 
     for (JsonNode valueElement : value) {
       if (!isValueDataTypeCorrect(attribute.getType(), valueElement)) {
-        throw new PatchValidationException(ERROR_TYPE, ERROR_MESSAGE);
+        throw new SCIMException(ERROR_TYPE, ERROR_MESSAGE, Response.Status.BAD_REQUEST);
       }
     }
   }
 
-  private boolean isValueDataTypeCorrect(String type, JsonNode value) {
+  private boolean isValueDataTypeCorrect(final String type, final JsonNode value) {
     switch (AttributeDataType.of(type)) {
       case STRING:
         return value.isTextual();
@@ -62,7 +62,7 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
       case COMPLEX:
         return value.isObject();
       case DECIMAL:
-        return value.isDouble();
+        return value.isBigDecimal() || value.isDouble() || value.isIntegralNumber();
       case REFERENCE:
         return value.isTextual() && value.asText().matches(URI_PATTERN);
       case BINARY:
@@ -71,11 +71,12 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
         if (value.isTextual()) {
           try {
             DateTimeFormatter.ISO_INSTANT.parse(value.asText());
+            return true;
           } catch (DateTimeParseException e) {
             return false;
           }
         }
-        return true;
+        return false;
       default:
         return false;
     }

@@ -18,17 +18,6 @@
 
 package com.sap.scimono.entity;
 
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
-import com.sap.scimono.entity.base.Extension;
-import com.sap.scimono.entity.base.MultiValuedAttribute;
-import com.sap.scimono.entity.schema.validation.ValidCoreSchema;
-import com.sap.scimono.exception.InvalidInputException;
-import com.sap.scimono.helper.Strings;
-
-import javax.validation.Valid;
-import java.util.*;
-
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.ACTIVE_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.ADDRESSES_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.EMAILS_FIELD;
@@ -56,6 +45,31 @@ import static com.sap.scimono.entity.definition.ResourceConstants.SCHEMAS_FIELD;
 import static com.sap.scimono.helper.Objects.firstNonNull;
 import static com.sap.scimono.helper.Objects.sameOrEmpty;
 import static java.util.Objects.hash;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+
+import javax.validation.Valid;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.sap.scimono.entity.base.Extension;
+import com.sap.scimono.entity.base.MultiValuedAttribute;
+import com.sap.scimono.entity.schema.validation.ValidCoreSchema;
+import com.sap.scimono.entity.schema.validation.ValidEmails;
+import com.sap.scimono.exception.InvalidInputException;
+import com.sap.scimono.helper.Strings;
 
 /**
  * User resources are meant to enable expression of common User information. It should be possible to express most user data with the core attributes.
@@ -92,7 +106,7 @@ public final class User extends Resource<User> {
   private final String timezone;
   private final Boolean active;
   private final String password;
-  @Valid
+  @ValidEmails
   private final List<Email> emails;
   @Valid
   private final List<PhoneNumber> phoneNumbers;
@@ -648,6 +662,7 @@ public final class User extends Resource<User> {
      * @param userName the new userName of the user
      * @param user a existing user
      */
+    @SuppressWarnings("unchecked")
     Builder(final String userName, final User user) {
       super(user);
       addSchema(SCHEMA);
@@ -664,15 +679,15 @@ public final class User extends Resource<User> {
         timezone = user.timezone;
         active = user.active;
         password = user.password;
-        emails = firstNonNull(user.emails, emails);
-        phoneNumbers = firstNonNull(user.phoneNumbers, phoneNumbers);
-        ims = firstNonNull(user.ims, ims);
-        photos = firstNonNull(user.photos, photos);
-        addresses = firstNonNull(user.addresses, addresses);
-        groups = firstNonNull(user.groups, groups);
-        entitlements = firstNonNull(user.entitlements, entitlements);
-        roles = firstNonNull(user.roles, roles);
-        x509Certificates = firstNonNull(user.x509Certificates, x509Certificates);
+        emails = new ArrayList<>(firstNonNull(user.emails, emails));
+        phoneNumbers = new ArrayList<>(firstNonNull(user.phoneNumbers, phoneNumbers));
+        ims = new ArrayList<>(firstNonNull(user.ims, ims));
+        photos = new ArrayList<>(firstNonNull(user.photos, photos));
+        addresses = new ArrayList<>(firstNonNull(user.addresses, addresses));
+        groups = new ArrayList<>(firstNonNull(user.groups, groups));
+        entitlements = new ArrayList<>(firstNonNull(user.entitlements, entitlements));
+        roles = new ArrayList<>(firstNonNull(user.roles, roles));
+        x509Certificates = new ArrayList<>(firstNonNull(user.x509Certificates, x509Certificates));
       }
       if (!Strings.isNullOrEmpty(userName)) {
         this.userName = userName;
@@ -711,7 +726,7 @@ public final class User extends Resource<User> {
         throw new InvalidInputException("The given user must not be null");
       }
     }
-    
+
     /**
      * Sets the userName (See {@link User#getUserName()}).
      *

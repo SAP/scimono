@@ -9,6 +9,7 @@ import javax.ws.rs.ext.ExceptionMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sap.scimono.api.API;
 import com.sap.scimono.entity.ErrorResponse;
 
 public class InternalExceptionMapper implements ExceptionMapper<Throwable> {
@@ -23,7 +24,7 @@ public class InternalExceptionMapper implements ExceptionMapper<Throwable> {
     logger.error(EXPOSED_ERROR_MSG, exception);
 
     ErrorResponse scimError = new ErrorResponse(INTERNAL_SERVER_ERROR.getStatusCode(), null, EXPOSED_ERROR_MSG);
-    return Response.serverError().entity(scimError).build();
+    return Response.serverError().entity(scimError).type(API.APPLICATION_JSON_SCIM).build();
   }
 
 }

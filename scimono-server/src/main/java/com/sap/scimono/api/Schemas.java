@@ -2,9 +2,10 @@
 package com.sap.scimono.api;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
-import static com.sap.scimono.helper.Resources.addLocation;
+import static com.sap.scimono.api.API.SCHEMAS;
 import static com.sap.scimono.helper.Strings.stripStart;
 
+import java.net.URI;
 import java.util.*;
 
 import javax.ws.rs.Consumes;
@@ -17,10 +18,10 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
 
 import com.sap.scimono.entity.schema.validation.ValidSchemaId;
+import com.sap.scimono.helper.ResourceLocationService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,17 +44,16 @@ public class Schemas {
   public static final int PREDEFINED_SCHEMAS_COUNT = 6;
   private static final int CUSTOM_SCHEMAS_MAX_COUNT = 20;
 
-  @Context
-  private UriInfo uriInfo;
-
   private final SchemasCallback schemaAPI;
   private final SCIMConfigurationCallback scimConfig;
+  private final ResourceLocationService resourceLocationService;
 
-  public Schemas(@Context Application appContext) {
+  public Schemas(@Context Application appContext, @Context UriInfo uriInfo) {
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
 
     schemaAPI = scimApplication.getSchemasCallback();
     scimConfig = scimApplication.getConfigurationCallback();
+    resourceLocationService = new ResourceLocationService(uriInfo, scimApplication.getConfigurationCallback(), SCHEMAS);
   }
 
   @GET
@@ -63,7 +63,7 @@ public class Schemas {
 
     List<Schema> schemasWithLocation = new ArrayList<>();
     for (Schema schema : schemas) {
-      schema = addLocation(schema, uriInfo.getAbsolutePathBuilder().path(schema.getId()));
+      schema = resourceLocationService.addLocation(schema, schema.getId());
       schemasWithLocation.add(schema);
     }
 
@@ -78,9 +78,8 @@ public class Schemas {
     Schema schema =  schemaAPI.getSchema(schemaId);
 
     if (schema != null) {
-      Schema schemaWithLocation = addLocation(schema, uriInfo.getAbsolutePath());
-
-      return Response.ok(schemaWithLocation).tag(schemaWithLocation.getMeta().getVersion()).location(uriInfo.getAbsolutePath()).build();
+      Schema schemaWithLocation = resourceLocationService.addLocation(schema, schemaId);
+      return Response.ok(schemaWithLocation).tag(schemaWithLocation.getMeta().getVersion()).location(resourceLocationService.getLocation(schemaId)).build();
     }
 
     throw new ResourceNotFoundException(Schema.RESOURCE_TYPE_SCHEMA, schemaId);
@@ -90,15 +89,15 @@ public class Schemas {
   public Response createSchema(@ValidSchema final Schema newSchema) {
     validateSchema(newSchema);
 
-    UriBuilder location = uriInfo.getAbsolutePathBuilder().path(newSchema.getId());
+    URI location = resourceLocationService.getLocation(newSchema.getId());
     String version = UUID.randomUUID().toString();
-    Meta schemaMeta = new Meta.Builder().setResourceType(Schema.RESOURCE_TYPE_SCHEMA).setLocation(location.build().toString()).setVersion(version).build();
+    Meta schemaMeta = new Meta.Builder().setResourceType(Schema.RESOURCE_TYPE_SCHEMA).setLocation(location.toString()).setVersion(version).build();
     Schema schemaWithMeta = newSchema.builder().setMeta(schemaMeta).build();
 
     schemaAPI.createCustomSchema(schemaWithMeta);
 
     logger.trace("Created schema {} with version {}", newSchema.getId(), version);
-    return Response.created(location.build()).tag(version).entity(schemaWithMeta).build();
+    return Response.created(location).tag(version).entity(schemaWithMeta).build();
   }
 
   @DELETE
