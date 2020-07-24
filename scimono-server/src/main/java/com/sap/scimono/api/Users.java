@@ -125,28 +125,41 @@ public class Users {
   }
 
   @GET
-  //@formatter:off
-  public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) int startIndex,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) int count, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
+  // @formatter:off
+  public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndex,
+      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String count, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
       @QueryParam(FILTER_PARAM) final String filter) {
     // @formatter:on
     logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndex, startId, count);
-
-    if (startIndex < 1) {
-      startIndex = 1;
+    int startIndexNum = 0;
+    int countNum = 0;
+    try {
+      startIndexNum = Integer.parseInt(startIndex);
+    } catch (NumberFormatException e) {
+      throw new InvalidInputException("StartIndex is not a numeric value or is out of range.");
     }
 
-    if (count < 0) {
-      count = 0;
+    try {
+      countNum = Integer.parseInt(count);
+    } catch (NumberFormatException e) {
+      throw new InvalidInputException("Count is not a numeric value or is out of range.");
+    }
+
+    if (startIndexNum < 1) {
+      startIndexNum = 1;
+    }
+
+    if (countNum < 0) {
+      countNum = 0;
     }
 
     int maxCount = scimConfig.getMaxResourcesPerPage();
     logger.trace("Configured max count of returned resources is {}", maxCount);
-    if (count > maxCount) {
-      count = maxCount;
+    if (countNum > maxCount) {
+      countNum = maxCount;
     }
 
-    PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
+    PageInfo pageInfo = PageInfo.getInstance(Integer.parseInt(count), Integer.parseInt(startIndex) - 1, startId);
     PagedResult<User> users = usersAPI.getUsers(pageInfo, filter);
 
     List<User> usersToReturn = new ArrayList<>();
@@ -158,18 +171,20 @@ public class Users {
 
     // TODO maybe move this paging logic inside the PagedByX classes, what will remain here is whether to return paged by id or paged by index results
     if (startId != null) {
-      if (usersToReturn.size() <= count) {
+      if (usersToReturn.size() <= countNum) {
         return Response
-            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
+            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), countNum, startId, PAGINATION_BY_ID_END_PARAM))
+            .build();
       }
 
       int indexOfLastUser = usersToReturn.size() - 1;
       User nextUser = usersToReturn.remove(indexOfLastUser);
 
-      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, nextUser.getId())).build();
+      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), countNum, startId, nextUser.getId()))
+          .build();
     }
 
-    return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startIndex)).build();
+    return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), countNum, startIndexNum)).build();
   }
 
   @POST
@@ -246,6 +261,6 @@ public class Users {
   @POST
   @Path(".query")
   public Response queryUsers() {
-    return getUsers(0, 0, null, null);
+    return getUsers("0", "0", null, null);
   }
 }
