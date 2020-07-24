@@ -159,7 +159,7 @@ public class Users {
       countNum = maxCount;
     }
 
-    PageInfo pageInfo = PageInfo.getInstance(Integer.parseInt(count), Integer.parseInt(startIndex) - 1, startId);
+    PageInfo pageInfo = PageInfo.getInstance(countNum, startIndexNum - 1, startId);
     PagedResult<User> users = usersAPI.getUsers(pageInfo, filter);
 
     List<User> usersToReturn = new ArrayList<>();
