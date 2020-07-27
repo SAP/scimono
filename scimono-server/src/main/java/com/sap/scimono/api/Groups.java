@@ -94,23 +94,23 @@ public class Groups {
   }
 
   @GET
-  public Response getGroups(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndex,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String count, @QueryParam(START_ID_PARAM) @ValidStartId String startId,
+  public Response getGroups(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndexParam,
+      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId String startId,
       @QueryParam(FILTER_PARAM) final String filter) {
-    logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndex, startId, count);
-    int startIndexNum = 0;
-    int countNum = 0;
+    logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
+    int startIndex = 0;
+    int count = 0;
 
-    startIndexNum = PagingParamsParser.parseStartIndex(startIndex, startIndexNum);
-    countNum = PagingParamsParser.parseCount(count, countNum);
+    startIndex = PagingParamsParser.parseStartIndex(startIndexParam, startIndex);
+    count = PagingParamsParser.parseCount(countParam, count);
 
     int maxCount = scimConfig.getMaxResourcesPerPage();
     logger.trace("Configured max count of returned resources is {}", maxCount);
-    if (countNum > maxCount) {
-      countNum = maxCount;
+    if (count > maxCount) {
+      count = maxCount;
     }
 
-    PageInfo pageInfo = PageInfo.getInstance(countNum, startIndexNum - 1, startId);
+    PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
     PagedResult<Group> groups = groupAPI.getGroups(pageInfo, filter);
 
     List<Group> groupsToReturn = new ArrayList<>();
@@ -121,20 +121,20 @@ public class Groups {
     }
 
     if (isNotNullOrEmpty(startId)) {
-      if (groupsToReturn.size() <= countNum) {
+      if (groupsToReturn.size() <= count) {
         return Response
-            .ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), countNum, startId, PAGINATION_BY_ID_END_PARAM))
+            .ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM))
             .build();
       }
 
       int indexOfLastGroup = groupsToReturn.size() - 1;
       Group nextGroup = groupsToReturn.remove(indexOfLastGroup);
 
-      return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), countNum, startId, nextGroup.getId()))
+      return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, nextGroup.getId()))
           .build();
     }
 
-    return Response.ok(new PagedByIndexSearchResult<>(groupsToReturn, groups.getTotalResourceCount(), countNum, startIndexNum)).build();
+    return Response.ok(new PagedByIndexSearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startIndex)).build();
   }
 
   @POST
