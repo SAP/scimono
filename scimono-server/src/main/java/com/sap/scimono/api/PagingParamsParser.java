@@ -6,10 +6,12 @@ import com.sap.scimono.exception.InvalidInputException;
 public class PagingParamsParser {
 
   private PagingParamsParser() {
-    super();
+
   }
 
-  public static int parseCount(String countParam, int count) {
+  public static int parseCount(String countParam) {
+    int count = 0;
+
     try {
       count = Integer.parseInt(countParam);
 
@@ -22,7 +24,9 @@ public class PagingParamsParser {
     return count;
   }
 
-  public static int parseStartIndex(String startIndexParam, int startIndex) {
+  public static int parseStartIndex(String startIndexParam) {
+    int startIndex = 0;
+
     try {
       startIndex = Integer.parseInt(startIndexParam);
 
