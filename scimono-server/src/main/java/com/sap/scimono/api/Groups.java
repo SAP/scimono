@@ -98,11 +98,9 @@ public class Groups {
       @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId String startId,
       @QueryParam(FILTER_PARAM) final String filter) {
     logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
-    int startIndex = 0;
-    int count = 0;
 
-    startIndex = PagingParamsParser.parseStartIndex(startIndexParam, startIndex);
-    count = PagingParamsParser.parseCount(countParam, count);
+    int startIndex = PagingParamsParser.parseStartIndex(startIndexParam);
+    int count = PagingParamsParser.parseCount(countParam);
 
     int maxCount = scimConfig.getMaxResourcesPerPage();
     logger.trace("Configured max count of returned resources is {}", maxCount);
