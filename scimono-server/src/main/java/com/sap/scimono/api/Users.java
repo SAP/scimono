@@ -131,11 +131,9 @@ public class Users {
       @QueryParam(FILTER_PARAM) final String filter) {
     // @formatter:on
     logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
-    int startIndex = 0;
-    int count = 0;
 
-    startIndex = PagingParamsParser.parseStartIndex(startIndexParam, startIndex);
-    count = PagingParamsParser.parseCount(countParam, count);
+    int startIndex = PagingParamsParser.parseStartIndex(startIndexParam);
+    int count = PagingParamsParser.parseCount(countParam);
 
     int maxCount = scimConfig.getMaxResourcesPerPage();
     logger.trace("Configured max count of returned resources is {}", maxCount);
@@ -157,15 +155,13 @@ public class Users {
     if (startId != null) {
       if (usersToReturn.size() <= count) {
         return Response
-            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM))
-            .build();
+            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
       }
 
       int indexOfLastUser = usersToReturn.size() - 1;
       User nextUser = usersToReturn.remove(indexOfLastUser);
 
-      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, nextUser.getId()))
-          .build();
+      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, nextUser.getId())).build();
     }
 
     return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startIndex)).build();
