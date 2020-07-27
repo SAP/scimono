@@ -134,16 +134,8 @@ public class Users {
     int startIndexNum = 0;
     int countNum = 0;
 
-    startIndexNum = QueryParamParser.getStartIndexNum(startIndex, startIndexNum);
-    countNum = QueryParamParser.getCountNum(count, countNum);
-
-    if (startIndexNum < 1) {
-      startIndexNum = 1;
-    }
-
-    if (countNum < 0) {
-      countNum = 0;
-    }
+    startIndexNum = PagingParamsParser.parseStartIndex(startIndex, startIndexNum);
+    countNum = PagingParamsParser.parseCount(count, countNum);
 
     int maxCount = scimConfig.getMaxResourcesPerPage();
     logger.trace("Configured max count of returned resources is {}", maxCount);
