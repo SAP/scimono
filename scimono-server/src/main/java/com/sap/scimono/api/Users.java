@@ -125,20 +125,15 @@ public class Users {
   }
 
   @GET
-  //@formatter:off
-  public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) int startIndex,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) int count, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
+  // @formatter:off
+  public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndexParam,
+      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
       @QueryParam(FILTER_PARAM) final String filter) {
     // @formatter:on
-    logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndex, startId, count);
+    logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
-    if (startIndex < 1) {
-      startIndex = 1;
-    }
-
-    if (count < 0) {
-      count = 0;
-    }
+    int startIndex = PagingParamsParser.parseStartIndex(startIndexParam);
+    int count = PagingParamsParser.parseCount(countParam);
 
     int maxCount = scimConfig.getMaxResourcesPerPage();
     logger.trace("Configured max count of returned resources is {}", maxCount);
@@ -246,6 +241,6 @@ public class Users {
   @POST
   @Path(".query")
   public Response queryUsers() {
-    return getUsers(0, 0, null, null);
+    return getUsers("0", "0", null, null);
   }
 }

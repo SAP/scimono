@@ -1,6 +1,42 @@
 
 package com.sap.scimono.api;
 
+import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+import static com.sap.scimono.api.API.COUNT_PARAM;
+import static com.sap.scimono.api.API.FILTER_PARAM;
+import static com.sap.scimono.api.API.GROUPS;
+import static com.sap.scimono.api.API.START_ID_PARAM;
+import static com.sap.scimono.api.API.START_INDEX_PARAM;
+import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
+import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
+import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
+import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
+import static com.sap.scimono.helper.Strings.isNotNullOrEmpty;
+
+import java.net.URI;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.Application;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriInfo;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
@@ -19,40 +55,6 @@ import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
 import com.sap.scimono.helper.ResourceLocationService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
-import java.net.URI;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
-
-import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
-import static com.sap.scimono.api.API.COUNT_PARAM;
-import static com.sap.scimono.api.API.FILTER_PARAM;
-import static com.sap.scimono.api.API.GROUPS;
-import static com.sap.scimono.api.API.START_ID_PARAM;
-import static com.sap.scimono.api.API.START_INDEX_PARAM;
-import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
-import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
-import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
-import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
-import static com.sap.scimono.helper.Strings.isNotNullOrEmpty;
 
 @Path(API.GROUPS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -92,17 +94,13 @@ public class Groups {
   }
 
   @GET
-  public Response getGroups(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) int startIndex,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) int count, @QueryParam(START_ID_PARAM) @ValidStartId String startId,
+  public Response getGroups(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndexParam,
+      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId String startId,
       @QueryParam(FILTER_PARAM) final String filter) {
-    logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndex, startId, count);
-    if (startIndex < 1) {
-      startIndex = 1;
-    }
+    logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
-    if (count < 0) {
-      count = 0;
-    }
+    int startIndex = PagingParamsParser.parseStartIndex(startIndexParam);
+    int count = PagingParamsParser.parseCount(countParam);
 
     int maxCount = scimConfig.getMaxResourcesPerPage();
     logger.trace("Configured max count of returned resources is {}", maxCount);
@@ -122,13 +120,16 @@ public class Groups {
 
     if (isNotNullOrEmpty(startId)) {
       if (groupsToReturn.size() <= count) {
-        return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
+        return Response
+            .ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM))
+            .build();
       }
-    	
+
       int indexOfLastGroup = groupsToReturn.size() - 1;
       Group nextGroup = groupsToReturn.remove(indexOfLastGroup);
 
-      return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, nextGroup.getId())).build();
+      return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, nextGroup.getId()))
+          .build();
     }
 
     return Response.ok(new PagedByIndexSearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startIndex)).build();
