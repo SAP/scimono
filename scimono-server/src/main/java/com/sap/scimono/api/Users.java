@@ -133,17 +133,9 @@ public class Users {
     logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndex, startId, count);
     int startIndexNum = 0;
     int countNum = 0;
-    try {
-      startIndexNum = Integer.parseInt(startIndex);
-    } catch (NumberFormatException e) {
-      throw new InvalidInputException("StartIndex is not a numeric value or is out of range.");
-    }
 
-    try {
-      countNum = Integer.parseInt(count);
-    } catch (NumberFormatException e) {
-      throw new InvalidInputException("Count is not a numeric value or is out of range.");
-    }
+    startIndexNum = QueryParamParser.getStartIndexNum(startIndex, startIndexNum);
+    countNum = QueryParamParser.getCountNum(count, countNum);
 
     if (startIndexNum < 1) {
       startIndexNum = 1;
@@ -185,6 +177,24 @@ public class Users {
     }
 
     return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), countNum, startIndexNum)).build();
+  }
+
+  public int getCountNum(String count, int countNum) {
+    try {
+      countNum = Integer.parseInt(count);
+    } catch (NumberFormatException e) {
+      throw new InvalidInputException("Count is not a numeric value or is out of range.");
+    }
+    return countNum;
+  }
+
+  public int getStartIndexNum(String startIndex, int startIndexNum) {
+    try {
+      startIndexNum = Integer.parseInt(startIndex);
+    } catch (NumberFormatException e) {
+      throw new InvalidInputException("StartIndex is not a numeric value or is out of range.");
+    }
+    return startIndexNum;
   }
 
   @POST
