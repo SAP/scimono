@@ -126,24 +126,24 @@ public class Users {
 
   @GET
   // @formatter:off
-  public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndex,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String count, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
+  public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndexParam,
+      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
       @QueryParam(FILTER_PARAM) final String filter) {
     // @formatter:on
-    logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndex, startId, count);
-    int startIndexNum = 0;
-    int countNum = 0;
+    logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
+    int startIndex = 0;
+    int count = 0;
 
-    startIndexNum = PagingParamsParser.parseStartIndex(startIndex, startIndexNum);
-    countNum = PagingParamsParser.parseCount(count, countNum);
+    startIndex = PagingParamsParser.parseStartIndex(startIndexParam, startIndex);
+    count = PagingParamsParser.parseCount(countParam, count);
 
     int maxCount = scimConfig.getMaxResourcesPerPage();
     logger.trace("Configured max count of returned resources is {}", maxCount);
-    if (countNum > maxCount) {
-      countNum = maxCount;
+    if (count > maxCount) {
+      count = maxCount;
     }
 
-    PageInfo pageInfo = PageInfo.getInstance(countNum, startIndexNum - 1, startId);
+    PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
     PagedResult<User> users = usersAPI.getUsers(pageInfo, filter);
 
     List<User> usersToReturn = new ArrayList<>();
@@ -155,20 +155,20 @@ public class Users {
 
     // TODO maybe move this paging logic inside the PagedByX classes, what will remain here is whether to return paged by id or paged by index results
     if (startId != null) {
-      if (usersToReturn.size() <= countNum) {
+      if (usersToReturn.size() <= count) {
         return Response
-            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), countNum, startId, PAGINATION_BY_ID_END_PARAM))
+            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM))
             .build();
       }
 
       int indexOfLastUser = usersToReturn.size() - 1;
       User nextUser = usersToReturn.remove(indexOfLastUser);
 
-      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), countNum, startId, nextUser.getId()))
+      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, nextUser.getId()))
           .build();
     }
 
-    return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), countNum, startIndexNum)).build();
+    return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startIndex)).build();
   }
 
   @POST
