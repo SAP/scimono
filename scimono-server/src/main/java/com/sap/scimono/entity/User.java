@@ -620,7 +620,7 @@ public final class User extends Resource<User> {
     if (!Objects.equals(title, other.title)) {
       return false;
     }
-    if (!Objects.equals(userName, other.userName)) {
+    if (!userName.equalsIgnoreCase(other.userName)) {
       return false;
     }
     if (!Objects.equals(userType, other.userType)) {
