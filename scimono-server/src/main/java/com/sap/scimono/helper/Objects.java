@@ -54,4 +54,9 @@ public interface Objects {
 
     return output.toByteArray();
   }
+  
+  
+  static boolean stringsEqualsIgnoreCase(String a, String b) {
+    return (a == b) || (a != null && a.equalsIgnoreCase(b));
+  }
 }
