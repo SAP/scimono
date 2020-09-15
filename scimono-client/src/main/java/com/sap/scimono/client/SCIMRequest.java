@@ -28,7 +28,7 @@ import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
 
-class SCIMRequest {
+public class SCIMRequest {
   private final MultivaluedMap<String, Object> httpHeaders;
   private final Map<ResourceAction, ActionResponseStatusConfig> scimActionsResponseStatusConfig;
 
@@ -82,7 +82,7 @@ class SCIMRequest {
     return new Builder();
   }
 
-  static class Builder {
+  public static class Builder {
     private final MultivaluedMap<String, Object> httpHeaders = defaultHeaders();
     private Map<ResourceAction, ActionResponseStatusConfig> scimActionsResponseStatusConfig = defaultSCIMActionsResponseStatusConfig();
 
