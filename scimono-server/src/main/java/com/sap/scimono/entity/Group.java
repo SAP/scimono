@@ -30,6 +30,7 @@ import javax.validation.Valid;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.validation.ValidCoreSchema;
 import com.sap.scimono.helper.Strings;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -275,6 +276,11 @@ public final class Group extends Resource<Group> {
 
     public Builder removeMember(MemberRef member){
       members.remove(member);
+      return this;
+    }
+
+    public Builder addExtensions(Collection<Extension> extensions) {
+      super.addExtensions(extensions);
       return this;
     }
 
