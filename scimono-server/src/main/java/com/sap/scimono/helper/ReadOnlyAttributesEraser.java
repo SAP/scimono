@@ -18,15 +18,15 @@ import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.exception.SCIMException;
 
-public class ReadOnlyAttributesCleaner<T extends Resource<T>> {
+public class ReadOnlyAttributesEraser<T extends Resource<T>> {
 
   private SchemasCallback schemaAPI;
 
-  public ReadOnlyAttributesCleaner(final SchemasCallback schemaAPI) {
+  public ReadOnlyAttributesEraser(final SchemasCallback schemaAPI) {
     this.schemaAPI = schemaAPI;
   }
 
-  public T cleanCustomExtensions(final T resource) {
+  public T eraseAllFormCustomExtensions(final T resource) {
 
     List<Extension> extensions = resource.getExtensions().values().stream().map(extension -> {
       if (extension instanceof EnterpriseExtension) {
