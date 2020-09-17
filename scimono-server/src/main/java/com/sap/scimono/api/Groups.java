@@ -51,9 +51,11 @@ import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
+import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
+import com.sap.scimono.helper.ReadOnlyAttributesCleaner;
 import com.sap.scimono.helper.ResourceLocationService;
 
 @Path(API.GROUPS)
@@ -136,10 +138,16 @@ public class Groups {
   }
 
   @POST
-  public Response createGroup(final Group newGroup) {
+  public Response createGroup(Group newGroup) {
     if (newGroup == null) {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
+
+    ReadOnlyAttributesCleaner<Group> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
+    newGroup = readOnlyAttributesCleaner.cleanCustomExtensions(newGroup);
+
+    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI);
+    customAttributesValidator.validate(newGroup);
 
     String version = UUID.randomUUID().toString();
     Meta groupMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_GROUP).build();
@@ -156,7 +164,13 @@ public class Groups {
 
   @PUT
   @Path("{id}")
-  public Response updateGroup(@PathParam("id") @ValidId final String groupId, final Group groupToUpdate) {
+  public Response updateGroup(@PathParam("id") @ValidId final String groupId, Group groupToUpdate) {
+    ReadOnlyAttributesCleaner<Group> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
+    groupToUpdate = readOnlyAttributesCleaner.cleanCustomExtensions(groupToUpdate);
+
+    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI);
+    customAttributesValidator.validate(groupToUpdate);
+
     String newVersion = UUID.randomUUID().toString();
     Meta.Builder lastUpdatedMeta = new Meta.Builder(groupToUpdate.getMeta());
 
