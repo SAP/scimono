@@ -55,7 +55,7 @@ import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
-import com.sap.scimono.helper.ReadOnlyAttributesCleaner;
+import com.sap.scimono.helper.ReadOnlyAttributesEraser;
 import com.sap.scimono.helper.ResourceLocationService;
 
 @Path(API.GROUPS)
@@ -143,8 +143,8 @@ public class Groups {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
 
-    ReadOnlyAttributesCleaner<Group> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
-    newGroup = readOnlyAttributesCleaner.cleanCustomExtensions(newGroup);
+    ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
+    newGroup = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newGroup);
 
     ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI);
     customAttributesValidator.validate(newGroup);
@@ -165,8 +165,8 @@ public class Groups {
   @PUT
   @Path("{id}")
   public Response updateGroup(@PathParam("id") @ValidId final String groupId, Group groupToUpdate) {
-    ReadOnlyAttributesCleaner<Group> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
-    groupToUpdate = readOnlyAttributesCleaner.cleanCustomExtensions(groupToUpdate);
+    ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
+    groupToUpdate = readOnlyAttributesEraser.eraseAllFormCustomExtensions(groupToUpdate);
 
     ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI);
     customAttributesValidator.validate(groupToUpdate);
