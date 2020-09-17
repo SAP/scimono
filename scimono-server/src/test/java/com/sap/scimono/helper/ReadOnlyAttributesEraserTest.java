@@ -19,7 +19,7 @@ import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
 
-class ReadOnlyAttributesCleanerTest {
+class ReadOnlyAttributesEraserTest {
 
   private static final String TEST_SCHEMA_NAME = "testSchema";
   private static final String ATTRIBUTE2 = "attribute2";
@@ -30,7 +30,7 @@ class ReadOnlyAttributesCleanerTest {
   SchemasCallback schemaAPI;
 
   @Test
-  public void testClean() {
+  public void testEraseAttributes() {
     MockitoAnnotations.initMocks(this);
 
     Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
@@ -56,8 +56,8 @@ class ReadOnlyAttributesCleanerTest {
     Extension expectedExtension = new Extension.Builder(TEST_SCHEMA_NAME).setAttributes(expectedAttributes).build();
     User expectedUser = new User.Builder("vladi").addExtension(expectedExtension).build();
 
-    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
-    User actualUser = readOnlyAttributesCleaner.cleanCustomExtensions(user);
+    ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
+    User actualUser = readOnlyAttributesEraser.eraseAllFormCustomExtensions(user);
 
     assertEquals(expectedUser, actualUser);
   }

@@ -59,7 +59,7 @@ import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
-import com.sap.scimono.helper.ReadOnlyAttributesCleaner;
+import com.sap.scimono.helper.ReadOnlyAttributesEraser;
 import com.sap.scimono.helper.ResourceLocationService;
 
 @Path(USERS)
@@ -173,8 +173,8 @@ public class Users {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
 
-    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
-    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(newUser);
+    ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
+    User userWithoutReadOnlyAttributes = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newUser);
 
     ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
@@ -196,8 +196,8 @@ public class Users {
   @PUT
   @Path("{id}")
   public Response updateUser(@PathParam("id") @ValidId final String userId, @Valid final User userToUpdate) {
-    ReadOnlyAttributesCleaner<User> readOnlyAttributesCleaner = new ReadOnlyAttributesCleaner<>(schemaAPI);
-    User userWithoutReadOnlyAttributes = readOnlyAttributesCleaner.cleanCustomExtensions(userToUpdate);
+    ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
+    User userWithoutReadOnlyAttributes = readOnlyAttributesEraser.eraseAllFormCustomExtensions(userToUpdate);
 
     ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
