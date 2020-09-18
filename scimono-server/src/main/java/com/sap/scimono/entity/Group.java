@@ -284,6 +284,11 @@ public final class Group extends Resource<Group> {
       return this;
     }
 
+    public Builder removeExtensions() {
+      super.removeExtensions();
+      return this;
+    }
+
     @Override
     public Group build() {
       return new Group(this);
