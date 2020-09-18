@@ -253,7 +253,7 @@ public abstract class Resource<T> implements Serializable {
         externalId = resource.externalId;
         meta = resource.meta;
         schemas = resource.schemas;
-        extensions = firstNonNull(resource.extensions, extensions);
+        extensions = new HashMap<>(firstNonNull(resource.extensions, extensions));
       }
     }
 
