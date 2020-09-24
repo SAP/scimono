@@ -87,13 +87,13 @@ public class Groups {
 
     Group groupFromDb = groupAPI.getGroup(groupId);
 
-    if (groupFromDb != null) {
-      Group group = resourceLocationService.addLocation(groupFromDb, groupId);
-      group = resourceLocationService.addMembersLocation(group);
-      return Response.ok(group).tag(group.getMeta().getVersion()).location(resourceLocationService.getLocation(groupId)).build();
+    if (groupFromDb == null) {
+      throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);
     }
 
-    throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);
+    Group group = resourceLocationService.addLocation(groupFromDb, groupId);
+    group = resourceLocationService.addMembersLocation(group);
+    return Response.ok(group).tag(group.getMeta().getVersion()).location(resourceLocationService.getLocation(groupId)).build();
   }
 
   @GET

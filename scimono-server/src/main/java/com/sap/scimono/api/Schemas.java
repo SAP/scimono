@@ -77,13 +77,11 @@ public class Schemas {
     logger.trace("Reading schema {}", schemaId);
 
     Schema schema =  schemaAPI.getSchema(schemaId);
-
-    if (schema != null) {
-      Schema schemaWithLocation = resourceLocationService.addLocation(schema, schemaId);
-      return Response.ok(schemaWithLocation).tag(schemaWithLocation.getMeta().getVersion()).location(resourceLocationService.getLocation(schemaId)).build();
+    if (schema == null) {
+      throw new ResourceNotFoundException(Schema.RESOURCE_TYPE_SCHEMA, schemaId);
     }
-
-    throw new ResourceNotFoundException(Schema.RESOURCE_TYPE_SCHEMA, schemaId);
+    Schema schemaWithLocation = resourceLocationService.addLocation(schema, schemaId);
+    return Response.ok(schemaWithLocation).tag(schemaWithLocation.getMeta().getVersion()).location(resourceLocationService.getLocation(schemaId)).build();
   }
 
   @POST

@@ -93,20 +93,20 @@ public class Users {
 
     User userFromDb = usersAPI.getUserByUsername(userName);
 
-    if (userFromDb != null) {
-      UriBuilder location = uriInfo.getBaseUriBuilder();
-      List<PathSegment> pathSegments = uriInfo.getPathSegments(false);
-      for (int i = 0; i < pathSegments.size() - 1; ++i) {
-        location.path(pathSegments.get(i).toString());
-      }
-      location.path(userFromDb.getId());
-
-      User user = resourceLocationService.addLocation(userFromDb, location.build());
-      user = resourceLocationService.addRelationalEntitiesLocation(user);
-      return Response.ok(user).tag(user.getMeta().getVersion()).location(location.build()).build();
+    if (userFromDb == null) {
+      throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userName);
     }
 
-    throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userName);
+    UriBuilder location = uriInfo.getBaseUriBuilder();
+    List<PathSegment> pathSegments = uriInfo.getPathSegments(false);
+    for (int i = 0; i < pathSegments.size() - 1; ++i) {
+      location.path(pathSegments.get(i).toString());
+    }
+    location.path(userFromDb.getId());
+
+    User user = resourceLocationService.addLocation(userFromDb, location.build());
+    user = resourceLocationService.addRelationalEntitiesLocation(user);
+    return Response.ok(user).tag(user.getMeta().getVersion()).location(location.build()).build();
   }
 
   @GET
@@ -115,13 +115,13 @@ public class Users {
     logger.trace("Reading user {}", userId);
     User userFromDb = usersAPI.getUser(userId);
 
-    if (userFromDb != null) {
-      User user = resourceLocationService.addLocation(userFromDb, userId);
-      user = resourceLocationService.addRelationalEntitiesLocation(user);
-      return Response.ok(user).tag(user.getMeta().getVersion()).location(resourceLocationService.getLocation(userId)).build();
+    if (userFromDb == null) {
+      throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
     }
 
-    throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
+    User user = resourceLocationService.addLocation(userFromDb, userId);
+    user = resourceLocationService.addRelationalEntitiesLocation(user);
+    return Response.ok(user).tag(user.getMeta().getVersion()).location(resourceLocationService.getLocation(userId)).build();
   }
 
   @GET
