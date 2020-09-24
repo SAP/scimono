@@ -2,16 +2,15 @@
 package com.sap.scimono.api;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+import static com.sap.scimono.api.API.ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.COUNT_PARAM;
 import static com.sap.scimono.api.API.FILTER_PARAM;
 import static com.sap.scimono.api.API.GROUPS;
 import static com.sap.scimono.api.API.START_ID_PARAM;
 import static com.sap.scimono.api.API.START_INDEX_PARAM;
 import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
-import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
-import static com.sap.scimono.helper.Strings.isNotNullOrEmpty;
 
 import java.net.URI;
 import java.time.Instant;
@@ -47,8 +46,6 @@ import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.paging.PageInfo;
-import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
-import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidId;
@@ -100,9 +97,12 @@ public class Groups {
   }
 
   @GET
-  public Response getGroups(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndexParam,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId String startId,
-      @QueryParam(FILTER_PARAM) final String filter) {
+  public Response getGroups(@QueryParam(START_INDEX_PARAM) @DefaultValue(DEFAULT_START_INDEX) String startIndexParam,
+                            @QueryParam(COUNT_PARAM) @DefaultValue(DEFAULT_COUNT) String countParam,
+                            @QueryParam(START_ID_PARAM) @ValidStartId String startId,
+                            @QueryParam(FILTER_PARAM) final String filter,
+                            @QueryParam(ATTRIBUTES_PARAM) final String attributes) {
+
     logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
     int startIndex = PagingParamsParser.parseStartIndex(startIndexParam);
@@ -124,21 +124,11 @@ public class Groups {
       groupsToReturn.add(group);
     }
 
-    if (isNotNullOrEmpty(startId)) {
-      if (groupsToReturn.size() <= count) {
-        return Response
-            .ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM))
-            .build();
-      }
-
-      int indexOfLastGroup = groupsToReturn.size() - 1;
-      Group nextGroup = groupsToReturn.remove(indexOfLastGroup);
-
-      return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, nextGroup.getId()))
-          .build();
-    }
-
-    return Response.ok(new PagedByIndexSearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startIndex)).build();
+    return ListResponseBuilder.forGroups(groupsToReturn)
+        .withPagingStartParameters(startId, startIndex)
+        .withRequestedCount(count)
+        .withTotalResultsCount(groups.getTotalResourceCount())
+        .build();
   }
 
   @POST

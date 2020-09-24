@@ -17,6 +17,10 @@ public interface GroupsCallback {
    */
   Group getGroup(final String groupId);
 
+  default Group getGroup(final String groupId, final String filter) {
+    return getGroup(groupId);
+  }
+
   /**
    * Returns a page of groups (limited by {@link SCIMConfigurationCallback#getMaxResourcesPerPage()}),
    * taking into account the specified filter and paging parameters.

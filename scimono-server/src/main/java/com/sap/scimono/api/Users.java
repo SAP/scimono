@@ -8,7 +8,6 @@ import static com.sap.scimono.api.API.START_ID_PARAM;
 import static com.sap.scimono.api.API.START_INDEX_PARAM;
 import static com.sap.scimono.api.API.USERS;
 import static com.sap.scimono.entity.User.RESOURCE_TYPE_USER;
-import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
 
@@ -50,8 +49,6 @@ import com.sap.scimono.callback.users.UsersCallback;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PageInfo;
-import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
-import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidId;
@@ -154,20 +151,11 @@ public class Users {
       usersToReturn.add(user);
     }
 
-    // TODO maybe move this paging logic inside the PagedByX classes, what will remain here is whether to return paged by id or paged by index results
-    if (startId != null) {
-      if (usersToReturn.size() <= count) {
-        return Response
-            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
-      }
-
-      int indexOfLastUser = usersToReturn.size() - 1;
-      User nextUser = usersToReturn.remove(indexOfLastUser);
-
-      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, nextUser.getId())).build();
-    }
-
-    return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startIndex)).build();
+    return ListResponseBuilder.forUsers(usersToReturn)
+        .withPagingStartParameters(startId, startIndex)
+        .withRequestedCount(count)
+        .withTotalResultsCount(users.getTotalResourceCount())
+        .build();
   }
 
   @POST
