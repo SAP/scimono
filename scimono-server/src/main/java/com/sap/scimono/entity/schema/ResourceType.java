@@ -4,6 +4,7 @@ package com.sap.scimono.entity.schema;
 import static java.util.Objects.hash;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -188,6 +189,13 @@ public class ResourceType extends Resource<ResourceType> {
 
     public Builder removeSchemaExtension(final SchemaExtension schemaExt) {
       schemaExtensions.remove(schemaExt);
+      return this;
+    }
+
+    public Builder addSchemaExtensions(final Collection<SchemaExtension> schemaExtensions) {
+      if (schemaExtensions != null) {
+        schemaExtensions.forEach(this::addSchemaExtension);
+      }
       return this;
     }
 

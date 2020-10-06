@@ -3,6 +3,9 @@ package com.sap.scimono.callback.resourcetype;
 
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.schema.ResourceType;
+import com.sap.scimono.entity.schema.SchemaExtension;
+
+import java.util.List;
 
 public interface ResourceTypesCallback {
 
@@ -19,4 +22,11 @@ public interface ResourceTypesCallback {
    * @return the custom resource type or null if it does not exist
    */
   ResourceType getCustomResourceType(final String typeId);
+
+  /**
+   * Return the custom schema extensions for the specified resource type id.
+   * @param resourceTypeId
+   * @return list of custom schema extensions
+   */
+  List<SchemaExtension> getSchemaExtensions(final String resourceTypeId);
 }

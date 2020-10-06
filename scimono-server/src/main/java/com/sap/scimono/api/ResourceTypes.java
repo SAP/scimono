@@ -85,18 +85,20 @@ public class ResourceTypes {
     List<ResourceType> resources = new ArrayList<>();
 
     ResourceType userResourceType = resourceLocationService.addLocation(RESOURCE_TYPE_USER, User.RESOURCE_TYPE_USER);
-    resources.add(userResourceType);
+    resources.add(this.withSchemaExtensions(userResourceType));
 
     ResourceType groupResourceType = resourceLocationService.addLocation(RESOURCE_TYPE_GROUP, Group.RESOURCE_TYPE_GROUP);
-    resources.add(groupResourceType);
+    resources.add(this.withSchemaExtensions(groupResourceType));
 
     ResourceType schemaResourceType = resourceLocationService.addLocation(RESOURCE_TYPE_SCHEMA, Schema.RESOURCE_TYPE_SCHEMA);
-    resources.add(schemaResourceType);
+    resources.add(this.withSchemaExtensions(schemaResourceType));
 
     PagedResult<ResourceType> customResourceTypes = resourceTypesCallback.getCustomResourceTypes();
     resourceLocationService.addLocation(customResourceTypes);
 
-    resources.addAll(customResourceTypes.getResources());
+    for (ResourceType resourceType : customResourceTypes.getResources()) {
+      resources.add(this.withSchemaExtensions(resourceType));
+    }
 
     return new PagedByIndexSearchResult<>(resources, resources.size(), scimConfig.getMaxResourcesPerPage(), 1);
   }
@@ -127,6 +129,15 @@ public class ResourceTypes {
       throw new ResourceNotFoundException(ResourceType.RESOURCE_TYPE_RESOURCE_TYPE, typeId);
     }
 
+    resourceType = this.withSchemaExtensions(resourceType);
+
     return resourceLocationService.addLocation(resourceType, typeId);
+  }
+
+  private ResourceType withSchemaExtensions(ResourceType resourceType) {
+    Builder builder = resourceType.builder();
+    builder.clearSchemaExtensions();
+    builder.addSchemaExtensions(resourceTypesCallback.getSchemaExtensions(resourceType.getId()));
+    return builder.build();
   }
 }
