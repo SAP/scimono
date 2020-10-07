@@ -666,6 +666,7 @@ public final class User extends Resource<User> {
     Builder(final String userName, final User user) {
       super(user);
       addSchema(SCHEMA);
+      setResourceType(RESOURCE_TYPE_USER);
       if (user != null) {
         this.userName = user.userName;
         name = user.name;

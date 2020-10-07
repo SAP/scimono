@@ -111,6 +111,7 @@ public class Schema extends Resource<Schema> {
 
     Builder(final Schema resource) {
       super(resource);
+      setResourceType(RESOURCE_TYPE_SCHEMA);
       if (resource != null) {
         name = resource.name;
         description = resource.description;

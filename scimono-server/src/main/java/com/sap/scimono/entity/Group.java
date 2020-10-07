@@ -173,6 +173,7 @@ public final class Group extends Resource<Group> {
     Builder(final String displayName, final Group group) {
       super(group);
       addSchema(SCHEMA);
+      setResourceType(RESOURCE_TYPE_GROUP);
       if (group != null) {
         this.displayName = group.displayName;
         members = new HashSet<>(group.members);

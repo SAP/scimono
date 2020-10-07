@@ -302,6 +302,17 @@ public abstract class Resource<T> implements Serializable {
     }
 
     /**
+     * Sets the resource type (See {@link Resource#getResourceType()}).
+     *
+     * @param resourceType the resource type
+     * @return the builder itself
+     */
+    public Builder<T> setResourceType(final String resourceType) {
+      this.resourceType = resourceType;
+      return this;
+    }
+
+    /**
      * @param meta the meta object
      * @return the builder itself
      */

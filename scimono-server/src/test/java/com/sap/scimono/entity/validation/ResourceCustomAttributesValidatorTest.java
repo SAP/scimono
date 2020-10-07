@@ -5,10 +5,9 @@ import static com.sap.scimono.entity.schema.AttributeDataType.COMPLEX;
 import static com.sap.scimono.entity.schema.AttributeDataType.STRING;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
+import com.sap.scimono.entity.schema.SchemaExtension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -91,6 +90,61 @@ class ResourceCustomAttributesValidatorTest {
     User user = new User.Builder(USER_NAME).addExtension(extension).build();
 
     assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user));
+    ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
+  }
+
+  @Test
+  public void testValidateRequiredExtensionMissing() {
+    Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
+
+    String schemaId = Schema.EXTENSION_SCHEMA_URN.concat(SCHEMA_NAME);
+
+    SchemaExtension schemaExtension = new SchemaExtension(schemaId, true);
+    Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
+
+    User user = new User.Builder(USER_NAME).build();
+
+    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user));
+    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user));
+  }
+
+  @Test
+  public void testValidateOptionalExtensionMissing() {
+    Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
+
+    String schemaId = Schema.EXTENSION_SCHEMA_URN.concat(SCHEMA_NAME);
+
+    SchemaExtension schemaExtension = new SchemaExtension(schemaId, false);
+    Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
+
+    User user = new User.Builder(USER_NAME).build();
+
+    ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user);
+    ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
+  }
+
+  @Test
+  public void testValidateRequiredExtension() {
+    Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
+
+    String schemaId = Schema.EXTENSION_SCHEMA_URN.concat(SCHEMA_NAME);
+    Extension extension = new Extension.Builder(schemaId).setAttributes(value).build();
+
+    Schema schema = new Schema.Builder().setId(schemaId).addAttribute(attribute).build();
+    Mockito.when(schemaAPI.getSchema(schemaId)).thenReturn(schema);
+
+    SchemaExtension schemaExtension = new SchemaExtension(schemaId, true);
+    Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
+
+    User user = new User.Builder(USER_NAME).addExtension(extension).build();
+
+    ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user);
     ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
   }
 

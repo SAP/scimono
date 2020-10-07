@@ -136,6 +136,7 @@ public class ResourceType extends Resource<ResourceType> {
 
     Builder(final ResourceType resource) {
       super(resource);
+      setResourceType(RESOURCE_TYPE_RESOURCE_TYPE);
       if (resource != null) {
         name = resource.name;
         description = resource.description;

@@ -196,6 +196,7 @@ public class ServiceProviderConfig extends Resource<ServiceProviderConfig> {
 
     Builder(final ServiceProviderConfig resource) {
       super(resource);
+      setResourceType(RESOURCE_TYPE_SP_CONFIG);
     }
 
     public Builder() {
