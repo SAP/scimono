@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
+import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.callback.users.UsersCallback;
 import com.sap.scimono.entity.Meta;
@@ -72,6 +73,7 @@ public class Users {
   private final UriInfo uriInfo;
   private final UsersCallback usersAPI;
   private final SchemasCallback schemaAPI;
+  private final ResourceTypesCallback resourceTypesAPI;
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceLocationService resourceLocationService;
 
@@ -81,6 +83,7 @@ public class Users {
 
     usersAPI = scimApplication.getUsersCallback();
     schemaAPI = scimApplication.getSchemasCallback();
+    resourceTypesAPI = scimApplication.getResourceTypesCallback();
     scimConfig = scimApplication.getConfigurationCallback();
     resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, USERS);
   }
@@ -176,7 +179,7 @@ public class Users {
     ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newUser);
 
-    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI);
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI, resourceTypesAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
 
     String version = UUID.randomUUID().toString();
@@ -199,7 +202,7 @@ public class Users {
     ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesEraser.eraseAllFormCustomExtensions(userToUpdate);
 
-    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI);
+    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI, resourceTypesAPI);
     userCustomAttributesValidator.validate(userWithoutReadOnlyAttributes);
 
     String newVersion = UUID.randomUUID().toString();

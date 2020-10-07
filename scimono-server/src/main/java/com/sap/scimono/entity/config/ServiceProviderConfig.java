@@ -51,7 +51,7 @@ public class ServiceProviderConfig extends Resource<ServiceProviderConfig> {
       @JsonProperty(value = "filter", required = true) FilterSetting filter,
       @JsonProperty(value = "bulk", required = true) BulkSetting bulk,
       @JsonProperty(value = "authenticationSchemes", required = true) List<AuthenticationSchemeSetting> authenticationSchemes) {
-    super(null, null, meta, schemas);
+    super(RESOURCE_TYPE_SP_CONFIG, null, null, meta, schemas);
     this.documentationUri = documentationUri;
     this.patch = patch;
     this.changePassword = changePassword;

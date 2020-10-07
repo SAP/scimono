@@ -136,7 +136,7 @@ public final class User extends Resource<User> {
       @JsonProperty(PHOTOS_FIELD) final List<Photo> photos, @JsonProperty(ADDRESSES_FIELD) final List<Address> addresses,
       @JsonProperty(GROUPS_FIELD) final List<GroupRef> groups, @JsonProperty(ENTITLEMENTS_FIELD) final List<Entitlement> entitlements,
       @JsonProperty(ROLES_FIELD) final List<Role> roles, @JsonProperty(X509_CERTIFICATES_FIELD) final List<X509Certificate> x509Certificates) {
-    super(id, externalId, meta, schemas);
+    super(RESOURCE_TYPE_USER, id, externalId, meta, schemas);
     this.userName = userName != null ? userName : "";
     this.name = name;
     this.displayName = displayName;

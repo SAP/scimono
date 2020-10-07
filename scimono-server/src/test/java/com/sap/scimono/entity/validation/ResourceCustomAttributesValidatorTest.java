@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
+import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.base.Extension;
@@ -35,6 +36,8 @@ class ResourceCustomAttributesValidatorTest {
 
   @Mock
   SchemasCallback schemaAPI;
+  @Mock
+  ResourceTypesCallback resourceTypesAPI;
 
   @BeforeAll
   public static void setUpBeforeClass() {
@@ -69,8 +72,8 @@ class ResourceCustomAttributesValidatorTest {
 
     User user = new User.Builder(USER_NAME).addExtension(extension).build();
 
-    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPut(schemaAPI).validate(user));
-    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPost(schemaAPI).validate(user));
+    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user));
+    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user));
   }
 
   @Test
@@ -87,8 +90,8 @@ class ResourceCustomAttributesValidatorTest {
 
     User user = new User.Builder(USER_NAME).addExtension(extension).build();
 
-    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPut(schemaAPI).validate(user));
-    ResourceCustomAttributesValidator.<User> forPost(schemaAPI).validate(user);
+    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user));
+    ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
   }
 
   @Test
@@ -111,7 +114,7 @@ class ResourceCustomAttributesValidatorTest {
 
     User user = new User.Builder(USER_NAME).addExtension(extension).build();
 
-    ResourceCustomAttributesValidator.<User> forPut(schemaAPI).validate(user);
-    ResourceCustomAttributesValidator.<User> forPost(schemaAPI).validate(user);
+    ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user);
+    ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
   }
 }

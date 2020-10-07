@@ -62,6 +62,7 @@ public abstract class Resource<T> implements Serializable {
   private static final Predicate<Map.Entry<String, Extension>> CUSTOM_EXTENSION_FILTER = extension -> extension.getKey()
       .startsWith(Schema.EXTENSION_SCHEMA_URN);
 
+  private final String resourceType;
   private final String id;
   private final String externalId;
   private final Meta meta;
@@ -69,8 +70,9 @@ public abstract class Resource<T> implements Serializable {
   private final Set<String> schemas;
   private final Map<String, Extension> extensions;
 
-  protected Resource(@JsonProperty(ID_FIELD) final String id, @JsonProperty(EXTERNAL_ID_FIELD) final String externalId, @JsonProperty(META_FIELD) final Meta meta,
+  protected Resource(final String resourceType, @JsonProperty(ID_FIELD) final String id, @JsonProperty(EXTERNAL_ID_FIELD) final String externalId, @JsonProperty(META_FIELD) final Meta meta,
       @JsonProperty(value = SCHEMAS_FIELD, required = true) final Set<String> schemas) {
+    this.resourceType = resourceType;
     this.id = id;
     this.externalId = externalId;
     this.meta = meta;
@@ -82,11 +84,21 @@ public abstract class Resource<T> implements Serializable {
   }
 
   protected Resource(final Builder<T> builder) {
+    resourceType = builder.resourceType;
     id = builder.id;
     externalId = builder.externalId;
     meta = builder.meta;
     schemas = builder.schemas;
     extensions = builder.extensions;
+  }
+
+  /**
+   * Gets the type of the resource.
+   *
+   * @return the type of the resource
+   */
+  public String getResourceType() {
+    return resourceType;
   }
 
   /**
@@ -242,6 +254,7 @@ public abstract class Resource<T> implements Serializable {
    */
   public abstract static class Builder<T> {
     String externalId;
+    private String resourceType;
     private String id;
     private Meta meta;
     private Set<String> schemas = new HashSet<>();
@@ -249,6 +262,7 @@ public abstract class Resource<T> implements Serializable {
 
     public Builder(final Resource<T> resource) {
       if (resource != null) {
+        resourceType = resource.resourceType;
         id = resource.id;
         externalId = resource.externalId;
         meta = resource.meta;
