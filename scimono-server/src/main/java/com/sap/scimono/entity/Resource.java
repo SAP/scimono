@@ -97,6 +97,7 @@ public abstract class Resource<T> implements Serializable {
    *
    * @return the type of the resource
    */
+  @JsonIgnore
   public String getResourceType() {
     return resourceType;
   }
