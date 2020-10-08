@@ -5,6 +5,7 @@ import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.schema.ResourceType;
 import com.sap.scimono.entity.schema.SchemaExtension;
 
+import java.util.Collections;
 import java.util.List;
 
 public interface ResourceTypesCallback {
@@ -28,5 +29,7 @@ public interface ResourceTypesCallback {
    * @param resourceTypeId
    * @return list of custom schema extensions
    */
-  List<SchemaExtension> getSchemaExtensions(final String resourceTypeId);
+  default List<SchemaExtension> getSchemaExtensions(final String resourceTypeId) {
+    return Collections.emptyList();
+  }
 }
