@@ -242,7 +242,6 @@ public abstract class Resource<T> implements Serializable {
    */
   public abstract static class Builder<T> {
     String externalId;
-    private String resourceType;
     private String id;
     private Meta meta;
     private Set<String> schemas = new HashSet<>();
