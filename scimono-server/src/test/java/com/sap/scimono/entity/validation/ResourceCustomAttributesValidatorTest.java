@@ -3,6 +3,7 @@ package com.sap.scimono.entity.validation;
 
 import static com.sap.scimono.entity.schema.AttributeDataType.COMPLEX;
 import static com.sap.scimono.entity.schema.AttributeDataType.STRING;
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.*;
@@ -95,64 +96,6 @@ class ResourceCustomAttributesValidatorTest {
   }
 
   @Test
-  public void testValidateRequiredExtensionMissing() {
-    Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
-            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
-            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
-
-    String schemaId = Schema.EXTENSION_SCHEMA_URN.concat(SCHEMA_NAME);
-
-    SchemaExtension schemaExtension = new SchemaExtension(schemaId, true);
-    Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
-
-    Meta userMeta = new Meta.Builder().setResourceType(User.RESOURCE_TYPE_USER).build();
-    User user = new User.Builder(USER_NAME).setMeta(userMeta).build();
-
-    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user));
-    assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user));
-  }
-
-  @Test
-  public void testValidateOptionalExtensionMissing() {
-    Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
-            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
-            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
-
-    String schemaId = Schema.EXTENSION_SCHEMA_URN.concat(SCHEMA_NAME);
-
-    SchemaExtension schemaExtension = new SchemaExtension(schemaId, false);
-    Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
-
-    Meta userMeta = new Meta.Builder().setResourceType(User.RESOURCE_TYPE_USER).build();
-    User user = new User.Builder(USER_NAME).setMeta(userMeta).build();
-
-    ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user);
-    ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
-  }
-
-  @Test
-  public void testValidateRequiredExtension() {
-    Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
-            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
-            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
-
-    String schemaId = Schema.EXTENSION_SCHEMA_URN.concat(SCHEMA_NAME);
-    Extension extension = new Extension.Builder(schemaId).setAttributes(value).build();
-
-    Schema schema = new Schema.Builder().setId(schemaId).addAttribute(attribute).build();
-    Mockito.when(schemaAPI.getSchema(schemaId)).thenReturn(schema);
-
-    SchemaExtension schemaExtension = new SchemaExtension(schemaId, true);
-    Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
-
-    Meta userMeta = new Meta.Builder().setResourceType(User.RESOURCE_TYPE_USER).build();
-    User user = new User.Builder(USER_NAME).addExtension(extension).setMeta(userMeta).build();
-
-    ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user);
-    ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
-  }
-
-  @Test
   public void testValidateImmutableWithinMultivaluedAttribute() {
     Map<String, Object> customValue = new HashMap<>();
     Map<String, Object> attributeValue = new HashMap<>();
@@ -161,8 +104,8 @@ class ResourceCustomAttributesValidatorTest {
     customValue.put(ATTRIBUTE1, Arrays.asList(attributeValue));
 
     Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("immutable").multiValued(true)
-        .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
-        .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
 
     String schemaId = Schema.EXTENSION_SCHEMA_URN.concat(SCHEMA_NAME);
     Extension extension = new Extension.Builder(schemaId).setAttributes(customValue).build();
@@ -174,5 +117,52 @@ class ResourceCustomAttributesValidatorTest {
 
     ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user);
     ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
+  }
+
+  @Test
+  public void testValidateRequiredExtensionMissing() {
+    assertThrows(SCIMException.class, () -> testValidateExtension(true, true, false));
+    assertThrows(SCIMException.class, () -> testValidateExtension(false, true, false));
+  }
+
+  @Test
+  public void testValidateOptionalExtensionMissing() {
+    assertDoesNotThrow(() -> testValidateExtension(true, false, true));
+    assertDoesNotThrow(() -> testValidateExtension(false, false, true));
+    assertDoesNotThrow(() -> testValidateExtension(true, false, false));
+    assertDoesNotThrow(() -> testValidateExtension(false, false, false));
+  }
+
+  @Test
+  public void testValidateRequiredExtension() {
+    assertDoesNotThrow(() -> testValidateExtension(true, true, true));
+    assertDoesNotThrow(() -> testValidateExtension(false, true, true));
+  }
+
+  private void testValidateExtension(boolean isPostOperation, boolean isRequiredExtension, boolean hasExtension) {
+    Attribute attribute = new Attribute.Builder().name(ATTRIBUTE1).type(COMPLEX.toString()).mutability("readWrite")
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE1).type(STRING.toString()).mutability("readWrite").build())
+            .addSubAttribute(new Attribute.Builder().name(ATTRIBUTE2).type(STRING.toString()).mutability("readWrite").build()).build();
+
+    String schemaId = Schema.EXTENSION_SCHEMA_URN.concat(SCHEMA_NAME);
+    Extension extension = new Extension.Builder(schemaId).setAttributes(value).build();
+
+    Schema schema = new Schema.Builder().setId(schemaId).addAttribute(attribute).build();
+    Mockito.when(schemaAPI.getSchema(schemaId)).thenReturn(schema);
+
+    SchemaExtension schemaExtension = new SchemaExtension(schemaId, isRequiredExtension);
+    Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
+
+    Meta userMeta = new Meta.Builder().setResourceType(User.RESOURCE_TYPE_USER).build();
+    User.Builder userBuilder = new User.Builder(USER_NAME).setMeta(userMeta);
+    if (hasExtension) {
+      userBuilder.addExtension(extension);
+    }
+
+    if (isPostOperation) {
+      ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(userBuilder.build());
+    } else {
+      ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(userBuilder.build());
+    }
   }
 }
