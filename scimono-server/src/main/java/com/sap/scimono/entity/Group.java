@@ -65,7 +65,7 @@ public final class Group extends Resource<Group> {
   private Group(@JsonProperty(ID_FIELD) final String id, @JsonProperty(EXTERNAL_ID_FIELD) final String externalId, @JsonProperty(META_FIELD) final Meta meta,
       @JsonProperty(value = SCHEMAS_FIELD, required = true) final Set<String> schemas, @JsonProperty(value = DISPLAY_NAME_FIELD) final String displayName,
       @JsonProperty(MEMBERS_FIELD) final LinkedHashSet<MemberRef> members) {
-    super(RESOURCE_TYPE_GROUP, id, externalId, meta, schemas);
+    super(id, externalId, meta, schemas);
     this.displayName = displayName;
     this.members = members != null ? members : new LinkedHashSet<>();
   }
@@ -173,7 +173,6 @@ public final class Group extends Resource<Group> {
     Builder(final String displayName, final Group group) {
       super(group);
       addSchema(SCHEMA);
-      setResourceType(RESOURCE_TYPE_GROUP);
       if (group != null) {
         this.displayName = group.displayName;
         members = new HashSet<>(group.members);

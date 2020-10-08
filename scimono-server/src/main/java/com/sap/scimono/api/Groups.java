@@ -149,15 +149,17 @@ public class Groups {
     ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     newGroup = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newGroup);
 
-    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI, resourceTypesAPI);
-    customAttributesValidator.validate(newGroup);
-
     String version = UUID.randomUUID().toString();
     Meta groupMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_GROUP).build();
-    Group.Builder groupWithMeta = newGroup.builder().setMeta(groupMeta);
-    groupAPI.generateId().ifPresent(groupWithMeta::setId);
+    Group.Builder groupWithMetaBuilder = newGroup.builder().setMeta(groupMeta);
+    groupAPI.generateId().ifPresent(groupWithMetaBuilder::setId);
 
-    Group createdGroup = groupAPI.createGroup(groupWithMeta.build());
+    Group groupWithMeta = groupWithMetaBuilder.build();
+
+    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI, resourceTypesAPI);
+    customAttributesValidator.validate(groupWithMeta);
+
+    Group createdGroup = groupAPI.createGroup(groupWithMeta);
     createdGroup = resourceLocationService.addMembersLocation(createdGroup);
     createdGroup = resourceLocationService.addLocation(createdGroup, createdGroup.getId());
 
@@ -171,9 +173,6 @@ public class Groups {
     ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     groupToUpdate = readOnlyAttributesEraser.eraseAllFormCustomExtensions(groupToUpdate);
 
-    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI, resourceTypesAPI);
-    customAttributesValidator.validate(groupToUpdate);
-
     String newVersion = UUID.randomUUID().toString();
     Meta.Builder lastUpdatedMeta = new Meta.Builder(groupToUpdate.getMeta());
 
@@ -181,6 +180,10 @@ public class Groups {
     lastUpdatedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(groupLocation.toString());
 
     Group updatedGroup = groupToUpdate.builder().setId(groupId).setMeta(lastUpdatedMeta.build()).build();
+
+    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI, resourceTypesAPI);
+    customAttributesValidator.validate(groupToUpdate);
+
     updatedGroup = groupAPI.updateGroup(updatedGroup);
     updatedGroup = resourceLocationService.addMembersLocation(updatedGroup);
 

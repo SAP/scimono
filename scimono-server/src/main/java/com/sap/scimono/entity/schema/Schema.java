@@ -36,7 +36,7 @@ public class Schema extends Resource<Schema> {
   public Schema(@JsonProperty(value = "id", required = true) final String id, @JsonProperty("externalId") final String externalId,
       @JsonProperty("meta") final Meta meta, @JsonProperty("schemas") final Set<String> schemas, @JsonProperty("name") final String name,
       @JsonProperty("description") final String description, @JsonProperty("attributes") final List<Attribute> attributes) {
-    super(RESOURCE_TYPE_SCHEMA, id, externalId, meta, schemas);
+    super(id, externalId, meta, schemas);
     this.name = name;
     this.description = description;
     this.attributes = attributes;
@@ -111,7 +111,6 @@ public class Schema extends Resource<Schema> {
 
     Builder(final Schema resource) {
       super(resource);
-      setResourceType(RESOURCE_TYPE_SCHEMA);
       if (resource != null) {
         name = resource.name;
         description = resource.description;

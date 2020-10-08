@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.util.*;
 
+import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.schema.SchemaExtension;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -104,7 +105,8 @@ class ResourceCustomAttributesValidatorTest {
     SchemaExtension schemaExtension = new SchemaExtension(schemaId, true);
     Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
 
-    User user = new User.Builder(USER_NAME).build();
+    Meta userMeta = new Meta.Builder().setResourceType(User.RESOURCE_TYPE_USER).build();
+    User user = new User.Builder(USER_NAME).setMeta(userMeta).build();
 
     assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user));
     assertThrows(SCIMException.class, () -> ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user));
@@ -121,7 +123,8 @@ class ResourceCustomAttributesValidatorTest {
     SchemaExtension schemaExtension = new SchemaExtension(schemaId, false);
     Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
 
-    User user = new User.Builder(USER_NAME).build();
+    Meta userMeta = new Meta.Builder().setResourceType(User.RESOURCE_TYPE_USER).build();
+    User user = new User.Builder(USER_NAME).setMeta(userMeta).build();
 
     ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user);
     ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);
@@ -142,7 +145,8 @@ class ResourceCustomAttributesValidatorTest {
     SchemaExtension schemaExtension = new SchemaExtension(schemaId, true);
     Mockito.when(resourceTypesAPI.getSchemaExtensions(User.RESOURCE_TYPE_USER)).thenReturn(Collections.singletonList(schemaExtension));
 
-    User user = new User.Builder(USER_NAME).addExtension(extension).build();
+    Meta userMeta = new Meta.Builder().setResourceType(User.RESOURCE_TYPE_USER).build();
+    User user = new User.Builder(USER_NAME).addExtension(extension).setMeta(userMeta).build();
 
     ResourceCustomAttributesValidator.<User> forPut(schemaAPI, resourceTypesAPI).validate(user);
     ResourceCustomAttributesValidator.<User> forPost(schemaAPI, resourceTypesAPI).validate(user);

@@ -39,7 +39,7 @@ public class ResourceType extends Resource<ResourceType> {
       @JsonProperty(value = "endpoint", required = true) final String endpoint, @JsonProperty(value = "schema", required = true) final String schema,
       @JsonProperty("meta") final Meta meta, @JsonProperty("schemas") final Set<String> schemas, @JsonProperty("name") final String name,
       @JsonProperty("description") final String description, @JsonProperty("schemaExtensions") final List<SchemaExtension> schemaExtensions) {
-    super(RESOURCE_TYPE_RESOURCE_TYPE, id, null, meta, schemas);
+    super(id, null, meta, schemas);
     this.name = name;
     this.description = description;
     this.endpoint = endpoint;
@@ -136,7 +136,6 @@ public class ResourceType extends Resource<ResourceType> {
 
     Builder(final ResourceType resource) {
       super(resource);
-      setResourceType(RESOURCE_TYPE_RESOURCE_TYPE);
       if (resource != null) {
         name = resource.name;
         description = resource.description;

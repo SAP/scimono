@@ -35,12 +35,14 @@ public class ResourceCustomAttributesValidator<T extends Resource<T>> implements
 
   @Override
   public void validate(final T resource) {
-    resourceTypesAPI.getSchemaExtensions(resource.getResourceType()).stream().filter(SchemaExtension::isRequired).forEach(schemaExtension -> {
-      if (!resource.isExtensionPresent(schemaExtension.getSchema())) {
-        throw new SCIMException(SCIMException.Type.INVALID_VALUE,
-                String.format("Extension with schema %s is required.", schemaExtension.getSchema()), Response.Status.BAD_REQUEST);
-      }
-    });
+    if (resource.getMeta() != null && resource.getMeta().getResourceType() != null) {
+      resourceTypesAPI.getSchemaExtensions(resource.getMeta().getResourceType()).stream().filter(SchemaExtension::isRequired).forEach(schemaExtension -> {
+        if (!resource.isExtensionPresent(schemaExtension.getSchema())) {
+          throw new SCIMException(SCIMException.Type.INVALID_VALUE,
+                  String.format("Extension with schema %s is required.", schemaExtension.getSchema()), Response.Status.BAD_REQUEST);
+        }
+      });
+    }
     resource.getExtensions().values().forEach(extension -> {
       Attribute schemaAttribute = schemaAPI.getSchema(extension.getUrn()).toAttribute();
       new SchemaBasedAttributeValueValidator(schemaAttribute, Collections.emptyMap()).validate(extension.getAttributes());
