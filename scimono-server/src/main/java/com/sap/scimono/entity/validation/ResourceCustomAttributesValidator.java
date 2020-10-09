@@ -5,32 +5,44 @@ import java.util.Collections;
 
 import javax.ws.rs.core.Response;
 
+import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.schema.Attribute;
+import com.sap.scimono.entity.schema.SchemaExtension;
 import com.sap.scimono.exception.SCIMException;
 
 public class ResourceCustomAttributesValidator<T extends Resource<T>> implements Validator<T> {
 
   private final SchemasCallback schemaAPI;
+  private final ResourceTypesCallback resourceTypesAPI;
   private final boolean isOperationPut;
 
-  public static <T extends Resource<T>> ResourceCustomAttributesValidator<T> forPost(final SchemasCallback schemaAPI) {
-    return new ResourceCustomAttributesValidator<>(schemaAPI, false);
+  public static <T extends Resource<T>> ResourceCustomAttributesValidator<T> forPost(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
+    return new ResourceCustomAttributesValidator<>(schemaAPI, resourceTypesAPI, false);
   }
 
-  public static <T extends Resource<T>> ResourceCustomAttributesValidator<T> forPut(final SchemasCallback schemaAPI) {
-    return new ResourceCustomAttributesValidator<>(schemaAPI, true);
+  public static <T extends Resource<T>> ResourceCustomAttributesValidator<T> forPut(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
+    return new ResourceCustomAttributesValidator<>(schemaAPI, resourceTypesAPI, true);
   }
 
-  private ResourceCustomAttributesValidator(final SchemasCallback schemaAPI, final boolean isOperationPut) {
+  private ResourceCustomAttributesValidator(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final boolean isOperationPut) {
     this.schemaAPI = schemaAPI;
+    this.resourceTypesAPI = resourceTypesAPI;
     this.isOperationPut = isOperationPut;
   }
 
   @Override
   public void validate(final T resource) {
+    if (resource.getMeta() != null && resource.getMeta().getResourceType() != null) {
+      resourceTypesAPI.getSchemaExtensions(resource.getMeta().getResourceType()).stream().filter(SchemaExtension::isRequired).forEach(schemaExtension -> {
+        if (!resource.isExtensionPresent(schemaExtension.getSchema())) {
+          throw new SCIMException(SCIMException.Type.INVALID_VALUE,
+                  String.format("Extension with schema %s is required.", schemaExtension.getSchema()), Response.Status.BAD_REQUEST);
+        }
+      });
+    }
     resource.getExtensions().values().forEach(extension -> {
       Attribute schemaAttribute = schemaAPI.getSchema(extension.getUrn()).toAttribute();
       new SchemaBasedAttributeValueValidator(schemaAttribute, Collections.emptyMap()).validate(extension.getAttributes());
