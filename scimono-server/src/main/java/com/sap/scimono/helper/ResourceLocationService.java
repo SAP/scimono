@@ -13,10 +13,15 @@ import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.Resource.Builder;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PagedResult;
+import com.sap.scimono.exception.InternalScimonoException;
 
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.core.UriInfo;
+
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -34,7 +39,7 @@ public class ResourceLocationService {
   }
 
   public URI getLocation(String path) {
-    return rootUriBuilder().path(endpoint).path(path).build();
+    return rootUriBuilder().path(endpoint).path(encodePath(path)).build();
   }
 
   public URI getLocation() {
@@ -59,7 +64,7 @@ public class ResourceLocationService {
   }
 
   public <T> T addLocation(final Resource<T> resource, final String path) {
-    return addLocation(resource, rootUriBuilder().path(endpoint).path(path).build());
+    return addLocation(resource, rootUriBuilder().path(endpoint).path(encodePath(path)).build());
   }
 
 
@@ -93,7 +98,7 @@ public class ResourceLocationService {
           return new MemberRef.Builder(memberRef)
             .setReference(rootUriBuilder()
                 .path(resourceEnpoint)
-                .path(memberRef.getValue())
+                .path(encodePath(memberRef.getValue()))
                 .build()
                 .toString()
             ).build();})
@@ -105,10 +110,7 @@ public class ResourceLocationService {
 
   public User addRelationalEntitiesLocation(User user) {
     User.Builder userBuilder = new User.Builder(user);
-
-    if (user.getGroups() != null) {
-      addAssignedGroupsLocation(userBuilder, user.getGroups());
-    }
+    addAssignedGroupsLocation(userBuilder, user.getGroups());
 
     if (user.isExtensionPresent(EnterpriseExtension.ENTERPRISE_URN)) {
       EnterpriseExtension enterpriseExtension = (EnterpriseExtension) user.getExtension(EnterpriseExtension.ENTERPRISE_URN);
@@ -125,7 +127,7 @@ public class ResourceLocationService {
   private void addAssignedGroupsLocation(User.Builder userBuilder, List<GroupRef> groupRefs) {
     // @formatter:off
     List<GroupRef> groupRefsWithLocation = groupRefs.stream().map(groupRef -> new GroupRef.Builder(groupRef)
-        .setReference(rootUriBuilder().path(API.GROUPS).path(groupRef.getValue()).build().toString()).build())
+        .setReference(rootUriBuilder().path(API.GROUPS).path(encodePath(groupRef.getValue())).build().toString()).build())
         .collect(Collectors.toList());
     // @formatter:on
 
@@ -140,10 +142,18 @@ public class ResourceLocationService {
 
     // @formatter:off
     Manager managerWithLocation = new Manager.Builder(manager)
-        .setReference(rootUriBuilder().path(API.USERS).path(manager.getValue()).toString()).build();
+        .setReference(rootUriBuilder().path(API.USERS).path(encodePath(manager.getValue())).toString()).build();
     // @formatter:on
 
     userBuilder.removeExtension(EnterpriseExtension.ENTERPRISE_URN);
     userBuilder.addExtension(new EnterpriseExtension.Builder(enterpriseExtension).setManager(managerWithLocation).build());
+  }
+
+  private String encodePath(String path) {
+    try {
+      return URLEncoder.encode(path, StandardCharsets.UTF_8.name());
+    } catch (UnsupportedEncodingException e) {
+      throw new InternalScimonoException("Unrecognized encoding", e);
+    }
   }
 }
