@@ -192,7 +192,7 @@ public interface SchemasCallback {
   }
 
   static boolean isCustomSchema(final String schemaId) {
-    return schemaId.startsWith(Schema.EXTENSION_SCHEMA_URN);
+    return schemaId.startsWith(Schema.EXTENSION_SCHEMA_URN) || schemaId.equalsIgnoreCase(Schema.SAP_CUSTOM_SCHEMA_URN);
   }
 
   static boolean isCoreSchema(final String schemaId) {

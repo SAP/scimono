@@ -23,6 +23,7 @@ import com.sap.scimono.entity.schema.validation.ValidCoreSchema;
 public class Schema extends Resource<Schema> {
 
   public static final String EXTENSION_SCHEMA_URN = "urn:sap:cloud:scim:schemas:extension:custom:2.0:";
+  public static final String SAP_CUSTOM_SCHEMA_URN = "urn:ietf:params:scim:schemas:extension:sap:2.0:User";
   public static final String RESOURCE_TYPE_SCHEMA = "Schema";
   public static final String SCHEMA = CORE_SCHEMA + RESOURCE_TYPE_SCHEMA;
   private static final long serialVersionUID = 7291316930756788028L;
