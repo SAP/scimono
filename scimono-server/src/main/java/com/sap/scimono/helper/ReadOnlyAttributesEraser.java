@@ -4,8 +4,10 @@ package com.sap.scimono.helper;
 import static com.sap.scimono.entity.schema.AttributeDataType.COMPLEX;
 
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.core.Response;
@@ -94,7 +96,9 @@ public class ReadOnlyAttributesEraser<T extends Resource<T>> {
       @SuppressWarnings("unchecked")
       Map<String, Object> valueMap = (Map<String, Object>) value;
 
-      for (Map.Entry<String, Object> entry : valueMap.entrySet()) {
+      Iterator<Entry<String, Object>> iterator = valueMap.entrySet().iterator();
+      while(iterator.hasNext()) {
+        Map.Entry<String, Object> entry = iterator.next();
         // @formatter:off
         Attribute subAttribute = targetAttribute.getSubAttributes().stream()
             .filter(attribute -> entry.getKey().equalsIgnoreCase(attribute.getName()))
@@ -104,7 +108,7 @@ public class ReadOnlyAttributesEraser<T extends Resource<T>> {
                 Response.Status.BAD_REQUEST));
         // @formatter:on
         if (removeReadOnlyAttributes(subAttribute, entry.getValue())) {
-          valueMap.remove(entry.getKey());
+          iterator.remove();
         }
       }
     }
