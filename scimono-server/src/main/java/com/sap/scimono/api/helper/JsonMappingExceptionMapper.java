@@ -15,7 +15,7 @@ public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingEx
 
   @Override
   public Response toResponse(final JsonMappingException exception) {
-    ErrorResponse scimError = new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), null, INVALID_FIELDS_MSG);
+    ErrorResponse scimError = new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), null, exception.getOriginalMessage());
 
     return Response.status(Response.Status.BAD_REQUEST).entity(scimError).type(API.APPLICATION_JSON_SCIM).build();
   }

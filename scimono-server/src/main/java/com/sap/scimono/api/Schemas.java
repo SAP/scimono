@@ -8,6 +8,7 @@ import static com.sap.scimono.helper.Strings.stripStart;
 import java.net.URI;
 import java.util.*;
 
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -86,7 +87,7 @@ public class Schemas {
   }
 
   @POST
-  public Response createSchema(@ValidSchema final Schema newSchema) {
+  public Response createSchema(@Valid @ValidSchema final Schema newSchema) {
     validateSchema(newSchema);
 
     URI location = resourceLocationService.getLocation(newSchema.getId());

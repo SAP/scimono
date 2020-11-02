@@ -31,11 +31,11 @@ class SchemaValidator implements ConstraintValidator<ValidSchema, Schema> {
   }
 
   private boolean isValidIdentifierName(final String identifierName, ConstraintValidatorContext context) {
-    return isAlphanumeric(identifierName) && isIdenifierLenghtValid(identifierName, context);
+    return isAlphanumeric(identifierName) && isIdentifierLengthValid(identifierName, context);
 
   }
 
-  private boolean isIdenifierLenghtValid(String identifier, ConstraintValidatorContext context) {
+  private boolean isIdentifierLengthValid(String identifier, ConstraintValidatorContext context) {
     if (identifier == null || identifier.isEmpty() || identifier.length() >= 20) {
       ValidationUtil.interpolateErrorMessage(context, generateViolationMessage(identifier));
 
@@ -67,6 +67,11 @@ class SchemaValidator implements ConstraintValidator<ValidSchema, Schema> {
   }
 
   private boolean areSchemaIdWithoutPrefixSameAsSchemaName(Schema schema, ConstraintValidatorContext context) {
+    String schemaName = schema.getName();
+    if (schemaName == null) {
+      return true;
+    }
+
     if (schema.getName().equals(schema.getId().substring(Schema.EXTENSION_SCHEMA_URN.length()))) {
       ValidationUtil.interpolateErrorMessage(context, "Schema name and id does not match!");
 

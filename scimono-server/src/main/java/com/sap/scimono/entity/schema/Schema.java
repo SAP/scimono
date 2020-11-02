@@ -35,7 +35,7 @@ public class Schema extends Resource<Schema> {
   @JsonCreator
   public Schema(@JsonProperty(value = "id", required = true) final String id, @JsonProperty("externalId") final String externalId,
       @JsonProperty("meta") final Meta meta, @JsonProperty("schemas") final Set<String> schemas, @JsonProperty("name") final String name,
-      @JsonProperty("description") final String description, @JsonProperty("attributes") final List<Attribute> attributes) {
+      @JsonProperty("description") final String description, @JsonProperty(value = "attributes", required = true) final List<Attribute> attributes) {
     super(id, externalId, meta, schemas);
     this.name = name;
     this.description = description;

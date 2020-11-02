@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.DefaultValue;
@@ -141,7 +142,7 @@ public class Groups {
   }
 
   @POST
-  public Response createGroup(Group newGroup) {
+  public Response createGroup(@Valid Group newGroup) {
     if (newGroup == null) {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
@@ -169,7 +170,7 @@ public class Groups {
 
   @PUT
   @Path("{id}")
-  public Response updateGroup(@PathParam("id") @ValidId final String groupId, Group groupToUpdate) {
+  public Response updateGroup(@PathParam("id") @ValidId final String groupId, @Valid Group groupToUpdate) {
     ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     groupToUpdate = readOnlyAttributesEraser.eraseAllFormCustomExtensions(groupToUpdate);
 
