@@ -63,7 +63,7 @@ public final class Group extends Resource<Group> {
 
   @JsonCreator
   private Group(@JsonProperty(ID_FIELD) final String id, @JsonProperty(EXTERNAL_ID_FIELD) final String externalId, @JsonProperty(META_FIELD) final Meta meta,
-      @JsonProperty(value = SCHEMAS_FIELD, required = true) final Set<String> schemas, @JsonProperty(value = DISPLAY_NAME_FIELD) final String displayName,
+      @JsonProperty(value = SCHEMAS_FIELD, required = true) final Set<String> schemas, @JsonProperty(value = DISPLAY_NAME_FIELD, required = true) final String displayName,
       @JsonProperty(MEMBERS_FIELD) final LinkedHashSet<MemberRef> members) {
     super(id, externalId, meta, schemas);
     this.displayName = displayName;
