@@ -2,7 +2,6 @@
 package com.sap.scimono.entity.schema.validation;
 
 import com.sap.scimono.callback.schemas.SchemasCallback;
-import com.sap.scimono.entity.schema.Schema;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
@@ -13,7 +12,7 @@ public class SchemaIdValidator implements ConstraintValidator<ValidSchemaId, Str
 
   @Override
   public boolean isValid(String schemaId, ConstraintValidatorContext context) {
-    return isValidSchemaId(schemaId, context) && isValidIdentifierName(schemaId.substring(Schema.EXTENSION_SCHEMA_URN.length()), context);
+    return isValidSchemaId(schemaId, context) && isValidIdentifierName(schemaId, context);
   }
 
   private boolean isValidSchemaId(final String schemaId, ConstraintValidatorContext context) {
@@ -26,7 +25,12 @@ public class SchemaIdValidator implements ConstraintValidator<ValidSchemaId, Str
     return false;
   }
 
-  private boolean isValidIdentifierName(final String identifierName, ConstraintValidatorContext context) {
+  private boolean isValidIdentifierName(final String schemaUrn, ConstraintValidatorContext context) {
+    final int indexOfSchemaDelimiter = schemaUrn.lastIndexOf(SchemasCallback.SCHEMA_URN_DELIMETER);
+    if (indexOfSchemaDelimiter == -1) {
+      return false;
+    }
+    final String identifierName = schemaUrn.substring(indexOfSchemaDelimiter + 1);
     return isAlphanumeric(identifierName) && isIdenifierLenghtValid(identifierName, context);
 
   }
