@@ -5,7 +5,7 @@ import java.util.List;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
-
+import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
 
@@ -72,7 +72,11 @@ class SchemaValidator implements ConstraintValidator<ValidSchema, Schema> {
       return true;
     }
 
-    if (schema.getName().equals(schema.getId().substring(Schema.EXTENSION_SCHEMA_URN.length()))) {
+    final int indexOfSchemaDelimiter = schema.getId().lastIndexOf(SchemasCallback.SCHEMA_URN_DELIMETER);
+    if (indexOfSchemaDelimiter == -1) {
+      return true;
+    }
+    if (schema.getName().equals(schema.getId().substring(indexOfSchemaDelimiter + 1))) {
       ValidationUtil.interpolateErrorMessage(context, "Schema name and id does not match!");
 
       return true;
