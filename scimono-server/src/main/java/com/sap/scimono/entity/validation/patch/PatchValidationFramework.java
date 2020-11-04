@@ -12,12 +12,14 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.EnterpriseExtension;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
+import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.helper.Strings;
@@ -26,15 +28,27 @@ public class PatchValidationFramework {
   private static final Pattern SCHEMA_PATTERN = Pattern.compile("^urn:[a-z0-9][a-z0-9-]{0,31}:([A-Za-z0-9()+,\\-.:=@;$_!*']|%[0-9a-f]{2})+$");
   private static final String SCHEMA_URN_DELIMETER = ":";
 
-  private SchemasCallback schemaAPI;
-  private String coreSchemaId;
-  private Map<String, Schema> requiredSchemas;
+  private final SchemasCallback schemaAPI;
+  private final ResourceTypesCallback resourceTypesAPI;
 
-  private PatchValidationFramework(final SchemasCallback schemaAPI, final Map<String, Schema> requiredSchemas, final String coreSchemaId) {
+  private final String coreSchemaId;
+  private final String resourceType;
+
+  private final Map<String, Schema> requiredSchemas;
+
+  // @formatter:off
+  private PatchValidationFramework(SchemasCallback schemaAPI,
+                                   ResourceTypesCallback resourceTypesAPI,
+                                   Map<String, Schema> requiredSchemas,
+                                   String coreSchemaId,
+                                   String resourceType) {
     this.schemaAPI = schemaAPI;
+    this.resourceTypesAPI = resourceTypesAPI;
     this.requiredSchemas = requiredSchemas;
     this.coreSchemaId = coreSchemaId;
+    this.resourceType = resourceType;
   }
+  // @formatter:on
 
   public void validate(PatchBody body) {
     List<Validator<PatchBody>> validators = Arrays.asList(new PatchSchemaPresenceValidator(), new AnyOperationPresenceValidator());
@@ -46,7 +60,7 @@ public class PatchValidationFramework {
       List<String> matchingPaths = schemaAPI.getSchema(coreSchemaId)
     		  .getAttributes()
     		  .stream()
-    		  .map(attribute -> attribute.getName())
+    		  .map(Attribute::getName)
     		  .filter(attributeName -> attributeName.equalsIgnoreCase(operation.getPath()))
     		  .collect(Collectors.toList());
       
@@ -93,6 +107,7 @@ public class PatchValidationFramework {
       validators.add(new PathSchemaExistenceValidator(requiredSchemas));
       validators.add(new PathAttributeExistenceValidator(schemaAPI));
       validators.add(new PathMutabilityValidator(schemaAPI));
+      validators.add(new PathRemoveRequiredAttributeValidator(schemaAPI, resourceTypesAPI, resourceType));
     }
 
     return validators;
@@ -102,16 +117,20 @@ public class PatchValidationFramework {
     return path.contains("[");
   }
 
-  public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI) {
+  public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
     String coreSchemaId = Group.SCHEMA;
+    String resourceType = Group.RESOURCE_TYPE_GROUP;
+
     Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, Collections.singleton(coreSchemaId));
-    return new PatchValidationFramework(schemaAPI, requiredSchemas, coreSchemaId);
+    return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 
-  public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI) {
+  public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
     String coreSchemaId = User.SCHEMA;
+    String resourceType = User.RESOURCE_TYPE_USER;
+
     Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, new HashSet<>(Arrays.asList(coreSchemaId, EnterpriseExtension.ENTERPRISE_URN)));
-    return new PatchValidationFramework(schemaAPI, requiredSchemas, coreSchemaId);
+    return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 
   private static Map<String, Schema> getRequiredSchemas(final SchemasCallback schemaAPI, final Set<String> requiredSchemaIds) {
