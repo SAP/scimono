@@ -7,11 +7,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.exception.SCIMException;
 
-public class RequiredAttributeValidator implements Validator<Attribute> {
+public class RequiredSubAttributesValidator implements Validator<Attribute> {
 
-  private JsonNode value;
+  private final JsonNode value;
 
-  public RequiredAttributeValidator(final JsonNode value) {
+  public RequiredSubAttributesValidator(final JsonNode value) {
     this.value = value;
   }
 

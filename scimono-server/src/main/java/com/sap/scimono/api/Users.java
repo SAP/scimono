@@ -233,7 +233,7 @@ public class Users {
   @PATCH
   @Path("{id}")
   public Response patchUser(@PathParam("id") @ValidId final String userId, final PatchBody patchBody) {
-    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI);
+    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI);
     validationFramework.validate(patchBody);
 
     String newVersion = UUID.randomUUID().toString();

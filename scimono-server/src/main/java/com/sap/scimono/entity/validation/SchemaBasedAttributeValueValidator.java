@@ -87,7 +87,7 @@ public class SchemaBasedAttributeValueValidator implements Validator<Object> {
       JsonNode attrValue = field.getValue();
 
       // @formatter:off
-      Attribute attributeDefinition = null;
+      Attribute attributeDefinition;
       Optional<String> schemaName = permittedSchemas.keySet().stream().filter(attrName::equalsIgnoreCase).findAny();
       if (schemaName.isPresent()) {
         attributeDefinition = new Attribute.Builder()
@@ -110,15 +110,15 @@ public class SchemaBasedAttributeValueValidator implements Validator<Object> {
     }
   }
 
-  private void validateAttribute(final Attribute аttribute, final JsonNode value) {
+  private void validateAttribute(final Attribute attribute, final JsonNode value) {
     List<Validator<Attribute>> validators = new LinkedList<>();
     validators.add(new CanonicalValuesValidator(value));
     validators.add(new AttributeDataTypeValidator(value));
     validators.add(new AttributeReadOnlyValidator());
-    if (!SchemasCallback.isCoreSchema(аttribute.getName())) {
-      validators.add(new RequiredAttributeValidator(value));
+    if (!SchemasCallback.isCoreSchema(attribute.getName())) {
+      validators.add(new RequiredSubAttributesValidator(value));
     }
-    validators.forEach(v -> v.validate(аttribute));
+    validators.forEach(v -> v.validate(attribute));
   }
 
 }

@@ -204,7 +204,7 @@ public class Groups {
   @PATCH
   @Path("{id}")
   public Response patchGroup(@PathParam("id") @ValidId final String groupId, final PatchBody patchBody) {
-    PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI);
+    PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI);
     validationFramework.validate(patchBody);
 
     Meta meta = new Meta.Builder(null, Instant.now()).setVersion(UUID.randomUUID().toString()).build();
