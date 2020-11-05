@@ -1,5 +1,5 @@
 SCHEMA_ID,NAME,TYPE,DESCRIPTION,MULTIVALUED,REQUIRED,CASE_EXACT,MUTABILITY,RETURNED,UNIQUENESS,CANONICAL_VALUES,REFERENCE_TYPES,SUB_ATTRIBUTE_OF
-urn:ietf:params:scim:schemas:core:2.0:Group,displayName,string,A human-readable name for the Group. REQUIRED.,0,0,0,readWrite,default,none,NULL,NULL,NULL
+urn:ietf:params:scim:schemas:core:2.0:Group,displayName,string,A human-readable name for the Group. REQUIRED.,0,1,0,readWrite,default,none,NULL,NULL,NULL
 urn:ietf:params:scim:schemas:core:2.0:Group,members,complex,A list of members of the Group.,1,0,0,readWrite,default,NULL,NULL,NULL,NULL
 urn:ietf:params:scim:schemas:core:2.0:Group,value,string,Identifier of the member of this Group.,0,0,0,immutable,default,none,NULL,NULL,members
 urn:ietf:params:scim:schemas:core:2.0:Group,$ref,reference,The URI corresponding to a SCIM resource that is a member of this Group.,0,0,0,immutable,default,none,NULL,"User,Group",members
