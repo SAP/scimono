@@ -2,6 +2,7 @@
 package com.sap.scimono.callback.groups;
 
 import java.util.Optional;
+import java.util.Set;
 
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.entity.Group;
@@ -17,7 +18,7 @@ public interface GroupsCallback {
    */
   Group getGroup(final String groupId);
 
-  default Group getGroup(final String groupId, final String filter) {
+  default Group getGroup(String groupId, Set<String> attributes) {
     return getGroup(groupId);
   }
 

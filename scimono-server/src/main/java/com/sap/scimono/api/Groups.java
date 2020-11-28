@@ -15,7 +15,10 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_STA
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -82,10 +85,13 @@ public class Groups {
 
   @GET
   @Path("{id}")
-  public Response getGroup(@PathParam("id") @ValidId final String groupId) {
+  public Response getGroup(@PathParam("id") @ValidId final String groupId, @QueryParam(ATTRIBUTES_PARAM) final String attributes) {
     logger.trace("Reading group {}", groupId);
-
-    Group groupFromDb = groupAPI.getGroup(groupId);
+    Set<String> attributesSet = new HashSet<>();
+    if (attributes != null) {
+      attributesSet.addAll(Arrays.asList(attributes.split(",")));
+    }
+    Group groupFromDb = groupAPI.getGroup(groupId, attributesSet);
 
     if (groupFromDb == null) {
       throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);
