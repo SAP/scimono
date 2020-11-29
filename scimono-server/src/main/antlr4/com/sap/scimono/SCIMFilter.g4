@@ -25,18 +25,18 @@ valuePath:
 ;
 
 valExpression:
-  | pagingQuery
+  pagingQuery
   | valFilter SP* '&' SP* pagingQuery
   | pagingQuery SP* '&' SP* valFilter
 
 ;
 
 pagingQuery:
-    pagingAssignment ('&'pagingAssignment)*?
+    PAGING_ASSIGNMENT ('&'PAGING_ASSIGNMENT)*?
 ;
 
-pagingAssignment:
-    PAGING_PARAMS '=' PARAM
+PAGING_ASSIGNMENT:
+    PAGING_PARAMS '=' UNRESERVED+
 ;
 
 valFilter:
