@@ -68,8 +68,8 @@ public class ListResponseBuilder<T extends Resource<T>> implements PagingStartPa
             .build();
       }
 
-      int indexOfLastGroup = resources.size() - 1;
-      Resource<?> nextResource = resources.remove(indexOfLastGroup);
+      int indexOfLastResource = resources.size() - 1;
+      Resource<?> nextResource = resources.remove(indexOfLastResource);
 
       return Response.ok(new PagedByIdentitySearchResult<>(resources, totalResultsCount, requestedCount, startId, nextResource.getId())).build();
 

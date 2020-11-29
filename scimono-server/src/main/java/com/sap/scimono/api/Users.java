@@ -2,7 +2,9 @@
 package com.sap.scimono.api;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+import static com.sap.scimono.api.API.ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.COUNT_PARAM;
+import static com.sap.scimono.api.API.EXCLUDED_ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.FILTER_PARAM;
 import static com.sap.scimono.api.API.START_ID_PARAM;
 import static com.sap.scimono.api.API.START_INDEX_PARAM;
@@ -42,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
+import com.sap.scimono.api.request.RequestedResourceAttributesParser;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
@@ -111,9 +114,13 @@ public class Users {
 
   @GET
   @Path("{id}")
-  public Response getUser(@PathParam("id") @ValidId final String userId) {
+  // @formatter:off
+  public Response getUser(@PathParam("id") @ValidId final String userId,
+                          @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                          @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+    // @formatter:on
     logger.trace("Reading user {}", userId);
-    User userFromDb = usersAPI.getUser(userId);
+    User userFromDb = usersAPI.getUser(userId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
 
     if (userFromDb == null) {
       throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
@@ -126,9 +133,12 @@ public class Users {
 
   @GET
   // @formatter:off
-  public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndexParam,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
-      @QueryParam(FILTER_PARAM) final String filter) {
+  public Response getUsers(@QueryParam(START_INDEX_PARAM) @DefaultValue(DEFAULT_START_INDEX)  String startIndexParam,
+                           @QueryParam(COUNT_PARAM) @DefaultValue(DEFAULT_COUNT) String countParam,
+                           @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
+                           @QueryParam(FILTER_PARAM) final String filter,
+                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
     // @formatter:on
     logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
@@ -142,7 +152,7 @@ public class Users {
     }
 
     PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
-    PagedResult<User> users = usersAPI.getUsers(pageInfo, filter);
+    PagedResult<User> users = usersAPI.getUsers(pageInfo, filter, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
 
     List<User> usersToReturn = new ArrayList<>();
     for (User user : users.getResources()) {
@@ -235,6 +245,6 @@ public class Users {
   @POST
   @Path(".query")
   public Response queryUsers() {
-    return getUsers("0", "0", null, null);
+    return getUsers("0", "0", null, null, null, null);
   }
 }

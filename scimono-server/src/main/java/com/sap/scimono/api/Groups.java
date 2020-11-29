@@ -4,6 +4,7 @@ package com.sap.scimono.api;
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
 import static com.sap.scimono.api.API.ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.COUNT_PARAM;
+import static com.sap.scimono.api.API.EXCLUDED_ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.FILTER_PARAM;
 import static com.sap.scimono.api.API.GROUPS;
 import static com.sap.scimono.api.API.START_ID_PARAM;
@@ -15,10 +16,7 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_STA
 import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -42,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
+import com.sap.scimono.api.request.RequestedResourceAttributesParser;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.groups.GroupsCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
@@ -85,13 +84,13 @@ public class Groups {
 
   @GET
   @Path("{id}")
-  public Response getGroup(@PathParam("id") @ValidId final String groupId, @QueryParam(ATTRIBUTES_PARAM) final String attributes) {
+  // @formatter:off
+  public Response getGroup(@PathParam("id") @ValidId final String groupId,
+                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+    // @formatter:on
     logger.trace("Reading group {}", groupId);
-    Set<String> attributesSet = new HashSet<>();
-    if (attributes != null) {
-      attributesSet.addAll(Arrays.asList(attributes.split(",")));
-    }
-    Group groupFromDb = groupAPI.getGroup(groupId, attributesSet);
+    Group groupFromDb = groupAPI.getGroup(groupId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
 
     if (groupFromDb == null) {
       throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);
@@ -103,12 +102,14 @@ public class Groups {
   }
 
   @GET
+  // @formatter:off
   public Response getGroups(@QueryParam(START_INDEX_PARAM) @DefaultValue(DEFAULT_START_INDEX) String startIndexParam,
                             @QueryParam(COUNT_PARAM) @DefaultValue(DEFAULT_COUNT) String countParam,
                             @QueryParam(START_ID_PARAM) @ValidStartId String startId,
                             @QueryParam(FILTER_PARAM) final String filter,
-                            @QueryParam(ATTRIBUTES_PARAM) final String attributes) {
-
+                            @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                            @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+    // @formatter:on
     logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
     int startIndex = PagingParamsParser.parseStartIndex(startIndexParam);
@@ -121,7 +122,7 @@ public class Groups {
     }
 
     PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
-    PagedResult<Group> groups = groupAPI.getGroups(pageInfo, filter);
+    PagedResult<Group> groups = groupAPI.getGroups(pageInfo, filter, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
 
     List<Group> groupsToReturn = new ArrayList<>();
     for (Group group : groups.getResources()) {
