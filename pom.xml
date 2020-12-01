@@ -57,14 +57,14 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
 
-        <antlr4.version>4.7.2</antlr4.version>
+        <antlr4.version>4.9</antlr4.version>
         <slf4j.version>1.7.30</slf4j.version>
-        <jackson.version>2.10.2</jackson.version>
-        <jersey.version>2.30.1</jersey.version>
+        <jackson.version>2.12.0</jackson.version>
+        <jersey.version>2.32</jersey.version>
 
-        <org.mockito.version>3.3.0</org.mockito.version>
-        <wiremock.version>2.26.0</wiremock.version>
-        <junit.version>5.6.0</junit.version>
+        <org.mockito.version>3.6.28</org.mockito.version>
+        <wiremock.version>2.27.2</wiremock.version>
+        <junit.version>5.7.0</junit.version>
         <surefire.version>2.22.2</surefire.version>
     </properties>
 
