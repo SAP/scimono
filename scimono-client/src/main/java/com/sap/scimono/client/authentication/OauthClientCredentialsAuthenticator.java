@@ -1,17 +1,17 @@
 package com.sap.scimono.client.authentication;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.sap.scimono.api.helper.ObjectMapperFactory;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
 import java.io.IOException;
 import java.net.URI;
 import java.time.Instant;
 
-import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Response;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sap.scimono.api.helper.ObjectMapperFactory;
 
 public class OauthClientCredentialsAuthenticator implements TargetSystemAuthenticator {
   private static final String CLIENT_CREDENTIALS_GRANT_VALUE = "client_credentials";
