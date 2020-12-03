@@ -39,7 +39,7 @@ public class OauthClientCredentialsAuthenticator implements TargetSystemAuthenti
     }
 
     String tokenType = tokenProperties.getTokenType();
-    if ((tokenType == null) || "Bearer".equalsIgnoreCase(tokenType)) {
+    if ("Bearer".equalsIgnoreCase(tokenType)) {
       tokenType = "Bearer";
     }
     
