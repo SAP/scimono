@@ -1,5 +1,11 @@
 package com.sap.scimono.client;
 
+import static com.sap.scimono.api.API.USERS;
+import static com.sap.scimono.client.query.ResourcePageQuery.indexPageQuery;
+
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+
 import com.sap.scimono.client.query.IdentityPageQuery;
 import com.sap.scimono.client.query.IndexPageQuery;
 import com.sap.scimono.entity.User;
@@ -7,13 +13,8 @@ import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
 
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-
-import static com.sap.scimono.api.API.USERS;
-
 public class UserRequest {
-  private SCIMResourceRequest<User> resourceRequestDelegate;
+  private final SCIMResourceRequest<User> resourceRequestDelegate;
 
   public UserRequest(WebTarget targetSystem, SCIMRequest scimRequest) {
     this.resourceRequestDelegate = new SCIMResourceRequest<>(targetSystem.path(USERS), scimRequest, User.class);
@@ -24,47 +25,70 @@ public class UserRequest {
   }
 
   public SCIMResponse<User> readSingleUser(String id) {
-    return resourceRequestDelegate.readSingleResource(id);
+    return readSingleUser(id, RequestDetails.DEFAULT);
   }
 
   public SCIMResponse<PagedByIndexSearchResult<User>> readAllUsers() {
-    return resourceRequestDelegate.readAllResources(new GenericType<PagedByIndexSearchResult<User>>(){});
+    return readAllUsers(RequestDetails.DEFAULT);
   }
 
   public SCIMResponse<PagedByIndexSearchResult<User>> readAllUsers(String scimFilter) {
-    return resourceRequestDelegate.readAllResources(new GenericType<PagedByIndexSearchResult<User>>(){}, scimFilter);
+    return readAllUsers(RequestDetails.builder().withFilter(scimFilter).build());
   }
 
   public SCIMResponse<PagedByIndexSearchResult<User>> readMultipleUsers() {
-    return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<User>>(){});
+    return readMultipleUsers(RequestDetails.builder().withPageQuery(indexPageQuery()).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<User>> readMultipleUsers(String filter) {
-    return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<User>>(){}, filter);
+    return readMultipleUsers(RequestDetails.builder().withPageQuery(indexPageQuery()).withFilter(filter).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIdentitySearchResult<User>> readMultipleUsers(IdentityPageQuery identityPageQuery) {
-    return resourceRequestDelegate.readMultipleResources(identityPageQuery, new GenericType<PagedByIdentitySearchResult<User>>(){});
+    return readMultipleUsersById(RequestDetails.builder().withPageQuery(identityPageQuery).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIdentitySearchResult<User>> readMultipleUsers(IdentityPageQuery identityPageQuery, String filter) {
-    return resourceRequestDelegate.readMultipleResources(identityPageQuery, filter, new GenericType<PagedByIdentitySearchResult<User>>(){});
+    return readMultipleUsersById(RequestDetails.builder().withPageQuery(identityPageQuery).withFilter(filter).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<User>> readMultipleUsers(IndexPageQuery indexPageQuery) {
-    return resourceRequestDelegate.readMultipleResources(indexPageQuery, new GenericType<PagedByIndexSearchResult<User>>(){});
+    return readMultipleUsers(RequestDetails.builder().withPageQuery(indexPageQuery).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<User>> readMultipleUsers(IndexPageQuery indexPageQuery, String filter) {
-    return resourceRequestDelegate.readMultipleResources(indexPageQuery, filter, new GenericType<PagedByIndexSearchResult<User>>(){});
+    return readMultipleUsers(RequestDetails.builder().withPageQuery(indexPageQuery).withFilter(filter).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<User>> readMultipleUsersWithoutPaging() {
-    return resourceRequestDelegate.readMultipleResourcesWithoutPaging(new GenericType<PagedByIndexSearchResult<User>>(){});
+    return readMultipleUsers(RequestDetails.DEFAULT);
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<User>> readMultipleUsersWithoutPaging(String filter) {
-    return resourceRequestDelegate.readMultipleResourcesWithoutPaging(new GenericType<PagedByIndexSearchResult<User>>(){}, filter);
+    return readMultipleUsers(RequestDetails.builder().withFilter(filter).build());
+  }
+
+  public SCIMResponse<PagedByIndexSearchResult<User>> readAllUsers(RequestDetails requestDetails) {
+    return resourceRequestDelegate.readAllResources(new GenericType<PagedByIndexSearchResult<User>>(){}, requestDetails);
+  }
+
+  public SCIMResponse<PagedByIndexSearchResult<User>> readMultipleUsers(RequestDetails requestDetails) {
+    return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<User>>(){}, requestDetails);
+  }
+
+  public SCIMResponse<PagedByIdentitySearchResult<User>> readMultipleUsersById(RequestDetails requestDetails) {
+    return resourceRequestDelegate.readMultipleResourcesById(new GenericType<PagedByIdentitySearchResult<User>>(){}, requestDetails);
+  }
+
+  public SCIMResponse<User> readSingleUser(String id, RequestDetails requestDetails) {
+    return resourceRequestDelegate.readSingleResource(id, requestDetails);
   }
 
   public SCIMResponse<User> updateUser(User user) {

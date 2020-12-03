@@ -6,7 +6,7 @@ public interface SCIMQuery {
   WebTarget apply(WebTarget target);
 
   class SCIMQueryBuilder {
-    private WebTarget target;
+    private final WebTarget target;
 
     public SCIMQueryBuilder(WebTarget target) {
       this.target = target;

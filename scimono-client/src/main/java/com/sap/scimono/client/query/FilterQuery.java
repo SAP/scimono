@@ -7,9 +7,9 @@ import javax.ws.rs.client.WebTarget;
 
 public class FilterQuery implements SCIMQuery {
   private static final String FILTER_QUERY_PARAM = "filter";
-  private String filter;
+  private final String filter;
 
-  public FilterQuery(String filter) {
+  private FilterQuery(String filter) {
     this.filter = filter;
   }
 

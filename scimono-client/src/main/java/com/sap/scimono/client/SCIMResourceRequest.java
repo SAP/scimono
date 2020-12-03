@@ -1,22 +1,5 @@
 package com.sap.scimono.client;
 
-import com.sap.scimono.client.query.FilterQuery;
-import com.sap.scimono.client.query.IdentityPageQuery;
-import com.sap.scimono.client.query.IndexPageQuery;
-import com.sap.scimono.client.query.SCIMQuery;
-import com.sap.scimono.entity.Resource;
-import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
-import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
-import com.sap.scimono.entity.paging.PagedResult;
-import com.sap.scimono.entity.patch.PatchBody;
-
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
-
-import java.util.LinkedList;
-import java.util.List;
-
 import static com.sap.scimono.client.ResourceAction.CREATE_SINGLE;
 import static com.sap.scimono.client.ResourceAction.DELETE;
 import static com.sap.scimono.client.ResourceAction.GET_ALL;
@@ -26,10 +9,24 @@ import static com.sap.scimono.client.ResourceAction.PUT_UPDATE;
 import static com.sap.scimono.client.query.ResourcePageQuery.indexPageQuery;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+
+import com.sap.scimono.client.query.SCIMQuery;
+import com.sap.scimono.entity.Resource;
+import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
+import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
+import com.sap.scimono.entity.paging.PagedResult;
+import com.sap.scimono.entity.patch.PatchBody;
+
 class SCIMResourceRequest<T extends Resource<T>> {
-  private WebTarget targetSystem;
-  private SCIMRequest scimRequest;
-  private Class<T> resourceClass;
+  private final WebTarget targetSystem;
+  private final SCIMRequest scimRequest;
+  private final Class<T> resourceClass;
 
   SCIMResourceRequest(WebTarget targetSystem, SCIMRequest scimRequest, Class<T> resourceClass) {
     this.targetSystem = targetSystem;
@@ -37,6 +34,7 @@ class SCIMResourceRequest<T extends Resource<T>> {
     this.resourceClass = resourceClass;
   }
 
+  @Deprecated
   static <T extends Resource<T>> SCIMResourceRequest<T> newInstance(WebTarget targetSystem, SCIMRequest scimRequest, Class<T> resourceClass) {
     return new SCIMResourceRequest<>(targetSystem, scimRequest, resourceClass);
   }
@@ -46,52 +44,9 @@ class SCIMResourceRequest<T extends Resource<T>> {
     return SCIMResponse.newInstance(resourceClass, response, scimRequest.getScimActionResponseStatusConfig(CREATE_SINGLE));
   }
 
-  SCIMResponse<T> readSingleResource(String id) {
-    Response response = scimRequest.get(targetSystem.path(id));
+  SCIMResponse<T> readSingleResource(String id, RequestDetails requestDetails) {
+    Response response = scimRequest.get(requestDetails.getAttributes().apply(targetSystem.path(id)));
     return SCIMResponse.newInstance(resourceClass, response, scimRequest.getScimActionResponseStatusConfig(GET_SINGLE));
-  }
-
-  SCIMResponse<PagedByIndexSearchResult<T>> readAllResources(GenericType<PagedByIndexSearchResult<T>> responseType) {
-    return readAllResources(responseType, target -> target);
-  }
-
-  SCIMResponse<PagedByIndexSearchResult<T>> readAllResources(GenericType<PagedByIndexSearchResult<T>> responseType, String filter) {
-    return readAllResources(responseType, FilterQuery.fromString(filter));
-  }
-
-  public SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResources(GenericType<PagedByIndexSearchResult<T>> responseType) {
-    return readMultipleResources(indexPageQuery(), responseType);
-  }
-
-  public SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResources(GenericType<PagedByIndexSearchResult<T>> responseType, String filter) {
-    return readMultipleResources(indexPageQuery(), filter, responseType);
-  }
-
-  SCIMResponse<PagedByIdentitySearchResult<T>> readMultipleResources(IdentityPageQuery identityPageQuery, GenericType<PagedByIdentitySearchResult<T>> listResponseTypePaging) {
-    Response response = scimRequest.get(identityPageQuery.apply(targetSystem));
-    return SCIMResponse.newInstance(listResponseTypePaging, response, scimRequest.getScimActionResponseStatusConfig(GET_ALL));
-  }
-
-  SCIMResponse<PagedByIdentitySearchResult<T>> readMultipleResources(IdentityPageQuery identityPageQuery, String filter, GenericType<PagedByIdentitySearchResult<T>> listResponseTypePaging) {
-    return readMultipleResources(identityPageQuery, FilterQuery.fromString(filter), listResponseTypePaging);
-  }
-
-  SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResources(IndexPageQuery indexPageQuery, GenericType<PagedByIndexSearchResult<T>> responseType) {
-    Response response = scimRequest.get(indexPageQuery.apply(targetSystem));
-    return readMultipleResourcesIndexed(response, responseType);
-  }
-
-  SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResources(IndexPageQuery indexPageQuery, String filter, GenericType<PagedByIndexSearchResult<T>> responseType) {
-    return readMultipleResources(indexPageQuery, FilterQuery.fromString(filter), responseType);
-  }
-
-  SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResourcesWithoutPaging(GenericType<PagedByIndexSearchResult<T>> listResponseTypePaging) {
-    Response response = scimRequest.get(targetSystem);
-    return SCIMResponse.newInstance(listResponseTypePaging, response, scimRequest.getScimActionResponseStatusConfig(GET_ALL));
-  }
-
-  SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResourcesWithoutPaging(GenericType<PagedByIndexSearchResult<T>> listResponseTypePaging, String filter) {
-    return readMultipleResourcesWithoutPaging(listResponseTypePaging, FilterQuery.fromString(filter));
   }
 
   SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResourcesIndexed(Response response, GenericType<PagedByIndexSearchResult<T>> responseType) {
@@ -113,22 +68,17 @@ class SCIMResourceRequest<T extends Resource<T>> {
     return SCIMResponse.fromEmpty(response, scimRequest.getScimActionResponseStatusConfig(DELETE));
   }
 
-  private SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResources(IndexPageQuery indexPageQuery, FilterQuery filterQuery, GenericType<PagedByIndexSearchResult<T>> responseType) {
-    Response response = scimRequest.get(new SCIMQuery.SCIMQueryBuilder(targetSystem).apply(indexPageQuery).apply(filterQuery).get());
+  SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResources(GenericType<PagedByIndexSearchResult<T>> responseType, RequestDetails requestDetails) {
+    Response response = scimRequest.get(requestDetails.apply(targetSystem));
     return readMultipleResourcesIndexed(response, responseType);
   }
 
-  private SCIMResponse<PagedByIdentitySearchResult<T>> readMultipleResources(IdentityPageQuery identityPageQuery, FilterQuery filterQuery, GenericType<PagedByIdentitySearchResult<T>> listResponseTypePaging) {
-    Response response = scimRequest.get(new SCIMQuery.SCIMQueryBuilder(targetSystem).apply(identityPageQuery).apply(filterQuery).get());
+  SCIMResponse<PagedByIdentitySearchResult<T>> readMultipleResourcesById(GenericType<PagedByIdentitySearchResult<T>> listResponseTypePaging, RequestDetails requestDetails) {
+    Response response = scimRequest.get(requestDetails.apply(targetSystem));
     return SCIMResponse.newInstance(listResponseTypePaging, response, scimRequest.getScimActionResponseStatusConfig(GET_ALL));
   }
 
-  private SCIMResponse<PagedByIndexSearchResult<T>> readMultipleResourcesWithoutPaging(GenericType<PagedByIndexSearchResult<T>> listResponseTypePaging, FilterQuery filter) {
-    Response response = scimRequest.get(filter.apply(targetSystem));
-    return SCIMResponse.newInstance(listResponseTypePaging, response, scimRequest.getScimActionResponseStatusConfig(GET_ALL));
-  }
-
-  private SCIMResponse<PagedByIndexSearchResult<T>> readAllResources(GenericType<PagedByIndexSearchResult<T>> responseType, SCIMQuery scimQuery) {
+  SCIMResponse<PagedByIndexSearchResult<T>> readAllResources(GenericType<PagedByIndexSearchResult<T>> responseType, RequestDetails requestDetails) {
     int startIndex = 1;
     int count = Integer.parseInt(DEFAULT_COUNT);
     long totalResults;
@@ -141,7 +91,8 @@ class SCIMResourceRequest<T extends Resource<T>> {
     do {
       lastHttpResponse = scimRequest.get(new SCIMQuery.SCIMQueryBuilder(targetSystem)
           .apply(indexPageQuery().withStartIndex(startIndex).withCount(count))
-          .apply(scimQuery)
+          .apply(requestDetails.getFilter())
+          .apply(requestDetails.getAttributes())
           .get());
       lastResourcesPageResponse = readMultipleResourcesIndexed(lastHttpResponse, responseType);
 

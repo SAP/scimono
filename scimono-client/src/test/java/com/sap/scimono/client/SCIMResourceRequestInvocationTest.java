@@ -12,8 +12,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestFilter;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,7 +21,6 @@ import java.util.UUID;
 import static com.sap.scimono.client.query.ResourcePageQuery.identityPageQuery;
 import static com.sap.scimono.client.query.ResourcePageQuery.indexPageQuery;
 import static java.net.URLEncoder.encode;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.ws.rs.HttpMethod.DELETE;
 import static javax.ws.rs.HttpMethod.GET;
 import static javax.ws.rs.HttpMethod.PATCH;
@@ -52,7 +49,8 @@ public class SCIMResourceRequestInvocationTest {
         readMultipleUsersInvocationWithIdentityPaging(),
         readMultipleUsersInvocationWithIdentityPagingAndFilter(),
         readMultipleUsersInvocationWithoutPaging(),
-        readMultipleUsersInvocationWithFilterAndWithoutPaging()
+        readMultipleUsersInvocationWithFilterAndWithoutPaging(),
+        readMultipleUsersInvocationWithRequestedAttributes()
     );
     // @formatter:on
   }
@@ -207,6 +205,23 @@ public class SCIMResourceRequestInvocationTest {
       assertThrows(ProcessingException.class,
           ()-> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=1&count=100", capturedAssertions)
               .readMultipleUsers()
+      );
+      assertFalse(capturedAssertions.isEmpty());
+      assertAll(capturedAssertions);
+    });
+  }
+
+  private DynamicTest readMultipleUsersInvocationWithRequestedAttributes() {
+    return dynamicTest("Read multiple Users invocation with requested and excluded attributes", () -> {
+      Collection<Executable> capturedAssertions = new ArrayList<>();
+      String expectedFilter = DEFAULT_URL + "/Users?attributes=displayName&excludedAttributes=groups";
+
+      assertThrows(ProcessingException.class,
+          ()-> scimRequestConfigForReadUsersInvocation(expectedFilter, capturedAssertions)
+              .readMultipleUsers(RequestDetails.builder()
+                  .requestAttribute("displayName")
+                  .excludeAttribute("groups")
+                  .build())
       );
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
