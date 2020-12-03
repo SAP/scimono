@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sap.scimono.api.helper.ObjectMapperFactory;
 
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Response;
 import java.io.IOException;
@@ -37,7 +38,12 @@ public class OauthClientCredentialsAuthenticator implements TargetSystemAuthenti
       tokenProperties = retrieveOauthToken();
     }
 
-    return tokenProperties.getTokenType() + " " + tokenProperties.getAccessToken();
+    String tokenType = tokenProperties.getTokenType();
+    if ((tokenType == null) || "Bearer".equalsIgnoreCase(tokenType)) {
+      tokenType = "Bearer";
+    }
+    
+    return tokenType + " " + tokenProperties.getAccessToken();
   }
 
   private OauthTokenProperties retrieveOauthToken() {
