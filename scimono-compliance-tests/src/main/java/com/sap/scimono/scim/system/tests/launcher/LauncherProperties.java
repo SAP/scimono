@@ -101,11 +101,12 @@ public class LauncherProperties {
     for (String arg : args) {
       String[] propertyNameValuePair = arg.split(PROPERTY_NAME_VALUE_DELIMITER);
       ParamName propertyName = ParamName.fromPropertyName(propertyNameValuePair[0]);
-      String propertyValue = arg.substring(propertyName.value().length() + 1);
 
       if(propertyName == null) {
         continue;
       }
+
+      String propertyValue = arg.substring(propertyName.value().length() + 1);
 
       properties.put(propertyName, new LauncherProperty(propertyName.value, propertyValue));
     }
