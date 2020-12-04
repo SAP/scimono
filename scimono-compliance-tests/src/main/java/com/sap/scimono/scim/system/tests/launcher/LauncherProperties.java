@@ -114,6 +114,9 @@ public class LauncherProperties {
   }
 
   private static boolean isArgsInValidFormat(String[] args) {
-    return Stream.of(args).allMatch(arg -> arg.split(PROPERTY_NAME_VALUE_DELIMITER).length >= 2);
+    return Stream.of(args).allMatch(arg -> {
+      int delimiterPosition = arg.indexOf(PROPERTY_NAME_VALUE_DELIMITER);
+      return delimiterPosition >= 1 && delimiterPosition <= arg.length() - 2;
+    });
   }
 }
