@@ -99,14 +99,13 @@ public class LauncherProperties {
 
     Map<ParamName, LauncherProperty> properties = new EnumMap<>(ParamName.class);
     for (String arg : args) {
-      String[] propertyNameValuePair = arg.split(PROPERTY_NAME_VALUE_DELIMITER);
+      String[] propertyNameValuePair = arg.split(PROPERTY_NAME_VALUE_DELIMITER, 2);
       ParamName propertyName = ParamName.fromPropertyName(propertyNameValuePair[0]);
+      String propertyValue = propertyNameValuePair[1];
 
       if(propertyName == null) {
-        continue;
+        throw new LauncherInitializationException("Unsupported property");
       }
-
-      String propertyValue = arg.substring(propertyName.value().length() + 1);
 
       properties.put(propertyName, new LauncherProperty(propertyName.value, propertyValue));
     }
@@ -114,9 +113,10 @@ public class LauncherProperties {
   }
 
   private static boolean isArgsInValidFormat(String[] args) {
-    return Stream.of(args).allMatch(arg -> {
-      int delimiterPosition = arg.indexOf(PROPERTY_NAME_VALUE_DELIMITER);
-      return delimiterPosition >= 1 && delimiterPosition <= arg.length() - 2;
-    });
+    // @formatter:off
+    return Stream.of(args)
+        .map(arg -> arg.split(PROPERTY_NAME_VALUE_DELIMITER, 2))
+        .allMatch(propertyNameValuePair -> propertyNameValuePair.length == 2 && !propertyNameValuePair[0].isEmpty() && !propertyNameValuePair[1].isEmpty());
+    // @formatter:on
   }
 }
