@@ -101,7 +101,7 @@ public class LauncherProperties {
     for (String arg : args) {
       String[] propertyNameValuePair = arg.split(PROPERTY_NAME_VALUE_DELIMITER);
       ParamName propertyName = ParamName.fromPropertyName(propertyNameValuePair[0]);
-      String propertyValue = propertyNameValuePair[1];
+      String propertyValue = arg.substring(propertyName.value().length() + 1);
 
       if(propertyName == null) {
         continue;
@@ -113,6 +113,6 @@ public class LauncherProperties {
   }
 
   private static boolean isArgsInValidFormat(String[] args) {
-    return Stream.of(args).allMatch(arg -> arg.split(PROPERTY_NAME_VALUE_DELIMITER).length == 2);
+    return Stream.of(args).allMatch(arg -> arg.split(PROPERTY_NAME_VALUE_DELIMITER).length >= 2);
   }
 }
