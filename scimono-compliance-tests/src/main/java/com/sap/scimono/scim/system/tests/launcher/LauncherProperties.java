@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class LauncherProperties {
+  private static final int PROPERTY_TOKENS_COUNT = 2;
   private static final String PROPERTY_NAME_VALUE_DELIMITER = "=";
 
   private enum ParamName {
@@ -99,7 +100,7 @@ public class LauncherProperties {
 
     Map<ParamName, LauncherProperty> properties = new EnumMap<>(ParamName.class);
     for (String arg : args) {
-      String[] propertyNameValuePair = arg.split(PROPERTY_NAME_VALUE_DELIMITER, 2);
+      String[] propertyNameValuePair = arg.split(PROPERTY_NAME_VALUE_DELIMITER, PROPERTY_TOKENS_COUNT);
       ParamName propertyName = ParamName.fromPropertyName(propertyNameValuePair[0]);
       String propertyValue = propertyNameValuePair[1];
 
@@ -115,8 +116,8 @@ public class LauncherProperties {
   private static boolean isArgsInValidFormat(String[] args) {
     // @formatter:off
     return Stream.of(args)
-        .map(arg -> arg.split(PROPERTY_NAME_VALUE_DELIMITER, 2))
-        .allMatch(propertyNameValuePair -> propertyNameValuePair.length == 2 && !propertyNameValuePair[0].isEmpty() && !propertyNameValuePair[1].isEmpty());
+        .map(arg -> arg.split(PROPERTY_NAME_VALUE_DELIMITER, PROPERTY_TOKENS_COUNT))
+        .allMatch(propertyNameValuePair -> propertyNameValuePair.length == PROPERTY_TOKENS_COUNT && !propertyNameValuePair[0].isEmpty() && !propertyNameValuePair[1].isEmpty());
     // @formatter:on
   }
 }
