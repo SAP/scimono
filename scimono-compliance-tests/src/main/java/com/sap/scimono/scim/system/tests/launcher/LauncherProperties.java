@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.stream.Stream;
 
 public class LauncherProperties {
+  private static final int PROPERTY_TOKENS_COUNT = 2;
   private static final String PROPERTY_NAME_VALUE_DELIMITER = "=";
 
   private enum ParamName {
@@ -99,12 +100,12 @@ public class LauncherProperties {
 
     Map<ParamName, LauncherProperty> properties = new EnumMap<>(ParamName.class);
     for (String arg : args) {
-      String[] propertyNameValuePair = arg.split(PROPERTY_NAME_VALUE_DELIMITER);
+      String[] propertyNameValuePair = arg.split(PROPERTY_NAME_VALUE_DELIMITER, PROPERTY_TOKENS_COUNT);
       ParamName propertyName = ParamName.fromPropertyName(propertyNameValuePair[0]);
       String propertyValue = propertyNameValuePair[1];
 
       if(propertyName == null) {
-        continue;
+        throw new LauncherInitializationException("Unsupported property");
       }
 
       properties.put(propertyName, new LauncherProperty(propertyName.value, propertyValue));
@@ -113,6 +114,10 @@ public class LauncherProperties {
   }
 
   private static boolean isArgsInValidFormat(String[] args) {
-    return Stream.of(args).allMatch(arg -> arg.split(PROPERTY_NAME_VALUE_DELIMITER).length == 2);
+    // @formatter:off
+    return Stream.of(args)
+        .map(arg -> arg.split(PROPERTY_NAME_VALUE_DELIMITER, PROPERTY_TOKENS_COUNT))
+        .allMatch(propertyNameValuePair -> propertyNameValuePair.length == PROPERTY_TOKENS_COUNT && !propertyNameValuePair[0].isEmpty() && !propertyNameValuePair[1].isEmpty());
+    // @formatter:on
   }
 }
