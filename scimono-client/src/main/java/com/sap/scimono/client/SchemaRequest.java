@@ -9,7 +9,7 @@ import javax.ws.rs.core.GenericType;
 import static com.sap.scimono.api.API.SCHEMAS;
 
 public class SchemaRequest {
-  private SCIMResourceRequest<Schema> resourceRequestDelegate;
+  private final SCIMResourceRequest<Schema> resourceRequestDelegate;
 
   public SchemaRequest(WebTarget targetSystem, SCIMRequest scimRequest) {
     this.resourceRequestDelegate = new SCIMResourceRequest<>(targetSystem.path(SCHEMAS), scimRequest, Schema.class);
@@ -20,11 +20,11 @@ public class SchemaRequest {
   }
 
   public SCIMResponse<Schema> readSingleSchema(String schemaUrn) {
-    return resourceRequestDelegate.readSingleResource(schemaUrn);
+    return resourceRequestDelegate.readSingleResource(schemaUrn, RequestDetails.DEFAULT);
   }
 
   public SCIMResponse<PagedByIndexSearchResult<Schema>> readAllSchemas() {
-    return resourceRequestDelegate.readMultipleResourcesWithoutPaging(new GenericType<PagedByIndexSearchResult<Schema>>(){});
+    return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<Schema>>(){}, RequestDetails.DEFAULT);
   }
 
   public SCIMResponse<Void> deleteSchema(String schemaUrn) {

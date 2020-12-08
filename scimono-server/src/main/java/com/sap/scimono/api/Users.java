@@ -2,13 +2,14 @@
 package com.sap.scimono.api;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+import static com.sap.scimono.api.API.ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.COUNT_PARAM;
+import static com.sap.scimono.api.API.EXCLUDED_ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.FILTER_PARAM;
 import static com.sap.scimono.api.API.START_ID_PARAM;
 import static com.sap.scimono.api.API.START_INDEX_PARAM;
 import static com.sap.scimono.api.API.USERS;
 import static com.sap.scimono.entity.User.RESOURCE_TYPE_USER;
-import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
 
@@ -43,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
+import com.sap.scimono.api.request.RequestedResourceAttributesParser;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
@@ -50,8 +52,6 @@ import com.sap.scimono.callback.users.UsersCallback;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PageInfo;
-import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
-import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidId;
@@ -96,42 +96,49 @@ public class Users {
 
     User userFromDb = usersAPI.getUserByUsername(userName);
 
-    if (userFromDb != null) {
-      UriBuilder location = uriInfo.getBaseUriBuilder();
-      List<PathSegment> pathSegments = uriInfo.getPathSegments(false);
-      for (int i = 0; i < pathSegments.size() - 1; ++i) {
-        location.path(pathSegments.get(i).toString());
-      }
-      location.path(userFromDb.getId());
-
-      User user = resourceLocationService.addLocation(userFromDb, location.build());
-      user = resourceLocationService.addRelationalEntitiesLocation(user);
-      return Response.ok(user).tag(user.getMeta().getVersion()).location(location.build()).build();
+    if (userFromDb == null) {
+      throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userName);
     }
 
-    throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userName);
+    UriBuilder location = uriInfo.getBaseUriBuilder();
+    List<PathSegment> pathSegments = uriInfo.getPathSegments(false);
+    for (int i = 0; i < pathSegments.size() - 1; ++i) {
+      location.path(pathSegments.get(i).toString());
+    }
+    location.path(userFromDb.getId());
+
+    User user = resourceLocationService.addLocation(userFromDb, location.build());
+    user = resourceLocationService.addRelationalEntitiesLocation(user);
+    return Response.ok(user).tag(user.getMeta().getVersion()).location(location.build()).build();
   }
 
   @GET
   @Path("{id}")
-  public Response getUser(@PathParam("id") @ValidId final String userId) {
+  // @formatter:off
+  public Response getUser(@PathParam("id") @ValidId final String userId,
+                          @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                          @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+    // @formatter:on
     logger.trace("Reading user {}", userId);
-    User userFromDb = usersAPI.getUser(userId);
+    User userFromDb = usersAPI.getUser(userId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
 
-    if (userFromDb != null) {
-      User user = resourceLocationService.addLocation(userFromDb, userId);
-      user = resourceLocationService.addRelationalEntitiesLocation(user);
-      return Response.ok(user).tag(user.getMeta().getVersion()).location(resourceLocationService.getLocation(userId)).build();
+    if (userFromDb == null) {
+      throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
     }
 
-    throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
+    User user = resourceLocationService.addLocation(userFromDb, userId);
+    user = resourceLocationService.addRelationalEntitiesLocation(user);
+    return Response.ok(user).tag(user.getMeta().getVersion()).location(resourceLocationService.getLocation(userId)).build();
   }
 
   @GET
   // @formatter:off
-  public Response getUsers(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndexParam,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
-      @QueryParam(FILTER_PARAM) final String filter) {
+  public Response getUsers(@QueryParam(START_INDEX_PARAM) @DefaultValue(DEFAULT_START_INDEX)  String startIndexParam,
+                           @QueryParam(COUNT_PARAM) @DefaultValue(DEFAULT_COUNT) String countParam,
+                           @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
+                           @QueryParam(FILTER_PARAM) final String filter,
+                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
     // @formatter:on
     logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
@@ -145,7 +152,7 @@ public class Users {
     }
 
     PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
-    PagedResult<User> users = usersAPI.getUsers(pageInfo, filter);
+    PagedResult<User> users = usersAPI.getUsers(pageInfo, filter, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
 
     List<User> usersToReturn = new ArrayList<>();
     for (User user : users.getResources()) {
@@ -154,20 +161,11 @@ public class Users {
       usersToReturn.add(user);
     }
 
-    // TODO maybe move this paging logic inside the PagedByX classes, what will remain here is whether to return paged by id or paged by index results
-    if (startId != null) {
-      if (usersToReturn.size() <= count) {
-        return Response
-            .ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM)).build();
-      }
-
-      int indexOfLastUser = usersToReturn.size() - 1;
-      User nextUser = usersToReturn.remove(indexOfLastUser);
-
-      return Response.ok(new PagedByIdentitySearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startId, nextUser.getId())).build();
-    }
-
-    return Response.ok(new PagedByIndexSearchResult<>(usersToReturn, users.getTotalResourceCount(), count, startIndex)).build();
+    return ListResponseBuilder.forUsers(usersToReturn)
+        .withPagingStartParameters(startId, startIndex)
+        .withRequestedCount(count)
+        .withTotalResultsCount(users.getTotalResourceCount())
+        .build();
   }
 
   @POST
@@ -247,6 +245,6 @@ public class Users {
   @POST
   @Path(".query")
   public Response queryUsers() {
-    return getUsers("0", "0", null, null);
+    return getUsers("0", "0", null, null, null, null);
   }
 }

@@ -3,6 +3,7 @@ package com.sap.scimono.callback.users;
 
 import java.util.Optional;
 
+import com.sap.scimono.api.request.RequestedResourceAttributes;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.User;
@@ -24,6 +25,14 @@ public interface UsersCallback {
   User getUser(final String userId);
 
   /**
+   * @param additionalAttributes additional attributes to be returned of excluded from the response
+   * @return the user with the specified userId or null if no such user exists
+   */
+  default User getUser(String userId, RequestedResourceAttributes additionalAttributes) {
+    return getUser(userId);
+  }
+
+  /**
    * Returns a page of users (limited by {@link SCIMConfigurationCallback#getMaxResourcesPerPage()}),
    * taking into account the specified filter and paging parameters.
    *
@@ -32,6 +41,16 @@ public interface UsersCallback {
    * @return a page of users or empty page if no users match the filter/paging criteria
    */
   PagedResult<User> getUsers(final PageInfo pageInfo, final String filter);
+
+  /**
+   * Returns a page of users (more info in {@link UsersCallback#getUsers(PageInfo, String)} ()}
+   * adding specifying additional attributes to be returned of excluded from the response
+   * @param additionalAttributes additional attributes to be returned of excluded from the response
+   * @return a page of users or empty page if no users match the filter/paging criteria
+   */
+  default PagedResult<User> getUsers(final PageInfo pageInfo, final String filter, RequestedResourceAttributes additionalAttributes) {
+    return getUsers(pageInfo, filter);
+  }
 
   /**
    * Creates a user with the provided attributes. The user object must have all mandatory attributes available,

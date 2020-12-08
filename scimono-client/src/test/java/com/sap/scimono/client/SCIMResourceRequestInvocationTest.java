@@ -12,8 +12,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 import javax.ws.rs.ProcessingException;
 import javax.ws.rs.client.ClientRequestFilter;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -23,7 +21,6 @@ import java.util.UUID;
 import static com.sap.scimono.client.query.ResourcePageQuery.identityPageQuery;
 import static com.sap.scimono.client.query.ResourcePageQuery.indexPageQuery;
 import static java.net.URLEncoder.encode;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static javax.ws.rs.HttpMethod.DELETE;
 import static javax.ws.rs.HttpMethod.GET;
 import static javax.ws.rs.HttpMethod.PATCH;
@@ -52,7 +49,8 @@ public class SCIMResourceRequestInvocationTest {
         readMultipleUsersInvocationWithIdentityPaging(),
         readMultipleUsersInvocationWithIdentityPagingAndFilter(),
         readMultipleUsersInvocationWithoutPaging(),
-        readMultipleUsersInvocationWithFilterAndWithoutPaging()
+        readMultipleUsersInvocationWithFilterAndWithoutPaging(),
+        readMultipleUsersInvocationWithRequestedAttributes()
     );
     // @formatter:on
   }
@@ -178,10 +176,9 @@ public class SCIMResourceRequestInvocationTest {
   private DynamicTest readAllUsersInvocation() {
     return dynamicTest("Read all Users invocation", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
-      assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=1&count=100", capturedAssertions)
-              .readAllUsers()
-      );
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=1&count=100", capturedAssertions);
+
+      assertThrows(ProcessingException.class, userRequest::readAllUsers);
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
     });
@@ -191,11 +188,10 @@ public class SCIMResourceRequestInvocationTest {
     return dynamicTest("Read all Users with filter invocation", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
       String filter = "userName eq \"something\"";
+      String path = DEFAULT_URL + "/Users?startIndex=1&count=100&filter=" + encode(filter, "UTF-8");
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(path, capturedAssertions);
 
-      assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=1&count=100&filter=" + encode(filter, "UTF-8"), capturedAssertions)
-              .readAllUsers(filter)
-      );
+      assertThrows(ProcessingException.class, () -> userRequest.readAllUsers(filter));
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
     });
@@ -204,9 +200,26 @@ public class SCIMResourceRequestInvocationTest {
   private DynamicTest readMultipleUsersInvocationDefaultPaging() {
     return dynamicTest("Read multiple Users invocation with default paging", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
+      String path = DEFAULT_URL + "/Users?startIndex=1&count=100";
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(path, capturedAssertions);
+
+      assertThrows(ProcessingException.class, userRequest::readMultipleUsers);
+      assertFalse(capturedAssertions.isEmpty());
+      assertAll(capturedAssertions);
+    });
+  }
+
+  private DynamicTest readMultipleUsersInvocationWithRequestedAttributes() {
+    return dynamicTest("Read multiple Users invocation with requested and excluded attributes", () -> {
+      Collection<Executable> capturedAssertions = new ArrayList<>();
+      String expectedFilter = DEFAULT_URL + "/Users?attributes=displayName&excludedAttributes=groups";
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(expectedFilter, capturedAssertions);
+
       assertThrows(ProcessingException.class,
-          ()-> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=1&count=100", capturedAssertions)
-              .readMultipleUsers()
+          ()-> userRequest.readMultipleUsers(RequestDetails.builder()
+              .requestAttribute("displayName")
+              .excludeAttribute("groups")
+              .build())
       );
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
@@ -217,11 +230,10 @@ public class SCIMResourceRequestInvocationTest {
     return dynamicTest("Read multiple Users invocation with default paging and filter", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
       String filter = "userName eq \"something\"";
+      String path = DEFAULT_URL + "/Users?startIndex=1&count=100&filter=" + encode(filter, "UTF-8");
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(path, capturedAssertions);
 
-      assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=1&count=100&filter=" + encode(filter, "UTF-8"), capturedAssertions)
-              .readMultipleUsers(filter)
-      );
+      assertThrows(ProcessingException.class, () -> userRequest.readMultipleUsers(filter));
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
     });
@@ -231,10 +243,10 @@ public class SCIMResourceRequestInvocationTest {
   private DynamicTest readMultipleUsersInvocationWithIndexPaging() {
     return dynamicTest("Read multiple Users invocation with index paging", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
-      assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=4&count=50", capturedAssertions)
-              .readMultipleUsers(indexPageQuery().withStartIndex(4).withCount(50))
-      );
+      String path = DEFAULT_URL + "/Users?startIndex=4&count=50";
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(path, capturedAssertions);
+
+      assertThrows(ProcessingException.class, () -> userRequest.readMultipleUsers(indexPageQuery().withStartIndex(4).withCount(50)));
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
     });
@@ -244,11 +256,10 @@ public class SCIMResourceRequestInvocationTest {
     return dynamicTest("Read multiple Users invocation with index paging and filter", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
       String filter = "userName eq \"something\"";
+      String path = DEFAULT_URL + "/Users?startIndex=4&count=50&filter=" + encode(filter, "UTF-8");
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(path, capturedAssertions);
 
-      assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startIndex=4&count=50&filter=" + encode(filter, "UTF-8"), capturedAssertions)
-              .readMultipleUsers(indexPageQuery().withStartIndex(4).withCount(50), filter)
-      );
+      assertThrows(ProcessingException.class, () -> userRequest.readMultipleUsers(indexPageQuery().withStartIndex(4).withCount(50), filter));
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
     });
@@ -257,10 +268,10 @@ public class SCIMResourceRequestInvocationTest {
   private DynamicTest readMultipleUsersInvocationWithIdentityPaging() {
     return dynamicTest("Read multiple Users invocation with identity paging", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
-      assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startId=something&count=50", capturedAssertions)
-              .readMultipleUsers(identityPageQuery().withStartId("something").withCount(50))
-      );
+      String path = DEFAULT_URL + "/Users?startId=something&count=50";
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(path, capturedAssertions);
+
+      assertThrows(ProcessingException.class, () -> userRequest.readMultipleUsers(identityPageQuery().withStartId("something").withCount(50)));
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
     });
@@ -270,10 +281,11 @@ public class SCIMResourceRequestInvocationTest {
     return dynamicTest("Read multiple Users invocation with identity paging and filter", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
       String filter = "userName eq \"something\"";
+      String path = DEFAULT_URL + "/Users?startId=something&count=50&filter=" + encode(filter, "UTF-8");
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(path, capturedAssertions);
 
       assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?startId=something&count=50&filter=" + encode(filter, "UTF-8"), capturedAssertions)
-              .readMultipleUsers(identityPageQuery().withStartId("something").withCount(50), filter)
+          () -> userRequest.readMultipleUsers(identityPageQuery().withStartId("something").withCount(50), filter)
       );
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
@@ -283,12 +295,9 @@ public class SCIMResourceRequestInvocationTest {
   private DynamicTest readMultipleUsersInvocationWithoutPaging() {
     return dynamicTest("Read multiple Users invocation without paging", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
-      String filter = "userName eq \"something\"";
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users", capturedAssertions);
 
-      assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users", capturedAssertions)
-              .readMultipleUsersWithoutPaging()
-      );
+      assertThrows(ProcessingException.class, userRequest::readMultipleUsersWithoutPaging);
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
     });
@@ -298,11 +307,10 @@ public class SCIMResourceRequestInvocationTest {
     return dynamicTest("Read multiple Users invocation with filter and without paging", () -> {
       Collection<Executable> capturedAssertions = new ArrayList<>();
       String filter = "userName eq \"something\"";
+      String path = DEFAULT_URL + "/Users?filter=" + encode(filter, "UTF-8");
+      UserRequest userRequest = scimRequestConfigForReadUsersInvocation(path, capturedAssertions);
 
-      assertThrows(ProcessingException.class,
-          () -> scimRequestConfigForReadUsersInvocation(DEFAULT_URL + "/Users?filter=" + encode(filter, "UTF-8"), capturedAssertions)
-              .readMultipleUsersWithoutPaging(filter)
-      );
+      assertThrows(ProcessingException.class, () -> userRequest.readMultipleUsersWithoutPaging(filter));
       assertFalse(capturedAssertions.isEmpty());
       assertAll(capturedAssertions);
     });

@@ -1,5 +1,12 @@
 package com.sap.scimono.client;
 
+import static com.sap.scimono.api.API.GROUPS;
+import static com.sap.scimono.client.query.ResourcePageQuery.indexPageQuery;
+
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
+import javax.ws.rs.core.Response;
+
 import com.sap.scimono.client.query.IdentityPageQuery;
 import com.sap.scimono.client.query.IndexPageQuery;
 import com.sap.scimono.entity.Group;
@@ -7,14 +14,8 @@ import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.patch.PatchBody;
 
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
-
-import static com.sap.scimono.api.API.GROUPS;
-
 public class GroupRequest {
-  private SCIMResourceRequest<Group> resourceRequestDelegate;
+  private final SCIMResourceRequest<Group> resourceRequestDelegate;
 
   public GroupRequest(WebTarget targetSystem, SCIMRequest scimRequest) {
     this.resourceRequestDelegate = new SCIMResourceRequest<>(targetSystem.path(GROUPS), scimRequest, Group.class);
@@ -25,51 +26,75 @@ public class GroupRequest {
   }
 
   public SCIMResponse<Group> readSingleGroup(String id) {
-    return resourceRequestDelegate.readSingleResource(id);
+    return readSingleGroup(id, RequestDetails.DEFAULT);
   }
 
   public SCIMResponse<PagedByIndexSearchResult<Group>> readAllGroups() {
-    return resourceRequestDelegate.readAllResources(new GenericType<PagedByIndexSearchResult<Group>>(){});
+    return readAllGroups(RequestDetails.DEFAULT);
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<Group>> readAllGroups(String filter) {
-    return resourceRequestDelegate.readAllResources(new GenericType<PagedByIndexSearchResult<Group>>(){}, filter);
+    return readAllGroups(RequestDetails.builder().withFilter(filter).build());
   }
 
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups() {
-    return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<Group>>(){});
+    return readMultipleGroups(RequestDetails.builder().withPageQuery(indexPageQuery()).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups(String filter) {
-    return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<Group>>(){}, filter);
+    return readMultipleGroups(RequestDetails.builder().withPageQuery(indexPageQuery()).withFilter(filter).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIdentitySearchResult<Group>> readMultipleGroups(IdentityPageQuery identityPageQuery) {
-    return resourceRequestDelegate.readMultipleResources(identityPageQuery, new GenericType<PagedByIdentitySearchResult<Group>>(){});
+    return readMultipleGroupsById(RequestDetails.builder().withPageQuery(identityPageQuery).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIdentitySearchResult<Group>> readMultipleGroups(IdentityPageQuery identityPageQuery, String filter) {
-    return resourceRequestDelegate.readMultipleResources(identityPageQuery, filter, new GenericType<PagedByIdentitySearchResult<Group>>(){});
+    return readMultipleGroupsById(RequestDetails.builder().withPageQuery(identityPageQuery).withFilter(filter).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups(IndexPageQuery indexPageQuery) {
-    return resourceRequestDelegate.readMultipleResources(indexPageQuery, new GenericType<PagedByIndexSearchResult<Group>>(){});
+    return readMultipleGroups(RequestDetails.builder().withPageQuery(indexPageQuery).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups(IndexPageQuery indexPageQuery, String filter) {
-    return resourceRequestDelegate.readMultipleResources(indexPageQuery, filter, new GenericType<PagedByIndexSearchResult<Group>>(){});
+    return readMultipleGroups(RequestDetails.builder().withPageQuery(indexPageQuery).withFilter(filter).build());
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroupsWithoutPaging() {
-    return resourceRequestDelegate.readMultipleResourcesWithoutPaging(new GenericType<PagedByIndexSearchResult<Group>>(){});
+    return readMultipleGroups(RequestDetails.DEFAULT);
   }
 
+  @Deprecated
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroupsWithoutPaging(String filter) {
-    return resourceRequestDelegate.readMultipleResourcesWithoutPaging(new GenericType<PagedByIndexSearchResult<Group>>(){}, filter);
+    return readMultipleGroups(RequestDetails.builder().withFilter(filter).build());
   }
 
   public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroupsIndexed(Response response) {
     return resourceRequestDelegate.readMultipleResourcesIndexed(response, new GenericType<PagedByIndexSearchResult<Group>>(){});
+  }
+
+  public SCIMResponse<PagedByIndexSearchResult<Group>> readAllGroups(RequestDetails requestDetails) {
+    return resourceRequestDelegate.readAllResources(new GenericType<PagedByIndexSearchResult<Group>>(){}, requestDetails);
+  }
+
+  public SCIMResponse<PagedByIndexSearchResult<Group>> readMultipleGroups(RequestDetails requestDetails) {
+    return resourceRequestDelegate.readMultipleResources(new GenericType<PagedByIndexSearchResult<Group>>(){}, requestDetails);
+  }
+
+  public SCIMResponse<PagedByIdentitySearchResult<Group>> readMultipleGroupsById(RequestDetails requestDetails) {
+    return resourceRequestDelegate.readMultipleResourcesById(new GenericType<PagedByIdentitySearchResult<Group>>(){}, requestDetails);
+  }
+
+  public SCIMResponse<Group> readSingleGroup(String id, RequestDetails requestDetails) {
+    return resourceRequestDelegate.readSingleResource(id, requestDetails);
   }
 
   public SCIMResponse<Group> updateGroup(Group group) {

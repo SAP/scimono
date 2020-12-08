@@ -27,10 +27,14 @@ import static java.util.Objects.hash;
 
 import java.io.Serializable;
 import java.time.Instant;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -52,6 +56,7 @@ public final class Meta implements Serializable {
   private final String version;
   private final Set<String> attributes;
   private final String resourceType;
+  private final Map<String, Object> additionalAttributes;
 
   @JsonCreator
   public Meta(@JsonProperty(META_CREATED_FIELD) final Instant created, @JsonProperty(META_LAST_MODIFIED_FIELD) final Instant lastModified,
@@ -63,6 +68,7 @@ public final class Meta implements Serializable {
     this.version = version;
     this.attributes = attributes;
     this.resourceType = resourceType;
+    this.additionalAttributes = new HashMap<>();
   }
 
   private Meta(final Builder builder) {
@@ -72,6 +78,7 @@ public final class Meta implements Serializable {
     location = builder.location;
     version = builder.version;
     resourceType = builder.resourceType;
+    additionalAttributes = builder.additionalAttributes;
   }
 
   /**
@@ -119,10 +126,16 @@ public final class Meta implements Serializable {
    * @return the creation date
    */
   public Instant getCreated() {
-    if (created != null) {
-      return created;
+    return created;
+  }
+
+  @JsonAnySetter
+  void handleAdditionalMetaAttributes(String attrName, Object attrValue) {
+    if (attrName == null || attrValue == null) {
+      return;
     }
-    return null;
+
+    additionalAttributes.put(attrName, attrValue);
   }
 
   /**
@@ -131,10 +144,7 @@ public final class Meta implements Serializable {
    * @return the last modified date
    */
   public Instant getLastModified() {
-    if (lastModified != null) {
-      return lastModified;
-    }
-    return null;
+    return lastModified;
   }
 
   /**
@@ -144,6 +154,15 @@ public final class Meta implements Serializable {
    */
   public String getResourceType() {
     return resourceType;
+  }
+
+  /**
+   * Gets the additional meta attributes provided by service provider
+   * @return attributes
+   */
+  @JsonAnyGetter
+  public Map<String, Object> getAdditionalAttributes() {
+    return additionalAttributes;
   }
 
   @Override
@@ -199,6 +218,7 @@ public final class Meta implements Serializable {
     private String version;
     private Set<String> attributes = new HashSet<>();
     private String resourceType;
+    private Map<String, Object> additionalAttributes = new HashMap<>();
 
     /**
      * Constructs a new builder with the created and last modified time set to the current time
@@ -232,6 +252,7 @@ public final class Meta implements Serializable {
         version = meta.version;
         attributes = meta.attributes;
         resourceType = meta.resourceType;
+        additionalAttributes = meta.additionalAttributes;
       }
     }
 
@@ -287,6 +308,31 @@ public final class Meta implements Serializable {
      */
     public Builder setLastModified(final Instant lastModified) {
       this.lastModified = lastModified;
+      return this;
+    }
+
+    /**
+     * Add additional meta attribute provided by service provider.
+     *
+     * @param attrName attribute name
+     * @param attribute value
+     * @return the builder itself
+     */
+    public Builder addAdditionalAttribute(final String attrName, final Object attribute) {
+      if (attrName == null || attribute == null) {
+        return this;
+      }
+
+      additionalAttributes.put(attrName, attribute);
+      return this;
+    }
+
+    public Builder addAdditionalAttributes(Map<String, Object> attributes) {
+      if (attributes == null) {
+        return this;
+      }
+
+      attributes.forEach(this::addAdditionalAttribute);
       return this;
     }
 

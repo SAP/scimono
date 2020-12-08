@@ -2,16 +2,16 @@
 package com.sap.scimono.api;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+import static com.sap.scimono.api.API.ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.COUNT_PARAM;
+import static com.sap.scimono.api.API.EXCLUDED_ATTRIBUTES_PARAM;
 import static com.sap.scimono.api.API.FILTER_PARAM;
 import static com.sap.scimono.api.API.GROUPS;
 import static com.sap.scimono.api.API.START_ID_PARAM;
 import static com.sap.scimono.api.API.START_INDEX_PARAM;
 import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
-import static com.sap.scimono.entity.paging.PagedByIdentitySearchResult.PAGINATION_BY_ID_END_PARAM;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
-import static com.sap.scimono.helper.Strings.isNotNullOrEmpty;
 
 import java.net.URI;
 import java.time.Instant;
@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
+import com.sap.scimono.api.request.RequestedResourceAttributesParser;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.groups.GroupsCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
@@ -47,8 +48,6 @@ import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.paging.PageInfo;
-import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
-import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidId;
@@ -85,24 +84,32 @@ public class Groups {
 
   @GET
   @Path("{id}")
-  public Response getGroup(@PathParam("id") @ValidId final String groupId) {
+  // @formatter:off
+  public Response getGroup(@PathParam("id") @ValidId final String groupId,
+                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+    // @formatter:on
     logger.trace("Reading group {}", groupId);
+    Group groupFromDb = groupAPI.getGroup(groupId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
 
-    Group groupFromDb = groupAPI.getGroup(groupId);
-
-    if (groupFromDb != null) {
-      Group group = resourceLocationService.addLocation(groupFromDb, groupId);
-      group = resourceLocationService.addMembersLocation(group);
-      return Response.ok(group).tag(group.getMeta().getVersion()).location(resourceLocationService.getLocation(groupId)).build();
+    if (groupFromDb == null) {
+      throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);
     }
 
-    throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);
+    Group group = resourceLocationService.addLocation(groupFromDb, groupId);
+    group = resourceLocationService.addMembersLocation(group);
+    return Response.ok(group).tag(group.getMeta().getVersion()).location(resourceLocationService.getLocation(groupId)).build();
   }
 
   @GET
-  public Response getGroups(@DefaultValue(DEFAULT_START_INDEX) @QueryParam(START_INDEX_PARAM) String startIndexParam,
-      @DefaultValue(DEFAULT_COUNT) @QueryParam(COUNT_PARAM) String countParam, @QueryParam(START_ID_PARAM) @ValidStartId String startId,
-      @QueryParam(FILTER_PARAM) final String filter) {
+  // @formatter:off
+  public Response getGroups(@QueryParam(START_INDEX_PARAM) @DefaultValue(DEFAULT_START_INDEX) String startIndexParam,
+                            @QueryParam(COUNT_PARAM) @DefaultValue(DEFAULT_COUNT) String countParam,
+                            @QueryParam(START_ID_PARAM) @ValidStartId String startId,
+                            @QueryParam(FILTER_PARAM) final String filter,
+                            @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                            @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+    // @formatter:on
     logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
     int startIndex = PagingParamsParser.parseStartIndex(startIndexParam);
@@ -115,7 +122,7 @@ public class Groups {
     }
 
     PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
-    PagedResult<Group> groups = groupAPI.getGroups(pageInfo, filter);
+    PagedResult<Group> groups = groupAPI.getGroups(pageInfo, filter, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
 
     List<Group> groupsToReturn = new ArrayList<>();
     for (Group group : groups.getResources()) {
@@ -124,21 +131,11 @@ public class Groups {
       groupsToReturn.add(group);
     }
 
-    if (isNotNullOrEmpty(startId)) {
-      if (groupsToReturn.size() <= count) {
-        return Response
-            .ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, PAGINATION_BY_ID_END_PARAM))
-            .build();
-      }
-
-      int indexOfLastGroup = groupsToReturn.size() - 1;
-      Group nextGroup = groupsToReturn.remove(indexOfLastGroup);
-
-      return Response.ok(new PagedByIdentitySearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startId, nextGroup.getId()))
-          .build();
-    }
-
-    return Response.ok(new PagedByIndexSearchResult<>(groupsToReturn, groups.getTotalResourceCount(), count, startIndex)).build();
+    return ListResponseBuilder.forGroups(groupsToReturn)
+        .withPagingStartParameters(startId, startIndex)
+        .withRequestedCount(count)
+        .withTotalResultsCount(groups.getTotalResourceCount())
+        .build();
   }
 
   @POST

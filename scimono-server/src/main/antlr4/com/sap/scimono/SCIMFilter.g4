@@ -21,7 +21,22 @@ attrExp:
 ;
 
 valuePath:
-    attrPath SP* LEFT_BRACKET valFilter SP* RIGHT_BRACKET SUBATTRNAME?
+    attrPath SP* LEFT_BRACKET SP* (valFilter | valExpression) SP* RIGHT_BRACKET SUBATTRNAME?
+;
+
+valExpression:
+  pagingQuery
+  | valFilter SP* '&' SP* pagingQuery
+  | pagingQuery SP* '&' SP* valFilter
+
+;
+
+pagingQuery:
+    PAGING_ASSIGNMENT ('&'PAGING_ASSIGNMENT)*?
+;
+
+PAGING_ASSIGNMENT:
+    PAGING_PARAMS '=' UNRESERVED+
 ;
 
 valFilter:
@@ -76,6 +91,12 @@ fragment SUB_DELIMITERS:
     | ','
     | ';'
     | '='
+;
+
+PAGING_PARAMS:
+    'startIndex'
+    | 'startId'
+    | 'count'
 ;
 
 OR:
