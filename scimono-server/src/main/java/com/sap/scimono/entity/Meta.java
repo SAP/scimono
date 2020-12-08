@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonAnySetter;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -125,10 +126,16 @@ public final class Meta implements Serializable {
    * @return the creation date
    */
   public Instant getCreated() {
-    if (created != null) {
-      return created;
+    return created;
+  }
+
+  @JsonAnySetter
+  void handleAdditionalMetaAttributes(String attrName, Object attrValue) {
+    if (attrName == null || attrValue == null) {
+      return;
     }
-    return null;
+
+    additionalAttributes.put(attrName, attrValue);
   }
 
   /**
@@ -137,10 +144,7 @@ public final class Meta implements Serializable {
    * @return the last modified date
    */
   public Instant getLastModified() {
-    if (lastModified != null) {
-      return lastModified;
-    }
-    return null;
+    return lastModified;
   }
 
   /**

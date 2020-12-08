@@ -21,7 +21,7 @@ attrExp:
 ;
 
 valuePath:
-    attrPath SP* LEFT_BRACKET (valFilter | valExpression) RIGHT_BRACKET SUBATTRNAME?
+    attrPath SP* LEFT_BRACKET SP* (valFilter | valExpression) SP* RIGHT_BRACKET SUBATTRNAME?
 ;
 
 valExpression:

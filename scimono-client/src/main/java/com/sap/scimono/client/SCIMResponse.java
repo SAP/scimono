@@ -5,10 +5,10 @@ import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.Response;
 
 public class SCIMResponse<T> {
-  private ResponseEntityReader<T> responseEntityReader;
+  private final ResponseEntityReader<T> responseEntityReader;
 
-  private Response response;
-  private ActionResponseStatusConfig responseStatusConfig;
+  private final Response response;
+  private final ActionResponseStatusConfig responseStatusConfig;
 
   private SCIMResponse(ResponseEntityReader<T> responseEntityReader, Response response, ActionResponseStatusConfig responseStatusConfig) {
     this.responseEntityReader = responseEntityReader;
