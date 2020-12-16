@@ -191,6 +191,7 @@ public class Users {
     User createdUser = usersAPI.createUser(userWithMeta);
 
     createdUser = resourceLocationService.addLocation(createdUser, createdUser.getId());
+    createdUser = resourceLocationService.addRelationalEntitiesLocation(createdUser);
 
     logger.trace("Created user {} with version {}", createdUser.getId(), version);
     return Response.created(resourceLocationService.getLocation(createdUser.getId())).tag(version).entity(createdUser).build();
@@ -214,6 +215,7 @@ public class Users {
     userCustomAttributesValidator.validate(updatedUser);
 
     updatedUser = usersAPI.updateUser(updatedUser);
+    updatedUser = resourceLocationService.addRelationalEntitiesLocation(updatedUser);
 
     logger.trace("Updated user {}, new version is {}", userId, newVersion);
     return Response.ok(updatedUser).tag(newVersion).location(userLocation).build();
