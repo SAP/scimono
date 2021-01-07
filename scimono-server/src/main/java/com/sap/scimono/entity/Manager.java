@@ -87,7 +87,6 @@ public final class Manager implements Serializable {
     final int prime = 31;
     int result = 1;
     result = prime * result + hash(displayName);
-    result = prime * result + hash(reference);
     result = prime * result + hash(value);
     return result;
   }
@@ -105,9 +104,6 @@ public final class Manager implements Serializable {
     }
     Manager other = (Manager) obj;
     if (!Objects.equals(displayName, other.displayName)) {
-      return false;
-    }
-    if (!Objects.equals(reference, other.reference)) {
       return false;
     }
     return Objects.equals(value, other.value);
