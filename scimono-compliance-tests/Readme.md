@@ -43,11 +43,11 @@ Values for the following command line arguments: `oauth.clientId`;  `oauth.secre
 java -jar scimono-compliance-tests-${version}-shaded.jar scim.service.url=http://localhost:8080/scim/v2 auth.type=Oauth oauth.grant=client_credentials oauth.clientId=admin oauth.secret=secret oauth.service.url=http://localhost:8080/oauth/token
 ```
 
-### Bearer Access Token Authentication
+### Access Token Authentication
 
 If you would like to use an access token retrieved by an OAuth grant that is not directly supported by this library, you can simply pass in a valid access token that will be prefixed with `Bearer` and included in the Authorization header of the SCIM requests.   
 
-Values for the command line arguments  `bearer.token` must be provided alongside with `auth.type=Token` parameter. For example:
+Values for the command line arguments  `access.token` must be provided alongside with `auth.type=Token` parameter. For example:
 ```
 java -jar scimono-compliance-tests-${version}-shaded.jar scim.service.url=http://localhost:8080/scim/v2 auth.type=Token access.token=<access_token>
 ```
