@@ -58,6 +58,7 @@ import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
 import com.sap.scimono.helper.ReadOnlyAttributesEraser;
 import com.sap.scimono.helper.ResourceLocationService;
+import com.sap.scimono.helper.UnnecessarySchemasEraser;
 
 @Path(API.GROUPS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -147,6 +148,9 @@ public class Groups {
     ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     newGroup = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newGroup);
 
+    UnnecessarySchemasEraser<Group> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
+    newGroup = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(newGroup, Group.SCHEMA);
+
     String version = UUID.randomUUID().toString();
     Meta groupMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_GROUP).build();
     Group.Builder groupWithMetaBuilder = newGroup.builder().setMeta(groupMeta);
@@ -170,6 +174,9 @@ public class Groups {
   public Response updateGroup(@PathParam("id") @ValidId final String groupId, @Valid Group groupToUpdate) {
     ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     groupToUpdate = readOnlyAttributesEraser.eraseAllFormCustomExtensions(groupToUpdate);
+
+    UnnecessarySchemasEraser<Group> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
+    groupToUpdate = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(groupToUpdate, Group.SCHEMA);
 
     String newVersion = UUID.randomUUID().toString();
     Meta.Builder lastUpdatedMeta = new Meta.Builder(groupToUpdate.getMeta());
