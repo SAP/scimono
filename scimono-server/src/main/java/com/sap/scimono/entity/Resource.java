@@ -343,6 +343,17 @@ public abstract class Resource<T> implements Serializable {
       extensions.remove(urn);
       return this;
     }
+    
+    /**
+     * set Schemas for the User
+     *
+     * @param schemas to set
+     * @return the builder itself
+     */
+    public Builder<T> setSchemas(final Set<String> schemas) {
+      this.schemas = schemas;
+      return this;
+    }
 
     /**
      * Builds the Object of the Builder

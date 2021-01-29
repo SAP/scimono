@@ -23,6 +23,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.sap.scimono.entity.schema.validation.ValidSchemaId;
 import com.sap.scimono.helper.ResourceLocationService;
+import com.sap.scimono.helper.UnnecessarySchemasEraser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,14 +89,17 @@ public class Schemas {
   public Response createSchema(@Valid @ValidSchema final Schema newSchema) {
     validateSchema(newSchema);
 
-    URI location = resourceLocationService.getLocation(newSchema.getId());
+    UnnecessarySchemasEraser<Schema> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
+    Schema schema = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(newSchema, Schema.SCHEMA);
+
+    URI location = resourceLocationService.getLocation(schema.getId());
     String version = UUID.randomUUID().toString();
     Meta schemaMeta = new Meta.Builder().setResourceType(Schema.RESOURCE_TYPE_SCHEMA).setLocation(location.toString()).setVersion(version).build();
-    Schema schemaWithMeta = newSchema.builder().setMeta(schemaMeta).build();
+    Schema schemaWithMeta = schema.builder().setMeta(schemaMeta).build();
 
     schemaAPI.createCustomSchema(schemaWithMeta);
 
-    logger.trace("Created schema {} with version {}", newSchema.getId(), version);
+    logger.trace("Created schema {} with version {}", schema.getId(), version);
     return Response.created(location).tag(version).entity(schemaWithMeta).build();
   }
 

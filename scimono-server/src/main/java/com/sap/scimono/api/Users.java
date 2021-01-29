@@ -62,6 +62,7 @@ import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
 import com.sap.scimono.helper.ReadOnlyAttributesEraser;
 import com.sap.scimono.helper.ResourceLocationService;
+import com.sap.scimono.helper.UnnecessarySchemasEraser;
 
 @Path(USERS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -177,10 +178,13 @@ public class Users {
     ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newUser);
 
+    UnnecessarySchemasEraser<User> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
+    User user = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(userWithoutReadOnlyAttributes, User.SCHEMA);
+
     String version = UUID.randomUUID().toString();
     Meta userMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_USER).build();
 
-    User.Builder userWithMetaBuilder = userWithoutReadOnlyAttributes.builder().setMeta(userMeta);
+    User.Builder userWithMetaBuilder = user.builder().setMeta(userMeta);
     usersAPI.generateId().ifPresent(userWithMetaBuilder::setId);
 
     User userWithMeta = userWithMetaBuilder.build();
@@ -202,6 +206,9 @@ public class Users {
   public Response updateUser(@PathParam("id") @ValidId final String userId, @Valid final User userToUpdate) {
     ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
     User userWithoutReadOnlyAttributes = readOnlyAttributesEraser.eraseAllFormCustomExtensions(userToUpdate);
+    
+    UnnecessarySchemasEraser<User> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
+    User user = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(userWithoutReadOnlyAttributes, User.SCHEMA);
 
     String newVersion = UUID.randomUUID().toString();
 
@@ -209,7 +216,7 @@ public class Users {
 
     URI userLocation = resourceLocationService.getLocation(userId);
     lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(userLocation.toString()).setResourceType(RESOURCE_TYPE_USER);
-    User updatedUser = userWithoutReadOnlyAttributes.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
+    User updatedUser = user.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
 
     ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI, resourceTypesAPI);
     userCustomAttributesValidator.validate(updatedUser);
