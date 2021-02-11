@@ -1,6 +1,5 @@
 package com.sap.scimono.client;
 
-import com.sap.scimono.api.helper.JacksonResolver;
 import com.sap.scimono.client.authentication.OauthClientCredentialsAuthenticator;
 import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
 
@@ -121,7 +120,7 @@ public class SCIMClientService {
     }
 
     private List<Object> getDefaultResolvers() {
-      return new ArrayList<>(Collections.singletonList(new JacksonResolver()));
+      return new ArrayList<>(Collections.singletonList(new ClientJacksonResolver()));
     }
 
     private void registerResolvers(Client client) {
