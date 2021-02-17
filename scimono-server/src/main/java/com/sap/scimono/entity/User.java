@@ -18,6 +18,7 @@
 
 package com.sap.scimono.entity;
 
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.ACTIVE_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.ADDRESSES_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.EMAILS_FIELD;
@@ -27,6 +28,7 @@ import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.IMS
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.LOCALE_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.NAME_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.NICK_NAME_FIELD;
+import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.PASSWORD_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.PHONE_NUMBERS_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.PHOTOS_FIELD;
 import static com.sap.scimono.entity.definition.CoreUserAttributes.Constants.PREFERRED_LANGUAGE_FIELD;
@@ -105,7 +107,10 @@ public final class User extends Resource<User> {
   private final String locale;
   private final String timezone;
   private final Boolean active;
+
+  @JsonProperty(access = WRITE_ONLY)
   private final String password;
+
   @ValidEmails
   private final List<Email> emails;
   @Valid
@@ -126,16 +131,34 @@ public final class User extends Resource<User> {
   private final List<X509Certificate> x509Certificates;
 
   @JsonCreator
-  private User(@JsonProperty(ID_FIELD) final String id, @JsonProperty(EXTERNAL_ID_FIELD) final String externalId, @JsonProperty(META_FIELD) final Meta meta,
-      @JsonProperty(value = SCHEMAS_FIELD, required = true) final Set<String> schemas, @JsonProperty(value = USER_NAME_FIELD, required = true) final String userName,
-      @JsonProperty(NAME_FIELD) final Name name, @JsonProperty(DISPLAY_NAME_FIELD) final String displayName, @JsonProperty(NICK_NAME_FIELD) final String nickName,
-      @JsonProperty(PROFILE_URL_FIELD) final String profileUrl, @JsonProperty(TITLE_FIELD) final String title, @JsonProperty(USER_TYPE_FIELD) final String userType,
-      @JsonProperty(PREFERRED_LANGUAGE_FIELD) final String preferredLanguage, @JsonProperty(LOCALE_FIELD) final String locale,
-      @JsonProperty(TIMEZONE_FIELD) final String timezone, @JsonProperty(ACTIVE_FIELD) final Boolean active, @JsonProperty(EMAILS_FIELD) final List<Email> emails,
-      @JsonProperty(PHONE_NUMBERS_FIELD) final List<PhoneNumber> phoneNumbers, @JsonProperty(IMS_FIELD) final List<Im> ims,
-      @JsonProperty(PHOTOS_FIELD) final List<Photo> photos, @JsonProperty(ADDRESSES_FIELD) final List<Address> addresses,
-      @JsonProperty(GROUPS_FIELD) final List<GroupRef> groups, @JsonProperty(ENTITLEMENTS_FIELD) final List<Entitlement> entitlements,
-      @JsonProperty(ROLES_FIELD) final List<Role> roles, @JsonProperty(X509_CERTIFICATES_FIELD) final List<X509Certificate> x509Certificates) {
+  private User(
+      // @formatter:off
+      @JsonProperty(ID_FIELD) final String id,
+      @JsonProperty(EXTERNAL_ID_FIELD) final String externalId,
+      @JsonProperty(META_FIELD) final Meta meta,
+      @JsonProperty(value = SCHEMAS_FIELD, required = true) final Set<String> schemas,
+      @JsonProperty(value = USER_NAME_FIELD, required = true) final String userName,
+      @JsonProperty(NAME_FIELD) final Name name,
+      @JsonProperty(DISPLAY_NAME_FIELD) final String displayName,
+      @JsonProperty(NICK_NAME_FIELD) final String nickName,
+      @JsonProperty(PROFILE_URL_FIELD) final String profileUrl,
+      @JsonProperty(TITLE_FIELD) final String title,
+      @JsonProperty(USER_TYPE_FIELD) final String userType,
+      @JsonProperty(PREFERRED_LANGUAGE_FIELD) final String preferredLanguage,
+      @JsonProperty(LOCALE_FIELD) final String locale,
+      @JsonProperty(TIMEZONE_FIELD) final String timezone,
+      @JsonProperty(ACTIVE_FIELD) final Boolean active,
+      @JsonProperty(PASSWORD_FIELD) final String password,
+      @JsonProperty(EMAILS_FIELD) final List<Email> emails,
+      @JsonProperty(PHONE_NUMBERS_FIELD) final List<PhoneNumber> phoneNumbers,
+      @JsonProperty(IMS_FIELD) final List<Im> ims,
+      @JsonProperty(PHOTOS_FIELD) final List<Photo> photos,
+      @JsonProperty(ADDRESSES_FIELD) final List<Address> addresses,
+      @JsonProperty(GROUPS_FIELD) final List<GroupRef> groups,
+      @JsonProperty(ENTITLEMENTS_FIELD) final List<Entitlement> entitlements,
+      @JsonProperty(ROLES_FIELD) final List<Role> roles,
+      @JsonProperty(X509_CERTIFICATES_FIELD) final List<X509Certificate> x509Certificates) {
+    // @formatter:on
     super(id, externalId, meta, schemas);
     this.userName = userName != null ? userName : "";
     this.name = name;
@@ -148,6 +171,7 @@ public final class User extends Resource<User> {
     this.locale = locale;
     this.timezone = timezone;
     this.active = active;
+    this.password = password;
 
     this.emails = sameOrEmpty(emails);
     this.phoneNumbers = sameOrEmpty(phoneNumbers);
@@ -158,8 +182,6 @@ public final class User extends Resource<User> {
     this.entitlements = sameOrEmpty(entitlements);
     this.roles = sameOrEmpty(roles);
     this.x509Certificates = sameOrEmpty(x509Certificates);
-
-    password = null;
   }
 
   private User(final Builder builder) {
@@ -332,9 +354,6 @@ public final class User extends Resource<User> {
    * <p>
    * For more detailed information please look at the <a href="http://tools.ietf.org/html/draft-ietf-scim-core-schema-02#section-6">SCIM core schema
    * 2.0, section 6</a>
-   * </p>
-   * <p>
-   * client info: if the actual user is loaded from the OSIAM server the password of the user will always be null
    * </p>
    *
    * @return the password of the {@link User}

@@ -1,0 +1,29 @@
+package com.sap.scimono.client;
+
+import static com.fasterxml.jackson.annotation.JsonProperty.Access.READ_WRITE;
+import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+
+import javax.ws.rs.Consumes;
+import javax.ws.rs.Produces;
+import javax.ws.rs.ext.ContextResolver;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.sap.scimono.api.helper.ObjectMapperFactory;
+import com.sap.scimono.entity.User;
+
+@Consumes(APPLICATION_JSON_SCIM)
+@Produces(APPLICATION_JSON_SCIM)
+public class ClientJacksonResolver implements ContextResolver<ObjectMapper> {
+  @Override
+  public ObjectMapper getContext(Class<?> type) {
+    ObjectMapper mapper = ObjectMapperFactory.createObjectMapper();
+    mapper.addMixIn(User.class, UserWithSerializablePassword.class);
+    return mapper;
+  }
+
+  private static class UserWithSerializablePassword {
+    @JsonProperty(access = READ_WRITE)
+    private String password;
+  }
+}

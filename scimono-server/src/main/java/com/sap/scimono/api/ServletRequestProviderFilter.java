@@ -21,7 +21,6 @@ public class ServletRequestProviderFilter implements ContainerRequestFilter, Con
   @Override
   public void filter(ContainerRequestContext requestContext) throws IOException {
     ContextResolver.bind(servletRequest);
-
   }
 
   @Override

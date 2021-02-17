@@ -196,5 +196,6 @@ public enum CoreUserAttributes implements ScimAttribute<CoreUserAttributes> {
     String ADDRESSES_REGION_FIELD = "region";
     String ADDRESSES_POSTAL_CODE_FIELD = "postalCode";
     String ADDRESSES_COUNTRY_FIELD = "country";
+    String PASSWORD_FIELD = "password";
   }
 }
