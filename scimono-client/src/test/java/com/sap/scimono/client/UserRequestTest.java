@@ -81,7 +81,7 @@ public class UserRequestTest {
   }
   
   @Test
-  public void testReadUserWithoutOptionalUserName() throws IOException {
+  public void testReadUserRequiringUserName() throws IOException {
     String sampleUserId = UUID.randomUUID().toString();
     JsonNode jsonResponse = readResponseUserAsJsonNodeFromFile("read_user_without_user_name.json");
 
@@ -100,7 +100,7 @@ public class UserRequestTest {
   }
   
   @Test
-  public void testReadUserWithoutRequiredUserName() throws IOException {
+  public void testReadUserWithoutRequiringUserName() throws IOException {
     String sampleUserId = UUID.randomUUID().toString();
     JsonNode jsonResponse = readResponseUserAsJsonNodeFromFile("read_user_without_user_name.json");
 
