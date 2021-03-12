@@ -1,38 +1,5 @@
 package com.sap.scimono.client;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.github.tomakehurst.wiremock.WireMockServer;
-import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
-import com.sap.scimono.api.helper.ObjectMapperFactory;
-import com.sap.scimono.entity.Address;
-import com.sap.scimono.entity.Email;
-import com.sap.scimono.entity.Im;
-import com.sap.scimono.entity.Name;
-import com.sap.scimono.entity.PhoneNumber;
-import com.sap.scimono.entity.Photo;
-import com.sap.scimono.entity.User;
-import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
-import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
-import com.sap.scimono.entity.patch.PatchBody;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestFactory;
-import org.junit.jupiter.api.function.Executable;
-
-import javax.ws.rs.core.Response;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.UUID;
-import java.util.function.Function;
-
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.get;
 import static com.github.tomakehurst.wiremock.client.WireMock.noContent;
@@ -53,8 +20,45 @@ import static org.glassfish.jersey.client.HttpUrlConnectorProvider.SET_METHOD_WO
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.UUID;
+import java.util.function.Function;
+
+import javax.ws.rs.ProcessingException;
+import javax.ws.rs.core.Response;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DynamicTest;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestFactory;
+import org.junit.jupiter.api.function.Executable;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.github.tomakehurst.wiremock.WireMockServer;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.sap.scimono.api.helper.ObjectMapperFactory;
+import com.sap.scimono.entity.Address;
+import com.sap.scimono.entity.Email;
+import com.sap.scimono.entity.Im;
+import com.sap.scimono.entity.Name;
+import com.sap.scimono.entity.PhoneNumber;
+import com.sap.scimono.entity.Photo;
+import com.sap.scimono.entity.User;
+import com.sap.scimono.entity.paging.PagedByIdentitySearchResult;
+import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
+import com.sap.scimono.entity.patch.PatchBody;
 
 public class UserRequestTest {
   private static final String DEFAULT_URL = "http://localhost:7070";
@@ -74,6 +78,42 @@ public class UserRequestTest {
   @AfterEach
   public void closeResources() {
     wireMockServer.stop();
+  }
+  
+  @Test
+  public void testReadUserRequiringUserName() throws IOException {
+    String sampleUserId = UUID.randomUUID().toString();
+    JsonNode jsonResponse = readResponseUserAsJsonNodeFromFile("read_user_without_user_name.json");
+
+    wireMockServer.stubFor(get(urlEqualTo("/Users/" + sampleUserId)).willReturn(configureMockedResponse(OK, jsonResponse)));
+
+    // @formatter:off
+    User responseUser = SCIMClientService.builder(DEFAULT_URL)
+        .setUserPropertiesConfiguration(new UserAttributesConfiguration().setUserNameOptional(true))
+        .build()
+        .buildUserRequest()
+        .readSingleUser(sampleUserId)
+        .get();
+
+    assertAll(getAllUserAttributeAssertionsWithoutUserName(responseUser));
+    // @formatter:on
+  }
+  
+  @Test
+  public void testReadUserWithoutRequiringUserName() throws IOException {
+    String sampleUserId = UUID.randomUUID().toString();
+    JsonNode jsonResponse = readResponseUserAsJsonNodeFromFile("read_user_without_user_name.json");
+
+    wireMockServer.stubFor(get(urlEqualTo("/Users/" + sampleUserId)).willReturn(configureMockedResponse(OK, jsonResponse)));
+
+    // @formatter:off
+    assertThrows(ProcessingException.class, () ->
+    SCIMClientService.builder(DEFAULT_URL)
+        .build()
+        .buildUserRequest()
+        .readSingleUser(sampleUserId)
+        .get());
+    // @formatter:on
   }
 
   @Test
@@ -237,9 +277,16 @@ public class UserRequestTest {
   }
 
   private List<Executable> getAllUserAttributeAssertions(User user) {
+    List<Executable> assertions = getAllUserAttributeAssertionsWithoutUserName(user);
+    assertions.add(() -> assertNotNull(user.getUserName()));
+    
+    return assertions;
+    
+  }
+
+  private List<Executable> getAllUserAttributeAssertionsWithoutUserName(User user) {
     List<Executable> assertions = new ArrayList<>(getCommonResourceAssertions(user, User.SCHEMA));
 
-    assertions.add(() -> assertNotNull(user.getUserName()));
     assertions.add(() -> assertNotNull(user.getName()));
     assertions.add(() -> assertNotNull(user.isActive()));
     assertions.add(() -> {
