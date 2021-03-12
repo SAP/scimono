@@ -18,7 +18,7 @@ import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
 
 public class SCIMClientService {
   private WebTarget providerRoot;
-  
+
   private SCIMClientService(WebTarget providerRoot) {
     this.providerRoot = providerRoot;
   }
