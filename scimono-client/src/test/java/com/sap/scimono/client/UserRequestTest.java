@@ -275,7 +275,7 @@ public class UserRequestTest {
     };
     // @formatter:on
   }
-  
+
   private List<Executable> getAllUserAttributeAssertions(User user) {
     List<Executable> assertions = getAllUserAttributeAssertionsWithoutUserName(user);
     assertions.add(() -> assertNotNull(user.getUserName()));

@@ -83,7 +83,7 @@ public class SCIMClientService {
     private Builder(URI serviceUrl) {
       this.serviceUrl = serviceUrl;
     }
-    
+
     public Builder addAuthenticator(TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator) {
       this.targetSystemAuthenticator = targetSystemAuthenticator;
       return this;
