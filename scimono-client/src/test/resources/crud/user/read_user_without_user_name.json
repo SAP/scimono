@@ -25,7 +25,7 @@
     "profileUrl": "https://www.facebook.com/test.user",
     "title": "Software Architect",
     "userType": "Employee",
-    "preferredLanguage": "Ð‘ÑŠÐ»Ð³Ð°Ñ€Ñ�ÐºÐ¸",
+    "preferredLanguage": "Български",
     "locale":"bg-BG",
     "timezone":"Europe/Sofia",
     "active": true,
@@ -39,12 +39,12 @@
     "addresses": [
       {
         "type": "work",
-        "streetAddress": "Ð±ÑƒÐ». Ð¦Ð°Ñ€ Ð‘Ð¾Ñ€Ð¸Ñ� III 136a",
-        "locality": "Ð¡Ð¾Ñ„Ð¸Ñ�",
-        "region": "Ð¡Ð�",
+        "streetAddress": "бул. Цар Борис III 136a",
+        "locality": "София",
+        "region": "СА",
         "postalCode": "1000",
         "country": "BG",
-        "formatted": "Ð±ÑƒÐ». Ð¦Ð°Ñ€ Ð‘Ð¾Ñ€Ð¸Ñ� III 136Ð�\nÐ¡Ð¾Ñ„Ð¸Ñ�, Ð‘ÑŠÐ»Ð³Ð°Ñ€Ð¸Ñ�",
+        "formatted": "бул. Цар Борис III 136А\nСофия, България",
         "primary": true
       }
     ],
