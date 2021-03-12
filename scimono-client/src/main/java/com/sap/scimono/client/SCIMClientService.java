@@ -1,20 +1,20 @@
 package com.sap.scimono.client;
 
-import com.sap.scimono.client.authentication.OauthClientCredentialsAuthenticator;
-import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 import javax.ws.rs.ext.ContextResolver;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.Map;
+
+import com.sap.scimono.client.authentication.OauthClientCredentialsAuthenticator;
+import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
 
 public class SCIMClientService {
   private WebTarget providerRoot;
@@ -72,11 +72,13 @@ public class SCIMClientService {
   }
 
   public static class Builder {
-    private final List<Object> resolvers = getDefaultResolvers();
+    private final List<Object> resolvers = new ArrayList<>();
     private final Map<String, Object> properties = new HashMap<>();
 
     private URI serviceUrl;
     private TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator;
+    
+    private boolean isUserNameOptional = false;
 
     private Builder(URI serviceUrl) {
       this.serviceUrl = serviceUrl;
@@ -96,8 +98,15 @@ public class SCIMClientService {
       properties.put(name, value);
       return this;
     }
+    
+    public Builder setUserNameOptional(boolean isOptional) {
+      isUserNameOptional = isOptional;
+      return this;
+    }
 
     public SCIMClientService build() {
+      resolvers.add(new ClientJacksonResolver(isUserNameOptional));
+      
       Client client = ClientBuilder.newClient();
       if (targetSystemAuthenticator != null) {
         configureTargetSystemAuthenticator(client);
@@ -117,10 +126,6 @@ public class SCIMClientService {
           authBuilder.setHttpClient(client);
         }
       }
-    }
-
-    private List<Object> getDefaultResolvers() {
-      return new ArrayList<>(Collections.singletonList(new ClientJacksonResolver()));
     }
 
     private void registerResolvers(Client client) {
