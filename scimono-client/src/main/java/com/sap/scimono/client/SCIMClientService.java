@@ -1,7 +1,10 @@
 package com.sap.scimono.client;
 
+import static com.sap.scimono.client.RequiredAttribute.USER_USER_NAME;
+
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ListIterator;
@@ -17,8 +20,17 @@ import com.sap.scimono.client.authentication.OauthClientCredentialsAuthenticator
 import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
 
 public class SCIMClientService {
+  private Client client;
+  private URI serviceUrl;
+  
   private WebTarget providerRoot;
 
+  private SCIMClientService(Client client, URI serviceUrl) {
+    this.client = client;
+    this.serviceUrl = serviceUrl;
+    this.providerRoot = client.target(serviceUrl);
+  }
+  
   private SCIMClientService(WebTarget providerRoot) {
     this.providerRoot = providerRoot;
   }
@@ -28,7 +40,18 @@ public class SCIMClientService {
   }
 
   public UserRequest buildUserRequest(SCIMRequest.Builder requestBuilder) {
-    return new UserRequest(providerRoot, requestBuilder.build());
+    SCIMRequest request = requestBuilder.build();
+    if (client == null || serviceUrl == null) {
+      return new UserRequest(providerRoot, request);
+    }
+    
+    if (!request.getRequiredAttributesToBeOptional().contains(USER_USER_NAME)) {
+      return new UserRequest(providerRoot, request);
+    }
+    
+    Client newClient = ClientBuilder.newClient(client.getConfiguration());
+    newClient.register(new ClientJacksonResolver(true));
+    return new UserRequest(newClient.target(serviceUrl), request);
   }
 
   public GroupRequest buildGroupRequest() {
@@ -72,18 +95,16 @@ public class SCIMClientService {
   }
 
   public static class Builder {
-    private final List<Object> resolvers = new ArrayList<>();
+    private final List<Object> resolvers = getDefaultResolvers();
     private final Map<String, Object> properties = new HashMap<>();
 
-    private URI serviceUrl;
     private TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator;
-    
-    private boolean isUserNameOptional = false;
+    private URI serviceUrl;
 
     private Builder(URI serviceUrl) {
       this.serviceUrl = serviceUrl;
     }
-
+    
     public Builder addAuthenticator(TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator) {
       this.targetSystemAuthenticator = targetSystemAuthenticator;
       return this;
@@ -98,15 +119,12 @@ public class SCIMClientService {
       properties.put(name, value);
       return this;
     }
-    
-    public Builder setUserNameOptional(boolean isOptional) {
-      isUserNameOptional = isOptional;
-      return this;
-    }
 
+    private List<Object> getDefaultResolvers() {
+      return new ArrayList<>(Collections.singletonList(new ClientJacksonResolver(false)));
+    }
+    
     public SCIMClientService build() {
-      resolvers.add(new ClientJacksonResolver(isUserNameOptional));
-      
       Client client = ClientBuilder.newClient();
       if (targetSystemAuthenticator != null) {
         configureTargetSystemAuthenticator(client);
@@ -116,7 +134,7 @@ public class SCIMClientService {
 
       registerResolvers(client);
       properties.forEach(client::property);
-      return new SCIMClientService(client.target(serviceUrl));
+      return new SCIMClientService(client, serviceUrl);
     }
 
     private void configureTargetSystemAuthenticator(Client client) {
