@@ -1,7 +1,7 @@
 package com.sap.scimono.client;
 
 
-public class UserPropertiesConfiguration {
+public class UserAttributesConfiguration {
   private boolean isUserNameOptional = false;
   
   public boolean isUserNameOptional() {

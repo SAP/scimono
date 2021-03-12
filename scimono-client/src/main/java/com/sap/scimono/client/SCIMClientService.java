@@ -72,7 +72,7 @@ public class SCIMClientService {
   }
 
   public static class Builder {
-    private UserPropertiesConfiguration userPropertiesConfiguration = new UserPropertiesConfiguration();
+    private UserAttributesConfiguration userPropertiesConfiguration = new UserAttributesConfiguration();
     
     private final List<Object> resolvers = new ArrayList<>();
     private final Map<String, Object> properties = new HashMap<>();
@@ -99,7 +99,7 @@ public class SCIMClientService {
       return this;
     }
     
-    public Builder setUserPropertiesConfiguration(UserPropertiesConfiguration userPropertiesConfiguration) {
+    public Builder setUserPropertiesConfiguration(UserAttributesConfiguration userPropertiesConfiguration) {
       this.userPropertiesConfiguration = userPropertiesConfiguration;
       return this;
     }
