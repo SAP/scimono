@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
 import static com.sap.scimono.client.ResourceAction.CREATE_SINGLE;
@@ -32,12 +31,10 @@ import static javax.ws.rs.core.Response.Status.OK;
 public class SCIMRequest {
   private final MultivaluedMap<String, Object> httpHeaders;
   private final Map<ResourceAction, ActionResponseStatusConfig> scimActionsResponseStatusConfig;
-  private final Set<RequiredAttribute> requiredAttributesToBeOptional;
 
   private SCIMRequest(Builder builder) {
     this.httpHeaders = builder.httpHeaders;
     this.scimActionsResponseStatusConfig = builder.scimActionsResponseStatusConfig;
-    this.requiredAttributesToBeOptional = builder.requiredAttributesToBeOptional;
   }
 
   Response get(WebTarget webTarget) {
@@ -62,10 +59,6 @@ public class SCIMRequest {
 
   ActionResponseStatusConfig getScimActionResponseStatusConfig(ResourceAction resourceAction) {
     return scimActionsResponseStatusConfig.get(resourceAction);
-  }
-  
-  Set<RequiredAttribute> getRequiredAttributesToBeOptional() {
-    return requiredAttributesToBeOptional;
   }
 
   private Invocation.Builder configureRequest(WebTarget webTarget) {
@@ -92,8 +85,7 @@ public class SCIMRequest {
   public static class Builder {
     private final MultivaluedMap<String, Object> httpHeaders = defaultHeaders();
     private Map<ResourceAction, ActionResponseStatusConfig> scimActionsResponseStatusConfig = defaultSCIMActionsResponseStatusConfig();
-    private Set<RequiredAttribute> requiredAttributesToBeOptional = new HashSet<>();
-    
+
     private Builder() {
     }
 
@@ -104,11 +96,6 @@ public class SCIMRequest {
 
     public Builder setExpectedResponseStatuses(ResourceAction resourceAction, Response.Status...responseStatuses) {
       scimActionsResponseStatusConfig.put(resourceAction, new ActionResponseStatusConfig(new HashSet<>(Arrays.asList(responseStatuses))));
-      return this;
-    }
-    
-    public Builder setOptional(RequiredAttribute attribute) {
-      requiredAttributesToBeOptional.add(attribute);
       return this;
     }
 
