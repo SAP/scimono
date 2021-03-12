@@ -12,7 +12,6 @@
     "schemas": [
       "urn:ietf:params:scim:schemas:core:2.0:User"
     ],
-    "userName": "testuser",
     "name": {
       "formatted": "Mr. Test Something User I",
       "givenName": "Test",
