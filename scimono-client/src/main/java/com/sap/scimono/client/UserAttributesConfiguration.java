@@ -8,7 +8,8 @@ public class UserAttributesConfiguration {
     return isUserNameOptional;
   }
   
-  public void setUserNameOptional(boolean isUserNameOptional) {
+  public UserAttributesConfiguration setUserNameOptional(boolean isUserNameOptional) {
     this.isUserNameOptional = isUserNameOptional;
+    return this;
   }
 }
