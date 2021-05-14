@@ -43,13 +43,24 @@ public interface UsersCallback {
   PagedResult<User> getUsers(final PageInfo pageInfo, final String filter);
 
   /**
+   * Returns a page of users (limited by {@link SCIMConfigurationCallback#getMaxResourcesPerPage()}),
+   * taking into account the specified filter and paging parameters.
+   *
+   * @param pageInfo parsed paging parameters from the API request
+   * @param filter   unparsed filter string from the $filter query parameter
+   * @param additionalAttributes additional attributes to be returned of excluded from the response
+   * @return a page of users or empty page if no users match the filter/paging criteria
+   */
+  PagedResult<User> getUsers(final PageInfo pageInfo, RequestedResourceAttributes additionalAttributes, final String filter);
+
+  /**
    * Returns a page of users (more info in {@link UsersCallback#getUsers(PageInfo, String)} ()}
    * adding specifying additional attributes to be returned of excluded from the response
    * @param additionalAttributes additional attributes to be returned of excluded from the response
    * @return a page of users or empty page if no users match the filter/paging criteria
    */
   default PagedResult<User> getUsers(final PageInfo pageInfo, final String filter, RequestedResourceAttributes additionalAttributes) {
-    return getUsers(pageInfo, filter);
+    return getUsers(pageInfo, additionalAttributes, filter);
   }
 
   /**
