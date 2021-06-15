@@ -61,7 +61,7 @@ public class PatchValidationFramework {
     		  .getAttributes()
     		  .stream()
     		  .map(Attribute::getName)
-    		  .filter(attributeName -> attributeName.equalsIgnoreCase(operation.getPath()))
+    		  .filter(attributeName -> (attributeName != null && attributeName.equalsIgnoreCase(operation.getPath())))
     		  .collect(Collectors.toList());
       
       String caseExactPath = matchingPaths.isEmpty() ? operation.getPath() : matchingPaths.get(0);
