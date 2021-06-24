@@ -43,7 +43,6 @@ import com.sap.scimono.exception.ResourceNotFoundException;
 public class Schemas {
   private static final Logger logger = LoggerFactory.getLogger(Schemas.class);
 
-  public static final int PREDEFINED_SCHEMAS_COUNT = 6;
   private static final int CUSTOM_SCHEMAS_MAX_COUNT = 20;
 
   private final SchemasCallback schemaAPI;
@@ -129,7 +128,7 @@ public class Schemas {
   private void validateSchema(final Schema schema) {
     validateSchemaId(schema.getId());
 
-    int customSchemasCount = schemaAPI.getCustomSchemas().size() - PREDEFINED_SCHEMAS_COUNT;
+    int customSchemasCount = schemaAPI.getCustomSchemas().size();
     if (customSchemasCount >= CUSTOM_SCHEMAS_MAX_COUNT) {
       throw new InvalidInputException("Custom schema maximum count reached!");
     }
