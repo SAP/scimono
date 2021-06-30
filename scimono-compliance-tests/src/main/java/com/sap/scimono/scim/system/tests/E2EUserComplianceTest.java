@@ -1040,9 +1040,9 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
   }
 
   @Test
-  @DisplayName("Test that creates a user with only required attributes and verifies, that the status code is 201")
+  @DisplayName("Test create a user with only required attributes and verifies, that the status code is 201")
   public void testCreateUserWithOnlyRequiredAttributesAndVerifiesStatusCode201(){
-    String testUserName = "testCreateUserWithIllegalEmail400";
+    String testUserName = "testCreateUserWithOnlyRequiredAttributesAndVerifiesStatusCode201";
     User testUser = TestData.setAttributesToATestUser(testUserName).build();
 
     logger.info("Creating User: {}, with username", testUserName);
