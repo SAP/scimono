@@ -474,6 +474,17 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
     assertAll("Verify Patch Group Response", getResponseStatusAssertions(response, false, NOT_FOUND));
   }
 
+  @Test
+  @DisplayName("Test Create a group without displayname and verifies, that the status code is 400")
+  public void testCreateGroupWithoutDisplayNameAndVerifiesStatusCode400() {
+    Group.Builder groupToCreate = new Group.Builder();
+
+    logger.info("Creating Group without displayname");
+    SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.createGroup(groupToCreate.build());
+
+    assertAll("Verify Create Group Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
+  }
+
   private SCIMResponse<Group> createGroupAndVerifySuccessfulResponse(String displayName) {
     Group groupToCreate = TestData.buildGroup(displayName);
 
