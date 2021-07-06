@@ -25,6 +25,8 @@ import com.sap.scimono.api.helper.JsonMappingExceptionMapper;
 import com.sap.scimono.api.helper.JsonProcessingExceptionMapper;
 import com.sap.scimono.api.helper.ScimExceptionMapper;
 import com.sap.scimono.api.helper.ValidationExceptionMapper;
+import com.sap.scimono.callback.bulk.BulkRequestCallback;
+import com.sap.scimono.callback.bulk.DefaultBulkRequestCallback;
 import com.sap.scimono.callback.config.DefaultSCIMConfigurationCallback;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.groups.DefaultGroupsCallback;
@@ -113,6 +115,13 @@ public abstract class SCIMApplication extends Application {
    */
   public SchemasCallback getSchemasCallback() {
     return new DefaultSchemasCallback();
+  }
+  
+  /**
+   * @return a request-scoped BulkRequestCallback implementation.
+   */
+  public BulkRequestCallback getBulkRequestCallback() {
+    return new DefaultBulkRequestCallback();
   }
 
   /**

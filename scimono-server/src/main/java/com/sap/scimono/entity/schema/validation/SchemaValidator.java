@@ -8,6 +8,7 @@ import javax.validation.ConstraintValidatorContext;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
+import com.sap.scimono.entity.validation.ValidationUtil;
 
 import java.util.regex.Pattern;
 
