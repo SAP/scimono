@@ -153,9 +153,9 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   }
 
   @Test
-  @DisplayName("Test create a user with only required attributes and verifies, that the status code is 201")
-  public void testCreateUserWithOnlyRequiredAttributesAndVerifiesStatusCode201(){
-    String testUserName = "testCreateUserWithOnlyRequiredAttributesAndVerifiesStatusCode201";
+  @DisplayName("Test create a user with only required attributes and verify Http status code: 201")
+  public void testCreateUserWithOnlyRequiredAttributes201(){
+    String testUserName = "testCreateUserWithOnlyRequiredAttributes201";
     User testUser = TestData.setAttributesToATestUser(testUserName).build();
 
     logger.info("Creating User: {}, with username", testUserName);

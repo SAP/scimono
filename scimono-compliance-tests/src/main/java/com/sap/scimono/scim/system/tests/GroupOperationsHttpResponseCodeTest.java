@@ -475,8 +475,8 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
   }
 
   @Test
-  @DisplayName("Test Create a group without displayname and verifies, that the status code is 400")
-  public void testCreateGroupWithoutDisplayNameAndVerifiesStatusCode400() {
+  @DisplayName("Test Create a group without displayname and verify Http status code: 400")
+  public void testCreateGroupWithoutDisplayName400() {
     Group.Builder groupToCreate = new Group.Builder();
 
     logger.info("Creating Group without displayname");
