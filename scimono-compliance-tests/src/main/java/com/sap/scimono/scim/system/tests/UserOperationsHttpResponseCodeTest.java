@@ -153,6 +153,18 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   }
 
   @Test
+  @DisplayName("Test create a user with only required attributes and verify Http status code: 201")
+  public void testCreateUserWithOnlyRequiredAttributes201(){
+    String testUserName = "testCreateUserWithOnlyRequiredAttributes201";
+    User testUser = TestData.setAttributesToATestUser(testUserName).build();
+
+    logger.info("Creating User: {}, with username", testUserName);
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(testUser);
+
+    assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
+  }
+
+  @Test
   @DisplayName("Test Create user with duplicate userName and verify Http status code: 409")
   public void testCreateUsersWithSameUserNames409() {
     String testUserName = "testCreateUsersWithSameUserNames409";
