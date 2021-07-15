@@ -1,14 +1,7 @@
 package com.sap.scimono.scim.system.tests;
 
 import static com.sap.scimono.client.authentication.OauthAuthenticatorFactory.clientCredentialsGrantAuthenticator;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.AUTH_TYPE;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_PASSWORD;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.BASIC_AUTH_USER;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_CLIENT_ID;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_GRANT;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SECRET;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SERVICE_URL;
-import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
+import static com.sap.scimono.scim.system.tests.util.TestProperties.*;
 import static com.sap.scimono.scim.system.tests.util.TestUtil.constructResourceLocation;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -27,6 +20,7 @@ import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 
+import com.sap.scimono.client.authentication.*;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import org.glassfish.jersey.client.HttpUrlConnectorProvider;
 import org.glassfish.jersey.logging.LoggingFeature;
@@ -39,10 +33,6 @@ import com.sap.scimono.client.SCIMClientService;
 import com.sap.scimono.client.SCIMResponse;
 import com.sap.scimono.client.SchemaRequest;
 import com.sap.scimono.client.UserRequest;
-import com.sap.scimono.client.authentication.OauthCredentials;
-import com.sap.scimono.client.authentication.OauthDeviceIdAuthenticator;
-import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
-import com.sap.scimono.client.authentication.TargetSystemBasicAuthenticator;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.Resource;
@@ -65,6 +55,8 @@ public abstract class SCIMComplianceTest {
       targetSystemAuthenticator = TargetSystemBasicAuthenticator.create(BASIC_AUTH_USER, BASIC_AUTH_PASSWORD);
     } else if ("Oauth".equalsIgnoreCase(AUTH_TYPE)) {
       targetSystemAuthenticator = getOauthAuthenticatorBuilder();
+    } else if ("Token".equalsIgnoreCase(AUTH_TYPE)) {
+      targetSystemAuthenticator = TargetSystemAccessTokenAuthenticator.create(ACCESS_TOKEN);
     }
   }
 
