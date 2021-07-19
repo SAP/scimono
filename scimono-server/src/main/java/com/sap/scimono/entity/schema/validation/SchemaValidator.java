@@ -36,7 +36,7 @@ class SchemaValidator implements ConstraintValidator<ValidSchema, Schema> {
   }
 
   private boolean isIdentifierLengthValid(String identifier, ConstraintValidatorContext context) {
-    if (identifier == null || identifier.isEmpty() || identifier.length() >= 20) {
+    if (identifier == null || identifier.isEmpty() || identifier.length() > 20) {
       ValidationUtil.interpolateErrorMessage(context, generateViolationMessage(identifier));
 
       return false;
@@ -62,8 +62,7 @@ class SchemaValidator implements ConstraintValidator<ValidSchema, Schema> {
   }
 
   private boolean areSchemaAttributesValid(List<Attribute> schemaAttributes, ConstraintValidatorContext context) {
-    return schemaAttributes.size() < 20 && areSchemaAttributeNamesValid(schemaAttributes, context);
-
+    return schemaAttributes.size() <= 20 && areSchemaAttributeNamesValid(schemaAttributes, context);
   }
 
   private boolean areSchemaIdWithoutPrefixSameAsSchemaName(Schema schema, ConstraintValidatorContext context) {
