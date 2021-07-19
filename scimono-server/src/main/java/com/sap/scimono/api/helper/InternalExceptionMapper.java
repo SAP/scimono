@@ -22,9 +22,10 @@ public class InternalExceptionMapper implements ExceptionMapper<Throwable> {
   @Override
   public Response toResponse(final Throwable exception) {
     logger.error(EXPOSED_ERROR_MSG, exception);
-
-    ErrorResponse scimError = new ErrorResponse(INTERNAL_SERVER_ERROR.getStatusCode(), null, EXPOSED_ERROR_MSG);
-    return Response.serverError().entity(scimError).type(API.APPLICATION_JSON_SCIM).build();
+    return Response.serverError().entity(toScimError(exception)).type(API.APPLICATION_JSON_SCIM).build();
   }
 
+  public ErrorResponse toScimError(final Throwable exception) {
+    return new ErrorResponse(INTERNAL_SERVER_ERROR.getStatusCode(), null, EXPOSED_ERROR_MSG);
+  }
 }

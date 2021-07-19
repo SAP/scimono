@@ -63,6 +63,14 @@ public class SCIMClientService {
     return new ServiceProviderConfigurationRequest(providerRoot, requestBuilder.build());
   }
 
+  public BulkRequest.Builder newBulkRequest() {
+    return newBulkRequest(SCIMRequest.newBuilder());
+  }
+
+  public BulkRequest.Builder newBulkRequest(SCIMRequest.Builder requestBuilder) {
+    return new BulkRequest.Builder(providerRoot, requestBuilder.build());
+  }
+
   public static SCIMClientService fromPreconfiguredWebTarget(WebTarget webTarget) {
     return new SCIMClientService(webTarget);
   }

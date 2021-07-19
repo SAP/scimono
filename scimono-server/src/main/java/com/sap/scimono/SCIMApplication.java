@@ -12,6 +12,7 @@ import javax.ws.rs.core.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sap.scimono.api.Bulk;
 import com.sap.scimono.api.Groups;
 import com.sap.scimono.api.ResourceTypes;
 import com.sap.scimono.api.Schemas;
@@ -64,6 +65,7 @@ public abstract class SCIMApplication extends Application {
     scimResources.add(Schemas.class);
     scimResources.add(ResourceTypes.class);
     scimResources.add(ServiceProviderConfiguration.class);
+    scimResources.add(Bulk.class);
 
     scimResources.addAll(getAdditionalResourceProviders());
 
