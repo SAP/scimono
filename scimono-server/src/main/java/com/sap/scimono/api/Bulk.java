@@ -28,6 +28,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.helper.ObjectMapperFactory;
+import com.sap.scimono.api.helper.ScimErrorResponseParser;
 import com.sap.scimono.api.preprocessor.ResourcePreProcessor;
 import com.sap.scimono.callback.bulk.BulkRequestCallback;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
@@ -170,7 +171,7 @@ public class Bulk {
       location = usersLocationService.getLocation(respOperation.getResourceId()).toString();
     }
 
-    if (location == null && RESOURCE_TYPE_GROUP.equalsIgnoreCase(resourceType)) {
+    if (location == null && Group.RESOURCE_TYPE_GROUP.equalsIgnoreCase(resourceType)) {
       location = groupsLocationService.getLocation(respOperation.getResourceId()).toString();
     }
 
@@ -181,14 +182,17 @@ public class Bulk {
     RequestOperation.Builder builder = operation.builder();
     switch (operation.getMethod()) {
       case POST:
-        builder.setData(userPreProcessor.prepareForCreate(operation.getDataAsUser()));
+        builder.setData(parseAndPreprocessUserData(userPreProcessor::prepareForCreate, operation));
         break;
       case PUT:
-        builder.setData(userPreProcessor.prepareForUpdate(operation.getDataAsUser(), requireResourceId(operation)));
+        String resourceId = requireResourceId(operation);
+        PreProcessorExecutor<User> updateProcessor = group -> userPreProcessor.prepareForUpdate(group, resourceId);
+        builder.setData(parseAndPreprocessUserData(updateProcessor, operation));
         break;
       case PATCH:
         requireResourceId(operation);
-        builder.setData(preparePatchBodyWithMeta(userPatchValidator, operation));
+        PreProcessorExecutor<PatchBody> patchProcessor = data -> preparePatchBodyWithMeta(userPatchValidator, data);
+        builder.setData(parseAndPreprocessPatchData(patchProcessor, operation));
         break;
     }
 
@@ -199,18 +203,41 @@ public class Bulk {
     RequestOperation.Builder builder = operation.builder();
     switch (operation.getMethod()) {
       case POST:
-        builder.setData(groupPreProcessor.prepareForCreate(operation.getDataAsGroup()));
+        builder.setData(parseAndPreprocessGroupData(groupPreProcessor::prepareForCreate, operation));
         break;
       case PUT:
-        builder.setData(groupPreProcessor.prepareForUpdate(operation.getDataAsGroup(), requireResourceId(operation)));
+        String resourceId = requireResourceId(operation);
+        PreProcessorExecutor<Group> updateProcessor = group -> groupPreProcessor.prepareForUpdate(group, resourceId);
+        builder.setData(parseAndPreprocessGroupData(updateProcessor, operation));
         break;
       case PATCH:
         requireResourceId(operation);
-        builder.setData(preparePatchBodyWithMeta(groupPatchValidator, operation));
+        PreProcessorExecutor<PatchBody> patchProcessor = data -> preparePatchBodyWithMeta(groupPatchValidator, data);
+        builder.setData(parseAndPreprocessPatchData(patchProcessor, operation));
         break;
     }
 
     return builder.build();
+  }
+
+  private Object parseAndPreprocessGroupData(PreProcessorExecutor<Group> preProcessor, RequestOperation reqOp) {
+    return parseAndPreprocessData(preProcessor, () -> JSON_OBJECT_MAPPER.treeToValue(reqOp.getRawData(), Group.class));
+  }
+
+  private Object parseAndPreprocessUserData(PreProcessorExecutor<User> preProcessor, RequestOperation reqOp) {
+    return parseAndPreprocessData(preProcessor, () -> JSON_OBJECT_MAPPER.treeToValue(reqOp.getRawData(), User.class));
+  }
+
+  private Object parseAndPreprocessPatchData(PreProcessorExecutor<PatchBody> preProcessor, RequestOperation reqOp) {
+    return parseAndPreprocessData(preProcessor, () -> JSON_OBJECT_MAPPER.treeToValue(reqOp.getRawData(), PatchBody.class));
+  }
+
+  private <T> Object parseAndPreprocessData(PreProcessorExecutor<T> preProcessor, JsonMappingExecutor<T> resourceMapping) {
+    try {
+      return preProcessor.execute(resourceMapping.execute());
+    } catch (Throwable e) {
+      return ScimErrorResponseParser.parseException(e);
+    }
   }
 
   private String requireResourceId(RequestOperation bulkOperation) {
@@ -218,12 +245,21 @@ public class Bulk {
         .orElseThrow(() -> new InternalScimonoException("resource id is required for this bulk operation..."));
   }
 
-  private PatchBody preparePatchBodyWithMeta(PatchValidationFramework validator, RequestOperation operation) {
+  private PatchBody preparePatchBodyWithMeta(PatchValidationFramework validator, PatchBody patchBody) {
     String version = UUID.randomUUID().toString();
     Meta meta = new Meta.Builder(null, Instant.now()).setVersion(version).build();
 
-    PatchBody patchBody = operation.getDataAsPatch();
     validator.validate(patchBody);
     return new PatchBody.Builder(patchBody).setMeta(meta).build();
+  }
+
+  @FunctionalInterface
+  private interface PreProcessorExecutor<T> {
+    T execute(T data);
+  }
+
+  @FunctionalInterface
+  private interface JsonMappingExecutor<T> {
+    T execute() throws JsonProcessingException;
   }
 }

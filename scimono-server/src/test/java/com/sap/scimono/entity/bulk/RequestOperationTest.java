@@ -2,6 +2,7 @@ package com.sap.scimono.entity.bulk;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.DynamicTest.dynamicTest;
 
@@ -9,9 +10,9 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Function;
 
+import org.junit.Test;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.DynamicTest;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestFactory;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -56,8 +57,32 @@ public class RequestOperationTest {
       "/Groups/abcd/",
   })
   public void testGettingResourceIdFromCorrectResourcePath(String path) {
-    RequestOperation operation = new RequestOperation.Builder().setPath(path).setMethod(RequestMethod.POST).build();
+    RequestOperation operation = new RequestOperation.Builder().setPath(path).setMethod(RequestMethod.PUT).build();
     assertEquals("abcd", operation.getResourceId().orElseThrow(AssertionFailedError::new));
+  }
+
+  @Test
+  @DisplayName("Test getting resource id from POST operation if resource data is present")
+  public void testGetResourceIdFromFromPostOperationIfDataIsPresent() {
+    String resourceId = "abcd";
+    RequestOperation operation = new RequestOperation.Builder()
+        .setPath("Groups")
+        .setData(new Group.Builder().setId(resourceId).build())
+        .setMethod(RequestMethod.POST)
+        .build();
+
+    assertEquals(resourceId, operation.getResourceId().orElseThrow(AssertionFailedError::new));
+  }
+
+  @Test
+  @DisplayName("Test resource id is empty for POST operation if resource data is NOT present")
+  public void testGetResourceIdFromFromPostOperationIfDataIsNotPresent() {
+    RequestOperation operation = new RequestOperation.Builder()
+        .setPath("Groups")
+        .setMethod(RequestMethod.POST)
+        .build();
+
+    assertFalse(operation.getResourceId().isPresent());
   }
 
   @TestFactory

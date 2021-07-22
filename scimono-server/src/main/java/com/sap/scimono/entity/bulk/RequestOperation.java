@@ -9,11 +9,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sap.scimono.api.API;
-import com.sap.scimono.api.helper.ObjectMapperFactory;
+import com.sap.scimono.entity.ErrorResponse;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.patch.PatchBody;
@@ -24,7 +22,6 @@ import com.sap.scimono.helper.Strings;
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RequestOperation extends BulkOperation {
-  private static final ObjectMapper JSON_MAPPER = ObjectMapperFactory.createObjectMapper();
   private static final String DATA_FIELD = "data";
   private static final String PATH_FIELD = "path";
 
@@ -36,7 +33,7 @@ public class RequestOperation extends BulkOperation {
   private Object data;
 
   @JsonCreator
-  public RequestOperation(@JsonProperty(value = METHOD_FIELD, required = true) final String method,
+  private RequestOperation(@JsonProperty(value = METHOD_FIELD, required = true) final String method,
                        @JsonProperty(value = BULK_ID_FIELD) final String bulkId,
                        @JsonProperty(value = PATH_FIELD, required = true) final String path,
                        @JsonProperty(VERSION_FIELD) final String version,
@@ -65,6 +62,8 @@ public class RequestOperation extends BulkOperation {
     return data != null ? data : rawData;
   }
 
+
+
   @JsonIgnore
   public boolean isDataAvailable() {
     return data != null || rawData != null;
@@ -72,6 +71,10 @@ public class RequestOperation extends BulkOperation {
 
   @JsonIgnore
   public Optional<String> getResourceId() {
+    if (RequestMethod.POST == getMethod() && data == null) {
+      return Optional.empty();
+    }
+
     if (RequestMethod.POST == getMethod() && data instanceof User) {
       return Optional.of(getDataAsUser().getId());
     }
@@ -91,7 +94,6 @@ public class RequestOperation extends BulkOperation {
 
   @JsonIgnore
   public PatchBody getDataAsPatch() {
-    parseAndSetObjectData();
     if (data instanceof PatchBody) {
       return (PatchBody) data;
     }
@@ -101,7 +103,6 @@ public class RequestOperation extends BulkOperation {
 
   @JsonIgnore
   public User getDataAsUser() {
-    parseAndSetObjectData();
     if (data instanceof User) {
       return (User) data;
     }
@@ -111,7 +112,6 @@ public class RequestOperation extends BulkOperation {
 
   @JsonIgnore
   public Group getDataAsGroup() {
-    parseAndSetObjectData();
     if (data instanceof Group) {
       return (Group) data;
     }
@@ -119,6 +119,28 @@ public class RequestOperation extends BulkOperation {
     throw new BulkOperationCastingException(super.getBulkId(), Group.class);
   }
 
+  @JsonIgnore
+  public ErrorResponse getDataAsScimError() {
+    if (data instanceof ErrorResponse) {
+      return (ErrorResponse) data;
+    }
+
+    throw new BulkOperationCastingException(super.getBulkId(), ErrorResponse.class);
+  }
+
+  @JsonIgnore
+  public JsonNode getRawData() {
+    return rawData;
+  }
+
+  @JsonIgnore
+  public boolean isValidationErrorAvailable() {
+    if (data == null) {
+      return false;
+    }
+
+    return data instanceof ErrorResponse;
+  }
 
   @Override
   public String toString() {
@@ -131,30 +153,6 @@ public class RequestOperation extends BulkOperation {
     valuesToDisplay.put(DATA_FIELD, data.toString());
 
     return Strings.createPrettyEntityString(valuesToDisplay, this.getClass());
-  }
-
-  private void parseAndSetObjectData() {
-    if (rawData == null || data != null) {
-      return;
-    }
-
-    try {
-      if (RequestMethod.PATCH == super.getMethod()) {
-        data = JSON_MAPPER.treeToValue(rawData, PatchBody.class);
-        return;
-      }
-
-      switch (getResourceType()) {
-        case User.RESOURCE_TYPE_USER:
-          data = JSON_MAPPER.treeToValue(rawData, User.class);
-          break;
-        case Group.RESOURCE_TYPE_GROUP:
-          data = JSON_MAPPER.treeToValue(rawData, Group.class);
-          break;
-      }
-    } catch (JsonProcessingException e) {
-      throw new InternalScimonoException(String.format("wrong data format for bulk operation with id: %s", super.getBulkId()));
-    }
   }
 
   @JsonIgnore
@@ -182,6 +180,13 @@ public class RequestOperation extends BulkOperation {
     return firstPathDelimiterIndex == -1 ? normalizedPath : normalizedPath.substring(0, firstPathDelimiterIndex);
   }
 
+  public ResponseOperation.Builder errorResponseFromExistingValidationError() {
+    if (!isValidationErrorAvailable()) {
+      throw new InternalScimonoException("Validation error is not present");
+    }
+
+    return ResponseOperation.error(this, getDataAsScimError());
+  }
   public ResponseOperation.Builder errorResponse(SCIMException scimException) {
     return ResponseOperation.error(this, scimException);
   }
@@ -193,6 +198,7 @@ public class RequestOperation extends BulkOperation {
   public static class Builder extends BulkOperation.Builder<RequestOperation> {
     private String path;
     private Object data;
+    private SCIMException validationError;
 
     public Builder() {
 
