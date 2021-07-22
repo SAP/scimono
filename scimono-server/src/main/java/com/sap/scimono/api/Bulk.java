@@ -114,17 +114,6 @@ public class Bulk {
       String msg = "Bulk operations count exceeded the maximum value supported.";
       throw new SCIMException(TOO_MANY, msg, Response.Status.REQUEST_ENTITY_TOO_LARGE);
     }
-
-    try {
-      byte[] bytes = JSON_OBJECT_MAPPER.writeValueAsBytes(bulkRequest);
-      int payloadSize = bulkSetting.getMaxPayloadSize();
-      if (bytes.length > bulkSetting.getMaxPayloadSize()) {
-        String msg = String.format("The size of the bulk operation exceeds the maxPayloadSize (%d).", payloadSize);
-        throw new SCIMException(TOO_MANY, msg, Response.Status.REQUEST_ENTITY_TOO_LARGE);
-      }
-    } catch (JsonProcessingException e) {
-      throw new InternalScimonoException("Unable to parse bulk body to bytes");
-    }
   }
 
   private List<RequestOperation> normalizeRequestOperations(List<RequestOperation> requestOperations) {
