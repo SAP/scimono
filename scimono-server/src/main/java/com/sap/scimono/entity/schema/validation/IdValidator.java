@@ -15,6 +15,7 @@ import javax.ws.rs.core.UriInfo;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.API;
+import com.sap.scimono.entity.validation.ValidationUtil;
 
 public class IdValidator implements ConstraintValidator<ValidId, Object> {
   private Map<CustomInputValidator.Type, CustomInputValidator> customValidators;

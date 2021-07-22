@@ -11,6 +11,8 @@ import javax.ws.rs.core.Application;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
+import com.sap.scimono.entity.validation.ValidationUtil;
+
 class StartIdValidator implements ConstraintValidator<ValidStartId, String> {
   private IdValidator resourceIdValidator;
 

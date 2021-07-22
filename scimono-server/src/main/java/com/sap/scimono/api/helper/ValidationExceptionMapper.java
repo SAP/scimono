@@ -28,6 +28,16 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
     return buildValidationResponse(exception, MediaType.valueOf(API.APPLICATION_JSON_SCIM));
   }
 
+  public ErrorResponse toScimError(final ValidationException exception) {
+    if (exception instanceof ConstraintViolationException) {
+      return getFirstConstraintValidationScimError((ConstraintViolationException) exception);
+    } else if (exception instanceof PatchValidationException) {
+      return buildPatchValidationScimError((PatchValidationException) exception);
+    } else {
+      return new InternalExceptionMapper().toScimError(exception);
+    }
+  }
+
   private Response buildValidationResponse(final ValidationException exception, final MediaType mediaType) {
     if (exception instanceof ConstraintViolationException) {
       return buildConstraintValidationResponse((ConstraintViolationException) exception, mediaType);
@@ -40,19 +50,31 @@ public class ValidationExceptionMapper implements ExceptionMapper<ValidationExce
 
   private Response buildPatchValidationResponse(final PatchValidationException pve, final MediaType mediaType) {
     Response.Status responseStatus = Response.Status.BAD_REQUEST;
-    SCIMException scimException = pve.toScimException();
-
-    ErrorResponse scimError = new ErrorResponse(responseStatus.getStatusCode(), scimException.getScimType(), scimException.getMessage());
+    ErrorResponse scimError = buildPatchValidationScimError(pve);
 
     return Response.status(responseStatus).type(mediaType).entity(scimError).build();
+  }
+
+  private ErrorResponse buildPatchValidationScimError(final PatchValidationException pve) {
+    Response.Status responseStatus = Response.Status.BAD_REQUEST;
+    SCIMException scimException = pve.toScimException();
+
+    return new ErrorResponse(responseStatus.getStatusCode(), scimException.getScimType(), scimException.getMessage());
   }
 
   private Response buildConstraintValidationResponse(final ConstraintViolationException cve, final MediaType mediaType) {
     Response.Status responseStatus = getResponseStatus(cve);
 
-    return Response.status(responseStatus).type(mediaType)
+    return Response.status(responseStatus)
+        .type(mediaType)
         .entity(new GenericEntity<>(constraintViolationToErrorResponses(cve), new GenericType<List<ErrorResponse>>() {
-        }.getType())).build();
+        }.getType()))
+        .build();
+  }
+
+  private ErrorResponse getFirstConstraintValidationScimError(final ConstraintViolationException cve) {
+    List<ErrorResponse> errorResponses = constraintViolationToErrorResponses(cve);
+    return errorResponses.isEmpty() ? null : errorResponses.get(0);
   }
 
   private static Response.Status getResponseStatus(final ConstraintViolationException violation) {

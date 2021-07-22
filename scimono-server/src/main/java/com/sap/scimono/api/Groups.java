@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
+import com.sap.scimono.api.preprocessor.ResourcePreProcessor;
 import com.sap.scimono.api.request.RequestedResourceAttributesParser;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.groups.GroupsCallback;
@@ -72,6 +73,7 @@ public class Groups {
   private final ResourceTypesCallback resourceTypesAPI;
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceLocationService resourceLocationService;
+  private final ResourcePreProcessor<Group> groupPreProcessor;
 
   public Groups(@Context Application appContext, @Context UriInfo uriInfo) {
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
@@ -80,7 +82,8 @@ public class Groups {
     schemaAPI = scimApplication.getSchemasCallback();
     resourceTypesAPI = scimApplication.getResourceTypesCallback();
     scimConfig = scimApplication.getConfigurationCallback();
-    resourceLocationService = new ResourceLocationService(uriInfo, scimApplication.getConfigurationCallback(), GROUPS);
+    resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, GROUPS);
+    groupPreProcessor = ResourcePreProcessor.forGroups(resourceLocationService, groupAPI, resourceTypesAPI, schemaAPI);
   }
 
   @GET
@@ -145,26 +148,13 @@ public class Groups {
       throw new InvalidInputException("One of the request inputs is not valid.");
     }
 
-    ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
-    newGroup = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newGroup);
+    Group preparedGroup = groupPreProcessor.prepareForCreate(newGroup);
+    Group createdGroup = groupAPI.createGroup(preparedGroup);
 
-    UnnecessarySchemasEraser<Group> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
-    newGroup = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(newGroup, Group.SCHEMA);
-
-    String version = UUID.randomUUID().toString();
-    Meta groupMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_GROUP).build();
-    Group.Builder groupWithMetaBuilder = newGroup.builder().setMeta(groupMeta);
-    groupAPI.generateId().ifPresent(groupWithMetaBuilder::setId);
-
-    Group groupWithMeta = groupWithMetaBuilder.build();
-
-    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI, resourceTypesAPI);
-    customAttributesValidator.validate(groupWithMeta);
-
-    Group createdGroup = groupAPI.createGroup(groupWithMeta);
     createdGroup = resourceLocationService.addMembersLocation(createdGroup);
     createdGroup = resourceLocationService.addLocation(createdGroup, createdGroup.getId());
 
+    String version = preparedGroup.getMeta().getVersion();
     logger.trace("Created group {} with version {}", createdGroup.getId(), version);
     return Response.created(resourceLocationService.getLocation(createdGroup.getId())).tag(version).entity(createdGroup).build();
   }
@@ -172,28 +162,14 @@ public class Groups {
   @PUT
   @Path("{id}")
   public Response updateGroup(@PathParam("id") @ValidId final String groupId, @Valid Group groupToUpdate) {
-    ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
-    groupToUpdate = readOnlyAttributesEraser.eraseAllFormCustomExtensions(groupToUpdate);
+    Group preparedGroup = groupPreProcessor.prepareForUpdate(groupToUpdate, groupId);
 
-    UnnecessarySchemasEraser<Group> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
-    groupToUpdate = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(groupToUpdate, Group.SCHEMA);
-
-    String newVersion = UUID.randomUUID().toString();
-    Meta.Builder lastUpdatedMeta = new Meta.Builder(groupToUpdate.getMeta());
-
-    URI groupLocation = resourceLocationService.getLocation(groupId);
-    lastUpdatedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(groupLocation.toString());
-
-    Group updatedGroup = groupToUpdate.builder().setId(groupId).setMeta(lastUpdatedMeta.build()).build();
-
-    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI, resourceTypesAPI);
-    customAttributesValidator.validate(groupToUpdate);
-
-    updatedGroup = groupAPI.updateGroup(updatedGroup);
+    Group updatedGroup = groupAPI.updateGroup(preparedGroup);
     updatedGroup = resourceLocationService.addMembersLocation(updatedGroup);
 
-    logger.trace("Updated group {}, new version is {}", groupId, newVersion);
-    return Response.ok(updatedGroup).tag(newVersion).location(groupLocation).build();
+    String version = preparedGroup.getMeta().getVersion();
+    logger.trace("Updated group {}, new version is {}", groupId, version);
+    return Response.ok(updatedGroup).tag(version).location(resourceLocationService.getLocation(groupId)).build();
   }
 
   @DELETE
