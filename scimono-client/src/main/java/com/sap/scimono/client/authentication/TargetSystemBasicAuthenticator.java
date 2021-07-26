@@ -1,6 +1,6 @@
 package com.sap.scimono.client.authentication;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 import java.nio.charset.StandardCharsets;
 
 public class TargetSystemBasicAuthenticator implements TargetSystemAuthenticator {

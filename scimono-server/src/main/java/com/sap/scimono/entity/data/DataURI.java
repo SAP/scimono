@@ -17,7 +17,7 @@
 
 package com.sap.scimono.entity.data;
 
-import javax.xml.bind.DatatypeConverter;
+import jakarta.xml.bind.DatatypeConverter;
 
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.helper.Objects;
