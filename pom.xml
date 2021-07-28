@@ -66,6 +66,8 @@
         <wiremock.version>2.27.2</wiremock.version>
         <junit.version>5.7.0</junit.version>
         <surefire.version>2.22.2</surefire.version>
+        <jaxb.api.version>2.3.1</jaxb.api.version>
+        <jaxb.runtime.version>2.3.1</jaxb.runtime.version>
     </properties>
 
     <dependencyManagement>
@@ -118,6 +120,16 @@
                 <groupId>javax.servlet</groupId>
                 <artifactId>javax.servlet-api</artifactId>
                 <version>3.1.0</version>
+            </dependency>
+            <dependency>
+              <groupId>javax.xml.bind</groupId>
+              <artifactId>jaxb-api</artifactId>
+              <version>${jaxb.api.version}</version>
+            </dependency>
+            <dependency>
+              <groupId>org.glassfish.jaxb</groupId>
+              <artifactId>jaxb-runtime</artifactId>
+              <version>${jaxb.runtime.version}</version>
             </dependency>
 
             <dependency>
