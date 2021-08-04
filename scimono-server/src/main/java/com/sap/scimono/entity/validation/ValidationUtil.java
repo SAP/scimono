@@ -1,11 +1,11 @@
 
-package com.sap.scimono.entity.schema.validation;
+package com.sap.scimono.entity.validation;
 
 import java.util.regex.Pattern;
 
 import javax.validation.ConstraintValidatorContext;
 
-class ValidationUtil {
+public class ValidationUtil {
   private static final Pattern EXPRESSION_LANGUAGE_CHARACTERS = Pattern.compile("([${}])");
 
   public static void interpolateErrorMessage(ConstraintValidatorContext context, String errorMessage) {

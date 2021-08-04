@@ -4,6 +4,7 @@ package com.sap.scimono.api;
 public interface API {
   String USERS = "Users";
   String GROUPS = "Groups";
+  String BULK = "Bulk";
   String RESOURCE_TYPES = "ResourceTypes";
   String SCHEMAS = "Schemas";
   String SERVICE_PROVIDER_CONFIG = "ServiceProviderConfig";

@@ -11,13 +11,13 @@ import com.sap.scimono.entity.ErrorResponse;
 
 public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingException> {
 
-  private static final String INVALID_FIELDS_MSG = "Invalid fields.";
-
   @Override
   public Response toResponse(final JsonMappingException exception) {
-    ErrorResponse scimError = new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), null, exception.getOriginalMessage());
+    return Response.status(Response.Status.BAD_REQUEST).entity(toScimError(exception)).type(API.APPLICATION_JSON_SCIM).build();
+  }
 
-    return Response.status(Response.Status.BAD_REQUEST).entity(scimError).type(API.APPLICATION_JSON_SCIM).build();
+  public ErrorResponse toScimError(final JsonMappingException exception) {
+    return new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), null, exception.getOriginalMessage());
   }
 
 }
