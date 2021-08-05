@@ -1,7 +1,8 @@
 package com.sap.scimono.client.authentication;
 
-import javax.xml.bind.DatatypeConverter;
-import java.nio.charset.StandardCharsets;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.util.Base64;
 
 public class TargetSystemBasicAuthenticator implements TargetSystemAuthenticator {
   private String userName;
@@ -23,6 +24,7 @@ public class TargetSystemBasicAuthenticator implements TargetSystemAuthenticator
 
   @Override
   public String authenticate() {
-    return "Basic " + DatatypeConverter.printBase64Binary(userName.concat(":").concat(password).getBytes(StandardCharsets.UTF_8));
+    String headerValue = Base64.getEncoder().encodeToString(userName.concat(":").concat(password).getBytes(UTF_8));
+    return "Basic " + headerValue;
   }
 }
