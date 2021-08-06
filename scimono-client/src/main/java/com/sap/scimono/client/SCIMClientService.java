@@ -30,32 +30,29 @@ public class SCIMClientService {
   }
 
   public UserRequest buildUserRequest() {
-    SCIMRequest.Builder newBuilder = SCIMRequest.newBuilder();
-    populateCustomHeaders(newBuilder);
-    return buildUserRequest(newBuilder);
+    return buildUserRequest(SCIMRequest.newBuilder());
   }
 
   public UserRequest buildUserRequest(SCIMRequest.Builder requestBuilder) {
+    populateCustomHeaders(requestBuilder);
     return new UserRequest(providerRoot, requestBuilder.build());
   }
 
   public GroupRequest buildGroupRequest() {
-    SCIMRequest.Builder newBuilder = SCIMRequest.newBuilder();
-    populateCustomHeaders(newBuilder);
-    return buildGroupRequest(newBuilder);
+    return buildGroupRequest(SCIMRequest.newBuilder());
   }
 
   public GroupRequest buildGroupRequest(SCIMRequest.Builder requestBuilder) {
+    populateCustomHeaders(requestBuilder);
     return new GroupRequest(providerRoot, requestBuilder.build());
   }
 
   public SchemaRequest buildSchemaRequest() {
-    SCIMRequest.Builder newBuilder = SCIMRequest.newBuilder();
-    populateCustomHeaders(newBuilder);
-    return buildSchemaRequest(newBuilder);
+    return buildSchemaRequest(SCIMRequest.newBuilder());
   }
 
   public SchemaRequest buildSchemaRequest(SCIMRequest.Builder requestBuilder) {
+    populateCustomHeaders(requestBuilder);
     return new SchemaRequest(providerRoot, requestBuilder.build());
   }
 
