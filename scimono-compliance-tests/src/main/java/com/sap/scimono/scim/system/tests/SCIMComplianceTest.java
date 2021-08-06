@@ -9,6 +9,7 @@ import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_GRANT;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SECRET;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SERVICE_URL;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
+import static com.sap.scimono.scim.system.tests.util.TestProperties.HEADERS;
 import static com.sap.scimono.scim.system.tests.util.TestUtil.constructResourceLocation;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -78,7 +79,7 @@ public abstract class SCIMComplianceTest {
   public static SCIMClientService configureScimClientService(final String serviceUrl) {
     // @formatter:off
     SCIMClientService.Builder clientServiceBuilder = SCIMClientService
-        .builder(serviceUrl)
+        .builder(serviceUrl, HEADERS)
         .addResolver(new LoggingFeature(logger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null))
         .addProperty(TestProperties.LOG_TRAFFIC, true)
         .addProperty(TestProperties.DUMP_ENTITY, true)

@@ -52,6 +52,7 @@ public class TestsLauncher {
     setTestParameter(launcherProperties.getOauthServiceUrl());
     setTestParameter(launcherProperties.getOauthClientId());
     setTestParameter(launcherProperties.getOathSecret());
+    setTestParameter(launcherProperties.getHeaders());
   }
 
   private void setTestParameter(LauncherProperties.LauncherProperty launcherProperty) {

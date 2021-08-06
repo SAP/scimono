@@ -18,9 +18,15 @@ import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
 
 public class SCIMClientService {
   private WebTarget providerRoot;
+  private String headers;
 
   private SCIMClientService(WebTarget providerRoot) {
     this.providerRoot = providerRoot;
+  }
+
+  private SCIMClientService(WebTarget providerRoot, String headers) {
+    this.providerRoot = providerRoot;
+    this.headers = headers;
   }
 
   public UserRequest buildUserRequest() {
@@ -32,7 +38,9 @@ public class SCIMClientService {
   }
 
   public GroupRequest buildGroupRequest() {
-    return buildGroupRequest(SCIMRequest.newBuilder());
+    SCIMRequest.Builder newBuilder = SCIMRequest.newBuilder();
+    populateCustomHeaders(newBuilder);
+    return buildGroupRequest(newBuilder);
   }
 
   public GroupRequest buildGroupRequest(SCIMRequest.Builder requestBuilder) {
@@ -40,7 +48,9 @@ public class SCIMClientService {
   }
 
   public SchemaRequest buildSchemaRequest() {
-    return buildSchemaRequest(SCIMRequest.newBuilder());
+    SCIMRequest.Builder newBuilder = SCIMRequest.newBuilder();
+    populateCustomHeaders(newBuilder);
+    return buildSchemaRequest(newBuilder);
   }
 
   public SchemaRequest buildSchemaRequest(SCIMRequest.Builder requestBuilder) {
@@ -79,17 +89,41 @@ public class SCIMClientService {
     return new Builder(UriBuilder.fromPath(serviceUrl).build());
   }
 
+  public void populateCustomHeaders(SCIMRequest.Builder newBuilder) {
+    if (headers == null) {
+        return;
+    }
+
+    String[] customHeaders = headers.split(",");
+    for (int i = 0; i < customHeaders.length; i++) {
+      int nextIndex = i + 1;
+      if (customHeaders.length > nextIndex) {
+        newBuilder.addHeader(customHeaders[i], customHeaders[nextIndex]);
+      }
+    }
+  }
+
+  public static Builder builder(String serviceUrl, String headers) {
+    return new Builder(UriBuilder.fromPath(serviceUrl).build(), headers);
+  }
+
   public static class Builder {
     private UserAttributesConfiguration userPropertiesConfiguration = new UserAttributesConfiguration();
-    
+
     private final List<Object> resolvers = new ArrayList<>();
     private final Map<String, Object> properties = new HashMap<>();
 
     private TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator;
     private URI serviceUrl;
+    private String headers;
 
     private Builder(URI serviceUrl) {
       this.serviceUrl = serviceUrl;
+    }
+
+    private Builder(URI serviceUrl, String headers) {
+      this.serviceUrl = serviceUrl;
+      this.headers = headers;
     }
 
     public Builder addAuthenticator(TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator) {
@@ -106,12 +140,12 @@ public class SCIMClientService {
       properties.put(name, value);
       return this;
     }
-    
+
     public Builder setUserPropertiesConfiguration(UserAttributesConfiguration userPropertiesConfiguration) {
       this.userPropertiesConfiguration = userPropertiesConfiguration;
       return this;
     }
-    
+
     public SCIMClientService build() {
       resolvers.add(new ClientJacksonResolver(userPropertiesConfiguration.isUserNameOptional()));
       Client client = ClientBuilder.newClient();
@@ -123,7 +157,7 @@ public class SCIMClientService {
 
       registerResolvers(client);
       properties.forEach(client::property);
-      return new SCIMClientService(client.target(serviceUrl));
+      return new SCIMClientService(client.target(serviceUrl), headers);
     }
 
     private void configureTargetSystemAuthenticator(Client client) {
