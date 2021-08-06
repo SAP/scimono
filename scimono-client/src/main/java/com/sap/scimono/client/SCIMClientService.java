@@ -30,7 +30,9 @@ public class SCIMClientService {
   }
 
   public UserRequest buildUserRequest() {
-    return buildUserRequest(SCIMRequest.newBuilder());
+    SCIMRequest.Builder newBuilder = SCIMRequest.newBuilder();
+    populateCustomHeaders(newBuilder);
+    return buildUserRequest(newBuilder);
   }
 
   public UserRequest buildUserRequest(SCIMRequest.Builder requestBuilder) {
