@@ -91,9 +91,13 @@ public class SCIMClientService {
     return new Builder(UriBuilder.fromPath(serviceUrl).build());
   }
 
-  public void populateCustomHeaders(SCIMRequest.Builder newBuilder) {
+  public static Builder builder(String serviceUrl, String headers) {
+    return new Builder(UriBuilder.fromPath(serviceUrl).build(), headers);
+  }
+
+  private void populateCustomHeaders(SCIMRequest.Builder newBuilder) {
     if (headers == null) {
-        return;
+      return;
     }
 
     String[] customHeaders = headers.split(",");
@@ -103,10 +107,6 @@ public class SCIMClientService {
         newBuilder.addHeader(customHeaders[i], customHeaders[nextIndex]);
       }
     }
-  }
-
-  public static Builder builder(String serviceUrl, String headers) {
-    return new Builder(UriBuilder.fromPath(serviceUrl).build(), headers);
   }
 
   public static class Builder {
