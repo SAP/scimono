@@ -18,15 +18,9 @@ import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
 
 public class SCIMClientService {
   private WebTarget providerRoot;
-  private String headers;
 
   private SCIMClientService(WebTarget providerRoot) {
     this.providerRoot = providerRoot;
-  }
-
-  private SCIMClientService(WebTarget providerRoot, String headers) {
-    this.providerRoot = providerRoot;
-    this.headers = headers;
   }
 
   public UserRequest buildUserRequest() {
@@ -34,7 +28,6 @@ public class SCIMClientService {
   }
 
   public UserRequest buildUserRequest(SCIMRequest.Builder requestBuilder) {
-    populateCustomHeaders(requestBuilder);
     return new UserRequest(providerRoot, requestBuilder.build());
   }
 
@@ -43,7 +36,6 @@ public class SCIMClientService {
   }
 
   public GroupRequest buildGroupRequest(SCIMRequest.Builder requestBuilder) {
-    populateCustomHeaders(requestBuilder);
     return new GroupRequest(providerRoot, requestBuilder.build());
   }
 
@@ -52,7 +44,6 @@ public class SCIMClientService {
   }
 
   public SchemaRequest buildSchemaRequest(SCIMRequest.Builder requestBuilder) {
-    populateCustomHeaders(requestBuilder);
     return new SchemaRequest(providerRoot, requestBuilder.build());
   }
 
@@ -88,24 +79,6 @@ public class SCIMClientService {
     return new Builder(UriBuilder.fromPath(serviceUrl).build());
   }
 
-  public static Builder builder(String serviceUrl, String headers) {
-    return new Builder(UriBuilder.fromPath(serviceUrl).build(), headers);
-  }
-
-  private void populateCustomHeaders(SCIMRequest.Builder newBuilder) {
-    if (headers == null) {
-      return;
-    }
-
-    String[] customHeaders = headers.split(",");
-    for (int i = 0; i < customHeaders.length; i++) {
-      int nextIndex = i + 1;
-      if (customHeaders.length > nextIndex) {
-        newBuilder.addHeader(customHeaders[i], customHeaders[nextIndex]);
-      }
-    }
-  }
-
   public static class Builder {
     private UserAttributesConfiguration userPropertiesConfiguration = new UserAttributesConfiguration();
 
@@ -114,15 +87,9 @@ public class SCIMClientService {
 
     private TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator;
     private URI serviceUrl;
-    private String headers;
 
     private Builder(URI serviceUrl) {
       this.serviceUrl = serviceUrl;
-    }
-
-    private Builder(URI serviceUrl, String headers) {
-      this.serviceUrl = serviceUrl;
-      this.headers = headers;
     }
 
     public Builder addAuthenticator(TargetSystemAuthenticator.Builder<?> targetSystemAuthenticator) {
@@ -156,7 +123,7 @@ public class SCIMClientService {
 
       registerResolvers(client);
       properties.forEach(client::property);
-      return new SCIMClientService(client.target(serviceUrl), headers);
+      return new SCIMClientService(client.target(serviceUrl));
     }
 
     private void configureTargetSystemAuthenticator(Client client) {

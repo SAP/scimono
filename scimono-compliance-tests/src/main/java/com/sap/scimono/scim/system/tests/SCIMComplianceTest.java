@@ -40,6 +40,7 @@ import com.sap.scimono.client.SCIMClientService;
 import com.sap.scimono.client.SCIMResponse;
 import com.sap.scimono.client.SchemaRequest;
 import com.sap.scimono.client.UserRequest;
+import com.sap.scimono.client.SCIMRequest;
 import com.sap.scimono.client.authentication.OauthCredentials;
 import com.sap.scimono.client.authentication.OauthDeviceIdAuthenticator;
 import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
@@ -71,15 +72,33 @@ public abstract class SCIMComplianceTest {
 
   protected SCIMComplianceTest() {
     SCIMClientService scimClientService = configureScimClientService(SERVICE_URL);
-    userRequest = scimClientService.buildUserRequest();
-    groupRequest = scimClientService.buildGroupRequest();
-    schemaRequest = scimClientService.buildSchemaRequest();
+    SCIMRequest.Builder builder = SCIMRequest.newBuilder();
+    populateCustomHeaders(builder);
+
+    userRequest = scimClientService.buildUserRequest(builder);
+    groupRequest = scimClientService.buildGroupRequest(builder);
+    schemaRequest = scimClientService.buildSchemaRequest(builder);
   }
+
+  private void populateCustomHeaders(SCIMRequest.Builder newBuilder) {
+    if (HEADERS == null) {
+      return;
+    }
+
+    String[] customHeaders = HEADERS.split(",");
+    for (int i = 0; i < customHeaders.length; i++) {
+      int nextIndex = i + 1;
+      if (customHeaders.length > nextIndex) {
+        newBuilder.addHeader(customHeaders[i], customHeaders[nextIndex]);
+      }
+    }
+  }
+
 
   public static SCIMClientService configureScimClientService(final String serviceUrl) {
     // @formatter:off
     SCIMClientService.Builder clientServiceBuilder = SCIMClientService
-        .builder(serviceUrl, HEADERS)
+        .builder(serviceUrl)
         .addResolver(new LoggingFeature(logger, Level.WARNING, LoggingFeature.Verbosity.PAYLOAD_ANY, null))
         .addProperty(TestProperties.LOG_TRAFFIC, true)
         .addProperty(TestProperties.DUMP_ENTITY, true)
