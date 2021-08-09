@@ -81,7 +81,7 @@ public class SCIMClientService {
 
   public static class Builder {
     private UserAttributesConfiguration userPropertiesConfiguration = new UserAttributesConfiguration();
-
+    
     private final List<Object> resolvers = new ArrayList<>();
     private final Map<String, Object> properties = new HashMap<>();
 
@@ -106,12 +106,12 @@ public class SCIMClientService {
       properties.put(name, value);
       return this;
     }
-
+    
     public Builder setUserPropertiesConfiguration(UserAttributesConfiguration userPropertiesConfiguration) {
       this.userPropertiesConfiguration = userPropertiesConfiguration;
       return this;
     }
-
+    
     public SCIMClientService build() {
       resolvers.add(new ClientJacksonResolver(userPropertiesConfiguration.isUserNameOptional()));
       Client client = ClientBuilder.newClient();
