@@ -44,6 +44,11 @@ java -jar scimono-compliance-tests-${version}-shaded.jar scim.service.url=http:/
 ```
 
 ### Custom Headers
+Headers should be in single quotes separated by comma
+```
+custom.headers='key:val','key2:val2'
+```
+
 ```
 java -jar scimono-compliance-tests-${version}-shaded.jar scim.service.url=http://localhost:8080/scim/v2 auth.type=Oauth oauth.grant=client_credentials oauth.clientId=admin oauth.secret=secret oauth.service.url=http://localhost:8080/oauth/token custom.headers='key:v1;v2','key2:value'
 ```
