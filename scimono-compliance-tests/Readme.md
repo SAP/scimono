@@ -81,6 +81,8 @@ com.sap.scimono.scim.system.tests.UserOperationsHttpResponseCodeTest=testGetUser
 | basic.auth.user  | No  | Username for Basic authentication  |
 | basic.auth.password  | No  | Password for Basic authentication  |
 | tests.file.path  | No  | Path to `.csv` file where custom subset of all tests is specified fo execution  |
+| custom.headers  | No  | Custom headers. Should be in single quotes separated by comma
+
 
 ## Test Results
 
