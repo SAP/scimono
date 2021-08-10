@@ -87,9 +87,8 @@ public abstract class SCIMComplianceTest {
       return null;
     }
 
-    String span = HEADERS;
     Pattern p = Pattern.compile(Pattern.quote("'") + "(.*?)" + Pattern.quote("'"));
-    Matcher m = p.matcher(span);
+    Matcher m = p.matcher(HEADERS);
     while (m.find()) {
       String[] header = m.group(1).split(":");
       newBuilder.addHeader(header[0], header[1]);
