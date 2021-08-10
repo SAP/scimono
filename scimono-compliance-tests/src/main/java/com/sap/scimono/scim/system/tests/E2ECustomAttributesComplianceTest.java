@@ -10,6 +10,7 @@
 
 package com.sap.scimono.scim.system.tests;
 
+import com.sap.scimono.client.SCIMRequest;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.base.Extension;
 import com.sap.scimono.entity.base.ExtensionFieldType;
@@ -41,7 +42,8 @@ public class E2ECustomAttributesComplianceTest extends SCIMComplianceTest {
 
   @RegisterExtension
   static SchemaClientScimResponseExtension resourceAwareSchemaRequest = SchemaClientScimResponseExtension
-      .forClearingAfterAllExecutions(SCIMComplianceTest.configureScimClientService(TestProperties.SERVICE_URL).buildSchemaRequest());
+      .forClearingAfterAllExecutions(SCIMComplianceTest.configureScimClientService(TestProperties.SERVICE_URL)
+      .buildSchemaRequest(requestWithCustomHeaders(SCIMRequest.newBuilder())));
 
   @RegisterExtension
   UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);

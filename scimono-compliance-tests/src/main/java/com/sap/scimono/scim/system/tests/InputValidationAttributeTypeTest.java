@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import com.sap.scimono.client.SCIMRequest;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -31,7 +32,8 @@ public class InputValidationAttributeTypeTest extends SCIMComplianceTest {
 
   @RegisterExtension
   static SchemaClientScimResponseExtension resourceAwareSchemaRequest = SchemaClientScimResponseExtension
-      .forClearingAfterAllExecutions(SCIMComplianceTest.configureScimClientService(TestProperties.SERVICE_URL).buildSchemaRequest());
+      .forClearingAfterAllExecutions(SCIMComplianceTest.configureScimClientService(TestProperties.SERVICE_URL)
+      .buildSchemaRequest(requestWithCustomHeaders(SCIMRequest.newBuilder())));
 
   @RegisterExtension
   UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);

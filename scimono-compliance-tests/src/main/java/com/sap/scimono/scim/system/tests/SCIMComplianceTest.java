@@ -75,16 +75,16 @@ public abstract class SCIMComplianceTest {
   protected SCIMComplianceTest() {
     SCIMClientService scimClientService = configureScimClientService(SERVICE_URL);
     SCIMRequest.Builder builder = SCIMRequest.newBuilder();
-    populateCustomHeaders(builder);
+    requestWithCustomHeaders(builder);
 
     userRequest = scimClientService.buildUserRequest(builder);
     groupRequest = scimClientService.buildGroupRequest(builder);
     schemaRequest = scimClientService.buildSchemaRequest(builder);
   }
 
-  public static SCIMRequest.Builder populateCustomHeaders(SCIMRequest.Builder newBuilder) {
+  public static SCIMRequest.Builder requestWithCustomHeaders(SCIMRequest.Builder newBuilder) {
     if (HEADERS == null) {
-      return null;
+      return newBuilder;
     }
 
     Pattern p = Pattern.compile(Pattern.quote("'") + "(.*?)" + Pattern.quote("'"));
