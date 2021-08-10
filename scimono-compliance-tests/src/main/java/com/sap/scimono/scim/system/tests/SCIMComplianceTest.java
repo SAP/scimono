@@ -22,6 +22,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -80,18 +82,19 @@ public abstract class SCIMComplianceTest {
     schemaRequest = scimClientService.buildSchemaRequest(builder);
   }
 
-  private void populateCustomHeaders(SCIMRequest.Builder newBuilder) {
+  public static SCIMRequest.Builder populateCustomHeaders(SCIMRequest.Builder newBuilder) {
     if (HEADERS == null) {
-      return;
+      return null;
     }
 
-    String[] customHeaders = HEADERS.split(",");
-    for (int i = 0; i < customHeaders.length; i++) {
-      int nextIndex = i + 1;
-      if (customHeaders.length > nextIndex) {
-        newBuilder.addHeader(customHeaders[i], customHeaders[nextIndex]);
-      }
+    String span = HEADERS;
+    Pattern p = Pattern.compile(Pattern.quote("'") + "(.*?)" + Pattern.quote("'"));
+    Matcher m = p.matcher(span);
+    while (m.find()) {
+      String[] header = m.group(1).split(":");
+      newBuilder.addHeader(header[0], header[1]);
     }
+    return newBuilder;
   }
 
 
