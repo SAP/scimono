@@ -43,6 +43,11 @@ Values for the following command line arguments: `oauth.clientId`;  `oauth.secre
 java -jar scimono-compliance-tests-${version}-shaded.jar scim.service.url=http://localhost:8080/scim/v2 auth.type=Oauth oauth.grant=client_credentials oauth.clientId=admin oauth.secret=secret oauth.service.url=http://localhost:8080/oauth/token
 ```
 
+### Custom Headers
+```
+java -jar scimono-compliance-tests-${version}-shaded.jar scim.service.url=http://localhost:8080/scim/v2 auth.type=Oauth oauth.grant=client_credentials oauth.clientId=admin oauth.secret=secret oauth.service.url=http://localhost:8080/oauth/token custom.headers='key:v1;v2','key2:value'
+```
+
 ## Run custom tests
 
 Many of the SCIM 2.0 service providers implement only some of the SCIM 2.0 features. It is possible to execute subset of all tests that are provided. You can specify which tests to be included in the test execution in `.csv` file with the following format:
