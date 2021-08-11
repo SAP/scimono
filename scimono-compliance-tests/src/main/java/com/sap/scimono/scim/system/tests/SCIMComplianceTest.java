@@ -9,6 +9,7 @@ import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_GRANT;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SECRET;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SERVICE_URL;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
+import static com.sap.scimono.scim.system.tests.util.TestProperties.HEADERS;
 import static com.sap.scimono.scim.system.tests.util.TestUtil.constructResourceLocation;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,6 +22,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -39,6 +42,7 @@ import com.sap.scimono.client.SCIMClientService;
 import com.sap.scimono.client.SCIMResponse;
 import com.sap.scimono.client.SchemaRequest;
 import com.sap.scimono.client.UserRequest;
+import com.sap.scimono.client.SCIMRequest;
 import com.sap.scimono.client.authentication.OauthCredentials;
 import com.sap.scimono.client.authentication.OauthDeviceIdAuthenticator;
 import com.sap.scimono.client.authentication.TargetSystemAuthenticator;
@@ -70,10 +74,28 @@ public abstract class SCIMComplianceTest {
 
   protected SCIMComplianceTest() {
     SCIMClientService scimClientService = configureScimClientService(SERVICE_URL);
-    userRequest = scimClientService.buildUserRequest();
-    groupRequest = scimClientService.buildGroupRequest();
-    schemaRequest = scimClientService.buildSchemaRequest();
+    SCIMRequest.Builder builder = SCIMRequest.newBuilder();
+    requestWithCustomHeaders(builder);
+
+    userRequest = scimClientService.buildUserRequest(builder);
+    groupRequest = scimClientService.buildGroupRequest(builder);
+    schemaRequest = scimClientService.buildSchemaRequest(builder);
   }
+
+  public static SCIMRequest.Builder requestWithCustomHeaders(SCIMRequest.Builder newBuilder) {
+    if (HEADERS == null) {
+      return newBuilder;
+    }
+
+    Pattern p = Pattern.compile(Pattern.quote("'") + "(.*?)" + Pattern.quote("'"));
+    Matcher m = p.matcher(HEADERS);
+    while (m.find()) {
+      String[] header = m.group(1).split(":");
+      newBuilder.addHeader(header[0], header[1]);
+    }
+    return newBuilder;
+  }
+
 
   public static SCIMClientService configureScimClientService(final String serviceUrl) {
     // @formatter:off
