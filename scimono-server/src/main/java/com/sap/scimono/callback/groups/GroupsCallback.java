@@ -1,6 +1,7 @@
 
 package com.sap.scimono.callback.groups;
 
+import java.security.Principal;
 import java.util.Optional;
 
 import com.sap.scimono.api.request.RequestedResourceAttributes;
@@ -19,6 +20,10 @@ public interface GroupsCallback {
   Group getGroup(final String groupId);
 
   default Group getGroup(String groupId, RequestedResourceAttributes additionalAttributes) {
+    return getGroup(groupId);
+  }
+
+  default Group getGroup(String groupId, RequestedResourceAttributes additionalAttributes, Principal userPrincipal) {
     return getGroup(groupId);
   }
 
@@ -42,6 +47,15 @@ public interface GroupsCallback {
     return getGroups(pageInfo, filter);
   }
 
+  /**
+   * Returns a page of groups (more info in {@link GroupsCallback#getGroups(PageInfo, String, RequestedResourceAttributes)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   * @return a page of groups or empty page if no groups match the filter/paging criteria
+   */
+  default PagedResult<Group> getGroups(final PageInfo pageInfo, final String filter, RequestedResourceAttributes additionalAttributes, Principal userPrincipal) {
+    return getGroups(pageInfo, filter, additionalAttributes);
+  }
 
   /**
    * Creates a group with the provided attributes. The group object must have all mandatory attributes available,
@@ -52,12 +66,32 @@ public interface GroupsCallback {
   Group createGroup(final Group group);
 
   /**
+   * Creates a group with the provided attributes.(more info in {@link GroupsCallback#createGroup(Group)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   * @return a page of groups or empty page if no groups match the filter/paging criteria
+   */
+  default Group createGroup(final Group group, Principal userPrincipal) {
+    return createGroup(group);
+  }
+
+  /**
    * Updates a group with the provided attributes. The group object must have all mandatory attributes available,
    * including metadata (id, new version, etc.).
    *
    * @param group
    */
   Group updateGroup(final Group group);
+
+  /**
+   * Updates a group with the provided attributes.(more info in {@link GroupsCallback#updateGroup(Group)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   * @return a page of groups or empty page if no groups match the filter/paging criteria
+   */
+  default Group updateGroup(final Group group, Principal userPrincipal) {
+    return updateGroup(group);
+  }
 
   /**
    * Updates a group with the provided attributes. The group object must have all mandatory attributes available,
@@ -70,11 +104,31 @@ public interface GroupsCallback {
   void patchGroup(String groupId, PatchBody patchBody, Meta groupMeta);
 
   /**
+   * Updates a group with the provided attributes.(more info in {@link GroupsCallback#patchGroup(String, PatchBody, Meta)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   * @return a page of groups or empty page if no groups match the filter/paging criteria
+   */
+  default void patchGroup(String groupId, PatchBody patchBody, Meta groupMeta, Principal userPrincipal) {
+    patchGroup(groupId, patchBody, groupMeta);
+  }
+
+  /**
    * Deletes the group with the specified groupId.
    *
    * @param groupId
    */
   void deleteGroup(final String groupId);
+
+  /**
+   * Deletes the group with the specified groupId.(more info in {@link GroupsCallback#deleteGroup(String)} ()}
+   * adding security principal to be able to allow or deny the requested user.
+   * @param userPrincipal
+   * @return a page of groups or empty page if no groups match the filter/paging criteria
+   */
+  default void deleteGroup(final String groupId, Principal userPrincipal) {
+    deleteGroup(groupId);
+  }
 
   /**
    * Generates a group id for a new group
