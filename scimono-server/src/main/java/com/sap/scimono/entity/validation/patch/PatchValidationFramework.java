@@ -135,10 +135,12 @@ public class PatchValidationFramework {
 
   private static Map<String, Schema> getRequiredSchemas(final SchemasCallback schemaAPI, final Set<String> requiredSchemaIds) {
     // @formatter:off
-    return schemaAPI.getSchemas().stream()
-        .filter(schema -> schema.getId().startsWith(Schema.EXTENSION_SCHEMA_URN) || requiredSchemaIds.contains(schema.getId()))
-        .collect(Collectors.toMap(Schema::getId, schema -> schema));
+    Map<String, Schema> requiredSchemas = schemaAPI.getCustomSchemas().stream().collect(Collectors.toMap(Schema::getId, schema -> schema));
+    requiredSchemas.putAll(schemaAPI.getSchemas().stream()
+        .filter(schema -> requiredSchemaIds.contains(schema.getId()))
+        .collect(Collectors.toMap(Schema::getId, schema -> schema)));
     // @formatter:on
+    return requiredSchemas;
   }
 
 }
