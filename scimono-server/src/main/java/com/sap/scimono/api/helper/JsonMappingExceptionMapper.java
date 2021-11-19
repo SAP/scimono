@@ -1,6 +1,7 @@
 
 package com.sap.scimono.api.helper;
 
+import javax.annotation.Priority;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -8,7 +9,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.sap.scimono.api.API;
 import com.sap.scimono.entity.ErrorResponse;
 
-
+@Priority(1)
 public class JsonMappingExceptionMapper implements ExceptionMapper<JsonMappingException> {
 
   @Override
