@@ -1,6 +1,7 @@
 
 package com.sap.scimono.api.helper;
 
+import javax.annotation.Priority;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.sap.scimono.api.API;
 import com.sap.scimono.entity.ErrorResponse;
 
+@Priority(1)
 public class JsonProcessingExceptionMapper implements ExceptionMapper<JsonProcessingException> {
 
   private static final String JSON_PROCESSING_EXCEPTION_MSG = "Error parsing request body.";
