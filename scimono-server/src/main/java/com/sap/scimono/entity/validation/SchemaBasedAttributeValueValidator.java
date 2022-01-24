@@ -114,7 +114,6 @@ public class SchemaBasedAttributeValueValidator implements Validator<Object> {
     List<Validator<Attribute>> validators = new LinkedList<>();
     validators.add(new CanonicalValuesValidator(value));
     validators.add(new AttributeDataTypeValidator(value));
-    validators.add(new AttributeReadOnlyValidator());
     if (!SchemasCallback.isCoreSchema(attribute.getName())) {
       validators.add(new RequiredSubAttributesValidator(value));
     }
