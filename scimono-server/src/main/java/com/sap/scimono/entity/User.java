@@ -219,6 +219,7 @@ public final class User extends Resource<User> {
    *
    * @return the user name
    */
+  @JsonInclude(Include.ALWAYS)
   public String getUserName() {
     return userName;
   }
