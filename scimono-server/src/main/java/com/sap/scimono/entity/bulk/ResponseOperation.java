@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.api.API;
 import com.sap.scimono.api.helper.ScimErrorResponseParser;
 import com.sap.scimono.entity.ErrorResponse;
@@ -18,11 +17,12 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.exception.InternalScimonoException;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.SCIMException;
-import com.sap.scimono.helper.Strings;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResponseOperation extends BulkOperation {
+
+  private static final long serialVersionUID = 2729999986283853529L;
   private static final String LOCATION_FIELD = "location";
   private static final String STATUS_FIELD = "status";
   private static final String RESPONSE_FIELD = "response";
@@ -120,11 +120,13 @@ public class ResponseOperation extends BulkOperation {
   }
 
   private static String validateAndNormalizeLocation(RequestMethod requestMethod, ErrorResponse errorResponse, String location) {
-    if (requestMethod != RequestMethod.POST && location == null) {
+    boolean hasErrorResponse = errorResponse != null;
+    
+    if (requestMethod != RequestMethod.POST && location == null && !hasErrorResponse) {
       throw new InvalidInputException("Expected resource location for input method: POST");
     }
 
-    if (requestMethod == RequestMethod.POST && errorResponse != null) {
+    if (requestMethod == RequestMethod.POST && hasErrorResponse) {
       return null;
     }
 

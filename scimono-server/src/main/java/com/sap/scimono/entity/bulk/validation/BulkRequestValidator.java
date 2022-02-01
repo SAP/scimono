@@ -1,22 +1,15 @@
 package com.sap.scimono.entity.bulk.validation;
 
-import static com.sap.scimono.entity.bulk.RequestMethod.DELETE;
-import static com.sap.scimono.entity.bulk.RequestMethod.PATCH;
-import static com.sap.scimono.entity.bulk.RequestMethod.POST;
-import static com.sap.scimono.entity.bulk.RequestMethod.PUT;
-
-import java.util.Arrays;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.function.UnaryOperator;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import com.sap.scimono.api.API;
 import com.sap.scimono.entity.bulk.BulkBody;
-import com.sap.scimono.entity.bulk.RequestMethod;
 import com.sap.scimono.entity.bulk.RequestOperation;
 import com.sap.scimono.entity.validation.ValidationUtil;
 
@@ -39,65 +32,42 @@ public class BulkRequestValidator implements ConstraintValidator<ValidBulkReques
       return false;
     }
 
-    return areOperationsValid(context, bulkRequest.getOperations());
+    return isAtLeastOneOperationValid(context, bulkRequest.getOperations());
+  }
+  
+  private boolean hasDuplicateBulkId(RequestOperation operation, List<String> allProcessedIDs) {
+      List<Integer> allIndexes = IntStream.range(0, allProcessedIDs.size()).boxed().filter(i -> allProcessedIDs.get(i).equals(operation.getBulkId()))
+          .collect(Collectors.toList());
+
+      if (allIndexes.size() > 1) {
+        return true;
+      }
+    return false;
+  }
+  
+  private List<String> getAllProcessedBulkIDs(List<RequestOperation> operations) {
+    List<String> allProcessedIDs = new ArrayList<String>();
+    for (RequestOperation operation : operations) {
+      String bulkId = operation.getBulkId();
+      if (bulkId != null) {
+        allProcessedIDs.add(bulkId);
+      }
+    }
+    return allProcessedIDs;
   }
 
-  private boolean areOperationsValid(ConstraintValidatorContext context, List<RequestOperation> operations) {
-    Set<String> processedBulkIds = new HashSet<>();
+  private boolean isAtLeastOneOperationValid(ConstraintValidatorContext context, List<RequestOperation> operations) {
+    List<String> allProcessedIDs = getAllProcessedBulkIDs(operations);
 
     for (RequestOperation operation : operations) {
       String msgPattern = "Invalid operation with bulkId: " + operation.getBulkId() + ". Reason: %s";
       UnaryOperator<String> errorMsgBuilder = detail -> String.format(msgPattern, detail);
 
-      RequestMethod method = operation.getMethod();
-      if (method == null) {
-        ValidationUtil.interpolateErrorMessage(context, errorMsgBuilder.apply("Invalid method name!, Valid methods: "
-            + Arrays.toString(RequestMethod.values())));
-        return false;
-      }
-
       String bulkId = operation.getBulkId();
-      if (POST == method && bulkId == null) {
-        ValidationUtil.interpolateErrorMessage(context, "bulkId is required for method: " + POST);
-        return false;
-      }
-
-      if (bulkId != null && processedBulkIds.contains(bulkId)) {
+      if (bulkId != null && hasDuplicateBulkId(operation, allProcessedIDs)) {
         ValidationUtil.interpolateErrorMessage(context, errorMsgBuilder.apply("BulkId should be unique within a bulk request!"));
         return false;
       }
-
-      if (bulkId != null) {
-        processedBulkIds.add(bulkId);
-      }
-
-      if (!validatePath(context, errorMsgBuilder, operation)) {
-        return false;
-      }
-
-      if (method != DELETE && !operation.isDataAvailable()) {
-        ValidationUtil.interpolateErrorMessage(context, errorMsgBuilder.apply("The attribute data is required for POST, PUT or PATCH!"));
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  private boolean validatePath(ConstraintValidatorContext context, UnaryOperator<String> errorMsgBuilder, RequestOperation operation) {
-    String resourceEndpoint = RequestOperation.extractRootFromPath(operation.getPath());
-    if (!API.USERS.equalsIgnoreCase(resourceEndpoint) && !API.GROUPS.equalsIgnoreCase(resourceEndpoint)) {
-      String msg = String.format("Invalid path endpoint for operation with bulkId: %s. Path should start with either %s or %s endpoint.",
-          operation.getBulkId(), API.USERS, API.GROUPS);
-
-      ValidationUtil.interpolateErrorMessage(context, errorMsgBuilder.apply(msg));
-      return false;
-    }
-
-    RequestMethod method = operation.getMethod();
-    if ((PUT == method || PATCH == method) && !operation.getResourceId().isPresent()) {
-      ValidationUtil.interpolateErrorMessage(context, errorMsgBuilder.apply("Path should point to resource id for PUT and POST methods"));
-      return false;
     }
 
     return true;

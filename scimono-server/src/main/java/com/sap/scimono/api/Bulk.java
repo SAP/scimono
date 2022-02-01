@@ -5,13 +5,19 @@ import static com.sap.scimono.api.API.BULK;
 import static com.sap.scimono.api.API.GROUPS;
 import static com.sap.scimono.api.API.USERS;
 import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
+import static com.sap.scimono.entity.bulk.RequestMethod.DELETE;
+import static com.sap.scimono.entity.bulk.RequestMethod.PATCH;
+import static com.sap.scimono.entity.bulk.RequestMethod.POST;
+import static com.sap.scimono.entity.bulk.RequestMethod.PUT;
 import static com.sap.scimono.exception.SCIMException.Type.TOO_MANY;
 
 import java.time.Instant;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 import javax.ws.rs.Consumes;
@@ -36,12 +42,14 @@ import com.sap.scimono.callback.groups.GroupsCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.callback.users.UsersCallback;
+import com.sap.scimono.entity.ErrorResponse;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.bulk.BulkBody;
 import com.sap.scimono.entity.bulk.RequestMethod;
 import com.sap.scimono.entity.bulk.RequestOperation;
+import com.sap.scimono.entity.bulk.RequestOperation.Builder;
 import com.sap.scimono.entity.bulk.ResponseOperation;
 import com.sap.scimono.entity.bulk.validation.ValidBulkRequest;
 import com.sap.scimono.entity.config.BulkSetting;
@@ -93,8 +101,7 @@ public class Bulk {
   
   @POST
   public Response handleBulkRequest(@ValidBulkRequest BulkBody<RequestOperation> bulkRequest) {
-    validateByBulkSettings(bulkRequest);
-    List<RequestOperation> normalizedBulkOperations = normalizeRequestOperations(bulkRequest.getOperations());
+    List<RequestOperation> normalizedBulkOperations = getValidatedCommonBulkOperations(bulkRequest);
 
     bulkRequest = BulkBody.forRequest(bulkRequest.getFailOnErrors(), normalizedBulkOperations);
     BulkBody<ResponseOperation> bulkResponse = bulkAPI.handleBulkRequest(bulkRequest);
@@ -116,15 +123,70 @@ public class Bulk {
     }
   }
 
-  private List<RequestOperation> normalizeRequestOperations(List<RequestOperation> requestOperations) {
-    return requestOperations.stream().map(operation -> {
-      String resourceType = operation.getResourceType();
-      if (User.RESOURCE_TYPE_USER.equalsIgnoreCase(resourceType)) {
-        return prepareUserBulkOperation(operation);
+  private List<RequestOperation> getValidatedCommonBulkOperations(BulkBody<RequestOperation> bulkRequest) {
+    List<RequestOperation> requestOperations = bulkRequest.getOperations();
+    List<RequestOperation> result = requestOperations.stream().map(operation -> {
+      Builder operationBuilder = operation.builder();
+      RequestMethod method = operation.getMethod();
+      if (method == null) {
+        operationBuilder.setData(
+            buildValidationErrorResponse(operation.getBulkId(), "Invalid method name!, Valid methods: " + Arrays.toString(RequestMethod.values())));
       }
 
-      if (RESOURCE_TYPE_GROUP.equalsIgnoreCase(resourceType)) {
-        return prepareGroupBulkOperation(operation);
+      String bulkId = operation.getBulkId();
+      if (POST == method && bulkId == null) {
+        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(), "bulkId is required for method: " + POST));
+      }
+
+      String resourceEndpoint = null;
+      String msg = String.format("Invalid path endpoint for operation with bulkId: %s. Path should start with either %s or %s endpoint.",
+          operation.getBulkId(), API.USERS, API.GROUPS);
+      try {
+        resourceEndpoint = RequestOperation.extractRootFromPath(operation.getPath());
+      } catch (InternalScimonoException e) {
+        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(), msg));
+      }
+
+      if (!API.USERS.equalsIgnoreCase(resourceEndpoint) && !API.GROUPS.equalsIgnoreCase(resourceEndpoint)) {
+        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(), msg));
+      }
+
+      if ((PUT == method || PATCH == method) && !operation.getResourceId().isPresent()) {
+        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(), "Path should point to resource id for PUT and POST methods"));
+      }
+
+      if (method != DELETE && !operation.isDataAvailable()) {
+        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(), "The attribute data is required for POST, PUT or PATCH!"));
+      }
+      return operationBuilder.build();
+    }).collect(Collectors.toList());
+
+    validateByBulkSettings(bulkRequest);
+
+    return normalizeRequestOperations(result);
+  }
+
+  private ErrorResponse buildValidationErrorResponse(String bulkId, String errMsg) {
+    return new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), SCIMException.Type.INVALID_VALUE.toJson(), buildErrorMessage(bulkId, errMsg));
+  }
+
+  private String buildErrorMessage(String bulkId, String errMsg) {
+    String msgPattern = "Invalid operation with bulkId: " + bulkId + ". Reason: %s";
+    UnaryOperator<String> errorMsgBuilder = detail -> String.format(msgPattern, detail);
+    return errorMsgBuilder.apply(errMsg);
+  }
+
+  private List<RequestOperation> normalizeRequestOperations(List<RequestOperation> requestOperations) {
+    return requestOperations.stream().map(operation -> {
+      if (!operation.isValidationErrorAvailable()) {
+        String resourceType = operation.getResourceType();
+        if (User.RESOURCE_TYPE_USER.equalsIgnoreCase(resourceType)) {
+          return prepareUserBulkOperation(operation);
+        }
+
+        if (RESOURCE_TYPE_GROUP.equalsIgnoreCase(resourceType)) {
+          return prepareGroupBulkOperation(operation);
+        }
       }
 
       return operation;
