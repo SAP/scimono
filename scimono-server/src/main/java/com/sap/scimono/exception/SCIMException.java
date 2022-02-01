@@ -64,7 +64,7 @@ public class SCIMException extends WebApplicationException {
       this.jsonRepresentation = jsonRepresentation;
     }
 
-    String toJson() {
+    public String toJson() {
       return jsonRepresentation;
     }
   }

@@ -9,7 +9,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.api.API;
 import com.sap.scimono.api.helper.ScimErrorResponseParser;
 import com.sap.scimono.entity.ErrorResponse;
@@ -18,11 +17,12 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.exception.InternalScimonoException;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.SCIMException;
-import com.sap.scimono.helper.Strings;
 
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ResponseOperation extends BulkOperation {
+
+  private static final long serialVersionUID = 2729999986283853529L;
   private static final String LOCATION_FIELD = "location";
   private static final String STATUS_FIELD = "status";
   private static final String RESPONSE_FIELD = "response";
@@ -95,7 +95,8 @@ public class ResponseOperation extends BulkOperation {
   }
 
   static Builder error(RequestOperation reqOperation, ErrorResponse scimError) {
-    return new Builder().forRequestOperation(reqOperation).withError(scimError).withStatus(scimError.getStatus());
+    return new Builder().forRequestOperation(reqOperation).withError(scimError).withStatus(scimError.getStatus())
+        .withLocation(reqOperation.getPath());
   }
 
   static Builder success(RequestOperation reqOperation) {
@@ -119,28 +120,48 @@ public class ResponseOperation extends BulkOperation {
     }
   }
 
-  private static String validateAndNormalizeLocation(RequestMethod requestMethod, ErrorResponse errorResponse, String location) {
-    if (requestMethod != RequestMethod.POST && location == null) {
-      throw new InvalidInputException("Expected resource location for input method: POST");
+  private static String validateAndNormalizeLocation(RequestMethod requestMethod, ErrorResponse errorResponse, String initLocation) {
+    boolean hasErrorResponse = errorResponse != null;
+    boolean isPostMethod = requestMethod == RequestMethod.POST;
+    String location = removeLocationEndingSlash(initLocation);
+    
+    boolean isLocationMissingFromNonPostMethod = !isPostMethod && location == null && !hasErrorResponse;
+    boolean isPostMethodWithError = isPostMethod && hasErrorResponse;
+    boolean isMissingLocation = location == null;
+    
+    if (isLocationMissingFromNonPostMethod) {
+      throw new InvalidInputException("Expected resource location for request method: " + requestMethod);
     }
 
-    if (requestMethod == RequestMethod.POST && errorResponse != null) {
+    if (isPostMethodWithError || isMissingLocation) {
       return null;
     }
 
-    String normalizedLocation;
+    return getNormalizedLocation(requestMethod, errorResponse, location);
+  }
+
+  private static String getNormalizedLocation(RequestMethod requestMethod, ErrorResponse errorResponse, String location) {
+    boolean hasErrorResponse = errorResponse != null;
+    String normalizedLocation = null;
+
     try {
       URL locationUrl = new URL(location);
       normalizedLocation = locationUrl.toURI().normalize().toASCIIString();
     } catch (MalformedURLException | URISyntaxException e) {
-      throw new InternalScimonoException("Unable to extract resource type and id from bulk operation's location");
-    }
 
-    if (location.endsWith("/")) {
-      normalizedLocation = normalizedLocation.substring(0, normalizedLocation.length() - 1);
+      if (!hasErrorResponse) {
+        throw new InternalScimonoException(String.format(
+            "Unable to extract resource type and id from bulk operation's location. Location is: %s, method is: %s", location, requestMethod));
+      }
     }
-
     return normalizedLocation;
+  }
+
+  private static String removeLocationEndingSlash(String location) {
+    if (location != null && location.endsWith("/")) {
+      location = location.substring(0, location.length() - 1);
+    }
+    return location;
   }
 
   public static class Builder extends BulkOperation.Builder<ResponseOperation> {
