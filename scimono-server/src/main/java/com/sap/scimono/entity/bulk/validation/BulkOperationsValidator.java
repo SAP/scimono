@@ -33,9 +33,21 @@ import com.sap.scimono.exception.SCIMException;
 import com.sap.scimono.helper.ResourceLocationService;
 
 public class BulkOperationsValidator {
+  
+  private static final String INVALID_PATH_ENDPOINT_ERROR_PLACEHOLDER = "Invalid path endpoint for operation with bulkId: %s. Path should start with either %s or %s endpoint.";
+  
+  private final SCIMConfigurationCallback scimConfigurationCallback;
+  private final ResourceLocationService usersLocationService;
+  private final ResourceLocationService groupsLocationService;
+  
+  public BulkOperationsValidator(SCIMConfigurationCallback scimConfigurationCallback, ResourceLocationService usersLocationService, ResourceLocationService groupsLocationService) {
+    this.scimConfigurationCallback = scimConfigurationCallback;
+    this.usersLocationService = usersLocationService;
+    this.groupsLocationService = groupsLocationService;
+  }
 
-  public static List<RequestOperation> getValidBulkOperations(BulkBody<RequestOperation> bulkRequest,
-      SCIMConfigurationCallback scimConfigurationCallback) {
+  public List<RequestOperation> getValidBulkOperations(BulkBody<RequestOperation> bulkRequest) {
+    validateByBulkSettings(bulkRequest, scimConfigurationCallback);
     List<RequestOperation> requestOperations = bulkRequest.getOperations();
     List<RequestOperation> result = requestOperations.stream().map(operation -> {
       Builder operationBuilder = operation.builder();
@@ -51,16 +63,16 @@ public class BulkOperationsValidator {
       }
 
       String resourceEndpoint = null;
-      String msg = String.format("Invalid path endpoint for operation with bulkId: %s. Path should start with either %s or %s endpoint.",
-          operation.getBulkId(), API.USERS, API.GROUPS);
       try {
         resourceEndpoint = RequestOperation.extractRootFromPath(operation.getPath());
       } catch (InternalScimonoException e) {
-        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(), msg));
+        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(),
+            String.format(INVALID_PATH_ENDPOINT_ERROR_PLACEHOLDER, operation.getBulkId(), API.USERS, API.GROUPS)));
       }
 
       if (!API.USERS.equalsIgnoreCase(resourceEndpoint) && !API.GROUPS.equalsIgnoreCase(resourceEndpoint)) {
-        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(), msg));
+        operationBuilder.setData(buildValidationErrorResponse(operation.getBulkId(),
+            String.format(INVALID_PATH_ENDPOINT_ERROR_PLACEHOLDER, operation.getBulkId(), API.USERS, API.GROUPS)));
       }
 
       if ((PUT == method || PATCH == method) && !operation.getResourceId().isPresent()) {
@@ -73,13 +85,10 @@ public class BulkOperationsValidator {
       return operationBuilder.build();
     }).collect(Collectors.toList());
 
-    validateByBulkSettings(bulkRequest, scimConfigurationCallback);
-
     return result;
   }
 
-  public static BulkBody<ResponseOperation> getValidResponseData(BulkBody<RequestOperation> bulkRequest, BulkBody<ResponseOperation> bulkResponse,
-      ResourceLocationService usersLocationService, ResourceLocationService groupsLocationService) {
+  public BulkBody<ResponseOperation> getValidResponseData(BulkBody<RequestOperation> bulkRequest, BulkBody<ResponseOperation> bulkResponse) {
     Map<String, RequestOperation> requestOperations = bulkRequest.getOperations().stream()
         .collect(Collectors.toMap(RequestOperation::getBulkId, Function.identity()));
 
@@ -94,7 +103,7 @@ public class BulkOperationsValidator {
     return BulkBody.forResponse(responseOperations);
   }
 
-  private static String getValidResponseLocation(RequestOperation reqOperation, ResponseOperation respOperation,
+  private String getValidResponseLocation(RequestOperation reqOperation, ResponseOperation respOperation,
       ResourceLocationService usersLocationService, ResourceLocationService groupsLocationService) {
     if (reqOperation.getMethod() == RequestMethod.POST && !respOperation.isSuccessful()) {
       return null;
@@ -114,7 +123,7 @@ public class BulkOperationsValidator {
     return location;
   }
 
-  private static void validateByBulkSettings(BulkBody<RequestOperation> bulkRequest, SCIMConfigurationCallback scimConfigurationCallback) {
+  private void validateByBulkSettings(BulkBody<RequestOperation> bulkRequest, SCIMConfigurationCallback scimConfigurationCallback) {
     BulkSetting bulkSetting = scimConfigurationCallback.getBulkSetting();
     if (bulkSetting == null || !bulkSetting.isSupported()) {
       String msg = "Service provider does not support bulk operations. Please check the bulk settings.";
@@ -127,12 +136,12 @@ public class BulkOperationsValidator {
     }
   }
 
-  private static ErrorResponse buildValidationErrorResponse(String bulkId, String errMsg) {
+  private ErrorResponse buildValidationErrorResponse(String bulkId, String errMsg) {
     return new ErrorResponse(Response.Status.BAD_REQUEST.getStatusCode(), SCIMException.Type.INVALID_VALUE.toJson(),
         buildErrorMessage(bulkId, errMsg));
   }
 
-  private static String buildErrorMessage(String bulkId, String errMsg) {
+  private String buildErrorMessage(String bulkId, String errMsg) {
     String msgPattern = "Invalid operation with bulkId: " + bulkId + ". Reason: %s";
     UnaryOperator<String> errorMsgBuilder = detail -> String.format(msgPattern, detail);
     return errorMsgBuilder.apply(errMsg);

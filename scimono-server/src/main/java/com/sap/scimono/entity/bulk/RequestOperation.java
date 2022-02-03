@@ -134,7 +134,7 @@ public class RequestOperation extends BulkOperation {
   }
 
   @JsonIgnore
-  public boolean isValidationErrorAvailable() {
+  public boolean hasValidationError() {
     if (data == null) {
       return false;
     }
@@ -158,7 +158,7 @@ public class RequestOperation extends BulkOperation {
   @JsonIgnore
   public String getResourceType() {
     
-    if (isValidationErrorAvailable()) {
+    if (hasValidationError()) {
       return null;
     }
     
@@ -185,7 +185,7 @@ public class RequestOperation extends BulkOperation {
   }
 
   public ResponseOperation.Builder errorResponseFromExistingValidationError() {
-    if (!isValidationErrorAvailable()) {
+    if (!hasValidationError()) {
       throw new InternalScimonoException("Validation error is not present");
     }
 

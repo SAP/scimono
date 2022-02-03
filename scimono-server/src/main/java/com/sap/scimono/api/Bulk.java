@@ -66,9 +66,7 @@ public class Bulk {
 
   private final SCIMConfigurationCallback scimConfigurationCallback;
 
-  public Bulk( @Context
-  final Application appContext, @Context
-  final UriInfo uriInfo) {
+  public Bulk(@Context final Application appContext, @Context final UriInfo uriInfo) {
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
     bulkAPI = scimApplication.getBulkRequestCallback();
     scimConfigurationCallback = scimApplication.getConfigurationCallback();
@@ -91,19 +89,20 @@ public class Bulk {
 
   @POST
   public Response handleBulkRequest(@ValidBulkRequest BulkBody<RequestOperation> bulkRequest) {
-    List<RequestOperation> validatedOperations = BulkOperationsValidator.getValidBulkOperations(bulkRequest, scimConfigurationCallback);
+    BulkOperationsValidator operationsValidator = new BulkOperationsValidator(scimConfigurationCallback, usersLocationService, groupsLocationService);
+    List<RequestOperation> validatedOperations = operationsValidator.getValidBulkOperations(bulkRequest);
     List<RequestOperation> formattedBulkOperations = normalizeRequestOperations(validatedOperations);
 
     bulkRequest = BulkBody.forRequest(bulkRequest.getFailOnErrors(), formattedBulkOperations);
     BulkBody<ResponseOperation> bulkResponse = bulkAPI.handleBulkRequest(bulkRequest);
 
-    bulkResponse = BulkOperationsValidator.getValidResponseData(bulkRequest, bulkResponse, usersLocationService, groupsLocationService);
+    bulkResponse = operationsValidator.getValidResponseData(bulkRequest, bulkResponse);
     return Response.ok().entity(bulkResponse).build();
   }
 
   private List<RequestOperation> normalizeRequestOperations(List<RequestOperation> requestOperations) {
     return requestOperations.stream().map(operation -> {
-      if (!operation.isValidationErrorAvailable()) {
+      if (!operation.hasValidationError()) {
         String resourceType = operation.getResourceType();
         if (User.RESOURCE_TYPE_USER.equalsIgnoreCase(resourceType)) {
           return prepareUserBulkOperation(operation);

@@ -42,10 +42,13 @@ public class ResponseOperation extends BulkOperation {
                             @JsonProperty(RESPONSE_FIELD) final ErrorResponse response,
                             @JsonProperty(value = STATUS_FIELD, required = true) final String status) {
     super(method, bulkId, version);
+
+    String validatedLocation = getValidatedLocation(getMethod(), response, location);
+    this.location = getNormalizedLocation(getMethod(), response, validatedLocation);
+    this.resourceId = extractResourceId(this.location);
+    this.resourceType = extractResourceType(this.location);
     this.status = status;
     this.response = response;
-    this.location = validateAndNormalizeLocation(getMethod(), response, location);
-    initResourceTypeAndId();
   }
 
   private ResponseOperation(Builder builder) {
@@ -104,31 +107,36 @@ public class ResponseOperation extends BulkOperation {
     return new Builder().forRequestOperation(reqOperation).withStatus(statusCode);
   }
 
-  private void initResourceTypeAndId() {
-    if (this.location == null) {
-      return;
+  private String extractResourceId(String normalizedLocation) {
+    if (normalizedLocation != null) {
+      String[] pathSegments = normalizedLocation.split("/");
+      return pathSegments[pathSegments.length - 1];
     }
-
-    String[] pathSegments = location.split("/");
-    this.resourceId = pathSegments[pathSegments.length - 1];
-    String endpoint = pathSegments[pathSegments.length - 2];
-
-    if (API.USERS.equalsIgnoreCase(endpoint)) {
-      this.resourceType = User.RESOURCE_TYPE_USER;
-    } else if (API.GROUPS.equalsIgnoreCase(endpoint)) {
-      this.resourceType = Group.RESOURCE_TYPE_GROUP;
-    }
+    return null;
   }
 
-  private static String validateAndNormalizeLocation(RequestMethod requestMethod, ErrorResponse errorResponse, String initLocation) {
+  private String extractResourceType(String normalizedLocation) {
+    if (normalizedLocation != null) {
+      String[] pathSegments = normalizedLocation.split("/");
+      String endpoint = pathSegments[pathSegments.length - 2];
+
+      if (API.USERS.equalsIgnoreCase(endpoint)) {
+        return User.RESOURCE_TYPE_USER;
+      } else if (API.GROUPS.equalsIgnoreCase(endpoint)) {
+        return Group.RESOURCE_TYPE_GROUP;
+      }
+    }
+    return null;
+  }
+ 
+  private static String getValidatedLocation(RequestMethod requestMethod, ErrorResponse errorResponse, String initLocation) {
     boolean hasErrorResponse = errorResponse != null;
     boolean isPostMethod = requestMethod == RequestMethod.POST;
-    String location = removeLocationEndingSlash(initLocation);
-    
-    boolean isLocationMissingFromNonPostMethod = !isPostMethod && location == null && !hasErrorResponse;
-    boolean isPostMethodWithError = isPostMethod && hasErrorResponse;
+    String location = removeEndingSlash(initLocation);
     boolean isMissingLocation = location == null;
-    
+    boolean isLocationMissingFromNonPostMethod = !isPostMethod && isMissingLocation && !hasErrorResponse;
+    boolean isPostMethodWithError = isPostMethod && hasErrorResponse;
+
     if (isLocationMissingFromNonPostMethod) {
       throw new InvalidInputException("Expected resource location for request method: " + requestMethod);
     }
@@ -136,28 +144,27 @@ public class ResponseOperation extends BulkOperation {
     if (isPostMethodWithError || isMissingLocation) {
       return null;
     }
-
-    return getNormalizedLocation(requestMethod, errorResponse, location);
+    return location;
   }
 
   private static String getNormalizedLocation(RequestMethod requestMethod, ErrorResponse errorResponse, String location) {
     boolean hasErrorResponse = errorResponse != null;
-    String normalizedLocation = null;
 
     try {
       URL locationUrl = new URL(location);
-      normalizedLocation = locationUrl.toURI().normalize().toASCIIString();
+      return locationUrl.toURI().normalize().toASCIIString();
     } catch (MalformedURLException | URISyntaxException e) {
 
       if (!hasErrorResponse) {
         throw new InternalScimonoException(String.format(
-            "Unable to extract resource type and id from bulk operation's location. Location is: %s, method is: %s", location, requestMethod));
+            "The resource's location could not be normalized in order to extract the resource type and id. Location is: %s, method is: %s", location,
+            requestMethod));
       }
     }
-    return normalizedLocation;
+    return null;
   }
 
-  private static String removeLocationEndingSlash(String location) {
+  private static String removeEndingSlash(String location) {
     if (location != null && location.endsWith("/")) {
       location = location.substring(0, location.length() - 1);
     }
