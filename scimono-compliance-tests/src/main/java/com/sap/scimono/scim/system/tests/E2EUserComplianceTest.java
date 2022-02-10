@@ -1238,7 +1238,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         .getResources()
         .stream()
         .filter(group -> !group.getMembers().isEmpty() && group.getDisplayName() != null)
-        .filter(group -> group.getMembers().stream().anyMatch(member -> MemberRef.Type.USER == member.getType()))
+        .filter(group -> group.getMembers().stream().anyMatch(member -> MemberRef.Type.USER.equals(member.getType())))
         .findFirst();
   }
 
