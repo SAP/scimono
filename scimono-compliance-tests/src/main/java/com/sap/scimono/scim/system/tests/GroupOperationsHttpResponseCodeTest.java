@@ -77,17 +77,17 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
   }
 
   @Test
-  @DisplayName("Test Get group with illegal id and verify Http status code: 400")
-  public void testGetGroupWithIllegalId400() {
+  @DisplayName("Test Get group with illegal id and verify Http status code: 404")
+  public void testGetGroupWithIllegalIdReturns404() {
     logger.info("Fetching Group with illegal id");
     SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.readSingleGroup(ILLEGAL_UUID);
 
-    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
   @DisplayName("Test Get group with non existing id and verify Http status code: 404")
-  public void testGetGroupWithNonExistingId400() {
+  public void testGetGroupWithNonExistingId404() {
     logger.info("Fetching Group with non existing id");
     SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.readSingleGroup(UUID.randomUUID().toString());
 
@@ -114,12 +114,12 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
   }
 
   @Test
-  @DisplayName("Test Get group with # instead of id and verify Http status code: 400")
-  public void testGetAllGroupsWithIllegalId400() {
+  @DisplayName("Test Get group with # instead of id and verify Http status code: 404")
+  public void testGetAllGroupsWithIllegalIdReturns404() {
     logger.info("Fetching Group with #");
     SCIMResponse<Group> scimResponse = resourceAwareGroupRequest.readSingleGroup("#");
 
-    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
@@ -223,12 +223,12 @@ public class GroupOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTes
   }
 
   @Test
-  @DisplayName("Test Delete group with illegal id and verify Http status code: 400")
-  public void testDeleteGroupWithIllegalId400() {
+  @DisplayName("Test Delete group with illegal id and verify Http status code: 404")
+  public void testDeleteGroupWithIllegalIdReturns404() {
     logger.info("Deleting Group with illegal Id");
     SCIMResponse<Void> deleteScimGroupResponse = resourceAwareGroupRequest.deleteGroup(ILLEGAL_UUID);
 
-    assertAll("Verify Delete Group Response", getResponseStatusAssertions(deleteScimGroupResponse, false, BAD_REQUEST));
+    assertAll("Verify Delete Group Response", getResponseStatusAssertions(deleteScimGroupResponse, false, NOT_FOUND));
   }
 
   @Test

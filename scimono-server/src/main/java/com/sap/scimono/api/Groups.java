@@ -51,7 +51,6 @@ import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
-import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
 import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
@@ -89,7 +88,7 @@ public class Groups {
   @GET
   @Path("{id}")
   // @formatter:off
-  public Response getGroup(@PathParam("id") @ValidId final String groupId,
+  public Response getGroup(@PathParam("id") final String groupId,
                            @QueryParam(ATTRIBUTES_PARAM) final String attributes,
                            @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
     // @formatter:on
@@ -161,7 +160,7 @@ public class Groups {
 
   @PUT
   @Path("{id}")
-  public Response updateGroup(@PathParam("id") @ValidId final String groupId, @Valid Group groupToUpdate) {
+  public Response updateGroup(@PathParam("id") final String groupId, @Valid Group groupToUpdate) {
     Group preparedGroup = groupPreProcessor.prepareForUpdate(groupToUpdate, groupId);
 
     Group updatedGroup = groupAPI.updateGroup(preparedGroup);
@@ -174,7 +173,7 @@ public class Groups {
 
   @DELETE
   @Path("{id}")
-  public void deleteGroup(@PathParam("id") @ValidId final String groupId) {
+  public void deleteGroup(@PathParam("id") final String groupId) {
     groupAPI.deleteGroup(groupId);
 
     logger.trace("Deleted group {}", groupId);
@@ -183,7 +182,7 @@ public class Groups {
 
   @PATCH
   @Path("{id}")
-  public Response patchGroup(@PathParam("id") @ValidId final String groupId, final PatchBody patchBody) {
+  public Response patchGroup(@PathParam("id") final String groupId, final PatchBody patchBody) {
     PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI);
     validationFramework.validate(patchBody);
 
