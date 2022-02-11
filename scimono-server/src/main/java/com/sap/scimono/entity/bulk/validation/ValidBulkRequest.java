@@ -12,7 +12,7 @@ import javax.validation.Payload;
 
 @Target({ElementType.METHOD, ElementType.ANNOTATION_TYPE, ElementType.PARAMETER, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = BulkRequestValidator.class)
+@Constraint(validatedBy = BulkRequestInitialValidator.class)
 @Documented
 public @interface ValidBulkRequest {
   String message() default "Invalid bulk request";
