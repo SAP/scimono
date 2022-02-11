@@ -89,16 +89,6 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
     assertAll("Verify GET Response", getResponseStatusAssertions(readUserResponse, true, OK));
   }
 
-  @ParameterizedTest(name = "Test Get users with illegal id: {0} and verify Http status code: 404")
-  @ValueSource(strings = {ILLEGAL_UUID, "@!$^&*()_+=-[].,<>\'\":", "e87ca7b1-5f4d-493d-96f2-5ba3cf43deb51"})
-  @DisplayName("Test Get users with illegal id: {} and verify Http status code: 404")
-  public void testGetUserIllegalId404(String illegalId) {
-    logger.info("Fetching User with illegal id");
-    SCIMResponse<User> scimResponse = resourceAwareUserRequest.readSingleUser(illegalId);
-
-    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
-  }
-
   @Test
   @DisplayName("Test Get users with non existing id and verify Http status code: 404")
   public void testGetUserNonExistingId404() {
@@ -159,11 +149,8 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
     String testUserName = "testCreateUserWithOnlyRequiredAttributes201";
     User testUser = TestData.setAttributesToATestUser(testUserName).build();
 
-    Email.Builder email = new Email.Builder().setValue("newEmail@mail.com").setPrimary(true);
-    User.Builder updatedUser = new User.Builder(testUser).addEmail(email.build());
-
     logger.info("Creating User: {}, with username", testUserName);
-    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(updatedUser.build());
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(testUser);
 
     assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
   }
@@ -174,11 +161,8 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
     String testUserName = "testCreateUsersWithSameUserNames409";
     User testUser = TestData.setAttributesToATestUser(testUserName).build();
 
-    Email.Builder email = new Email.Builder().setValue("newEmail@mail.com").setPrimary(true);
-    User.Builder updatedUser = new User.Builder(testUser).addEmail(email.build());
-
     logger.info("Creating User: {}", testUserName);
-    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(updatedUser.build());
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(testUser);
     assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
 
     User testUserDuplicate = TestData.setAttributesToATestUser(testUserName).build();
@@ -215,28 +199,13 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   }
 
   @Test
-  @DisplayName("Test Update user with illegal Id with PUT and verify Http status code: 404")
-  public void testUpdateUserWithIllegalIdReturns404() {
-    User createdUser = createUserAndVerifySuccessfulResponse("testUpdateUserWithIllegalId400").get();
-    User updatedUser = new User.Builder(createdUser).setDisplayName("testUpdateUserHTTPResponseUpdatedUser").setId(ILLEGAL_UUID).build();
-
-    logger.info("Updating User: {}, with illegal id", createdUser.getUserName());
-    SCIMResponse<User> scimResponse = resourceAwareUserRequest.updateUser(updatedUser);
-
-    assertAll("Verify Update User Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
-  }
-
-  @Test
   @DisplayName("Test Update user with non existing Id with PUT and verify Http status code: 404")
   public void testUpdateUserWithNonExistingId404() {
     String nonExistingUserId = UUID.randomUUID().toString();
     User testUser = TestData.setAttributesToATestUser("testUpdateUserWithNonExistingId404").setId(nonExistingUserId).build();
 
-    Email.Builder email = new Email.Builder().setValue("newEmail@mail.com").setPrimary(true);
-    User.Builder updatedUser = new User.Builder(testUser).addEmail(email.build());
-
     logger.info("Updating User with non existing id");
-    SCIMResponse<User> scimResponse = resourceAwareUserRequest.updateUser(updatedUser.build());
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.updateUser(testUser);
 
     assertAll("Verify Update User Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
@@ -250,15 +219,6 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
     SCIMResponse<Void> deleteUserResponse = resourceAwareUserRequest.deleteUser(createUserResponse.get().getId());
 
     assertAll("Verify Delete User Response", getResponseStatusAssertions(deleteUserResponse, true, NO_CONTENT));
-  }
-
-  @Test
-  @DisplayName("Test Delete user with illegal id and verify Http status code: 404")
-  public void testDeleteUserWithIllegalIdReturns404() {
-    logger.info("Deleting User with illegal id");
-    SCIMResponse<Void> scimResponse = resourceAwareUserRequest.deleteUser(ILLEGAL_UUID);
-
-    assertAll("Verify Delete User Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
@@ -619,11 +579,8 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   private SCIMResponse<User> createUserAndVerifySuccessfulResponse(String userName) {
     User userToCreate = TestData.buildTestUser(userName);
 
-    Email.Builder email = new Email.Builder().setValue("newEmail@mail.com").setPrimary(true);
-    User.Builder updatedUser = new User.Builder(userToCreate).setDisplayName("testCreateUser").addEmail(email.build());
-
     logger.info("Creating User: {}", userName);
-    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(updatedUser.build());
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(userToCreate);
     assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
 
     return scimResponse;
