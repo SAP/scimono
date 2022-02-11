@@ -54,7 +54,6 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
-import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
@@ -115,7 +114,7 @@ public class Users {
   @GET
   @Path("{id}")
   // @formatter:off
-  public Response getUser(@PathParam("id") @ValidId final String userId,
+  public Response getUser(@PathParam("id")  final String userId,
                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
     // @formatter:on
@@ -187,7 +186,7 @@ public class Users {
 
   @PUT
   @Path("{id}")
-  public Response updateUser(@PathParam("id") @ValidId final String userId, @Valid final User userToUpdate) {
+  public Response updateUser(@PathParam("id") final String userId, @Valid final User userToUpdate) {
     User preparedUser = userPreProcessor.prepareForUpdate(userToUpdate, userId);
 
     User updatedUser = usersAPI.updateUser(preparedUser);
@@ -201,7 +200,7 @@ public class Users {
 
   @DELETE
   @Path("{id}")
-  public void deleteUser(@PathParam("id") @ValidId final String userId) {
+  public void deleteUser(@PathParam("id") final String userId) {
     usersAPI.deleteUser(userId);
 
     logger.trace("Deleted user {}", userId);
@@ -210,7 +209,7 @@ public class Users {
 
   @PATCH
   @Path("{id}")
-  public Response patchUser(@PathParam("id") @ValidId final String userId, final PatchBody patchBody) {
+  public Response patchUser(@PathParam("id") final String userId, final PatchBody patchBody) {
     PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI);
     validationFramework.validate(patchBody);
 

@@ -89,15 +89,6 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
     assertAll("Verify GET Response", getResponseStatusAssertions(readUserResponse, true, OK));
   }
 
-  @ParameterizedTest(name = "Test Get users with illegal id: {} and verify Http status code: 400")
-  @ValueSource(strings = {ILLEGAL_UUID, "@!$^&*()_+=-[].,<>\'\":", "e87ca7b1-5f4d-493d-96f2-5ba3cf43deb51"})
-  public void testGetUserIllegalId400(String illegalId) {
-    logger.info("Fetching User with illegal id");
-    SCIMResponse<User> scimResponse = resourceAwareUserRequest.readSingleUser(illegalId);
-
-    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
-  }
-
   @Test
   @DisplayName("Test Get users with non existing id and verify Http status code: 404")
   public void testGetUserNonExistingId404() {
@@ -126,12 +117,12 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   }
 
   @Test
-  @DisplayName("Test Get all users with # instead of id and verify Http status code: 400")
-  public void testGetAllUsersHashTag400() {
+  @DisplayName("Test Get all users with # instead of id and verify Http status code: 404")
+  public void testGetAllUsersHashTag404() {
     logger.info("Fetching User with #");
     SCIMResponse<User> scimResponse = resourceAwareUserRequest.readSingleUser("#");
 
-    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
+    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
   }
 
   @Test
@@ -208,18 +199,6 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   }
 
   @Test
-  @DisplayName("Test Update user with illegal Id with PUT and verify Http status code: 400")
-  public void testUpdateUserWithIllegalId400() {
-    User createdUser = createUserAndVerifySuccessfulResponse("testUpdateUserWithIllegalId400").get();
-    User updatedUser = new User.Builder(createdUser).setDisplayName("testUpdateUserHTTPResponseUpdatedUser").setId(ILLEGAL_UUID).build();
-
-    logger.info("Updating User: {}, with illegal id", createdUser.getUserName());
-    SCIMResponse<User> scimResponse = resourceAwareUserRequest.updateUser(updatedUser);
-
-    assertAll("Verify Update User Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
-  }
-
-  @Test
   @DisplayName("Test Update user with non existing Id with PUT and verify Http status code: 404")
   public void testUpdateUserWithNonExistingId404() {
     String nonExistingUserId = UUID.randomUUID().toString();
@@ -240,15 +219,6 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
     SCIMResponse<Void> deleteUserResponse = resourceAwareUserRequest.deleteUser(createUserResponse.get().getId());
 
     assertAll("Verify Delete User Response", getResponseStatusAssertions(deleteUserResponse, true, NO_CONTENT));
-  }
-
-  @Test
-  @DisplayName("Test Delete user with illegal id and verify Http status code: 400")
-  public void testDeleteUserWithIllegalId400() {
-    logger.info("Deleting User with illegal id");
-    SCIMResponse<Void> scimResponse = resourceAwareUserRequest.deleteUser(ILLEGAL_UUID);
-
-    assertAll("Verify Delete User Response", getResponseStatusAssertions(scimResponse, false, BAD_REQUEST));
   }
 
   @Test
