@@ -119,9 +119,10 @@ public class PatchValidationFramework {
 
   public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
     String coreSchemaId = Group.SCHEMA;
+    String customExtensionSchemaId = Schema.EXTENSION_SCHEMA_URN + Group.RESOURCE_TYPE_GROUP;
     String resourceType = Group.RESOURCE_TYPE_GROUP;
 
-    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, Collections.singleton(coreSchemaId));
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, new HashSet<String>(Arrays.asList(coreSchemaId, customExtensionSchemaId)));
     return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 
