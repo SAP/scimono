@@ -136,7 +136,7 @@ public class Groups {
 
     return ListResponseBuilder.forGroups(groupsToReturn)
         .withPagingStartParameters(startId, startIndex)
-        .withRequestedCount(count)
+        .withRequestedCount(PagingParamsParser.getExtendedCountOrDefault(groups.getCount(), count))
         .withTotalResultsCount(groups.getTotalResourceCount())
         .build();
   }

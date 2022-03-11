@@ -8,6 +8,13 @@ public class PagingParamsParser {
   private PagingParamsParser() {
 
   }
+  
+  public static int getExtendedCountOrDefault(int extendedCount, int count) {
+    if (extendedCount > 0) {
+      return extendedCount;
+    }
+    return count;
+  }
 
   public static int parseCount(String countParam) {
     int count = 0;
