@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.sap.scimono.callback.schemas.SchemasCallback.SCHEMA_URN_DELIMETER;
+import static com.sap.scimono.callback.schemas.SchemasCallback.SCHEMA_PATTERN;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.EnterpriseExtension;
@@ -25,8 +27,6 @@ import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.helper.Strings;
 
 public class PatchValidationFramework {
-  private static final Pattern SCHEMA_PATTERN = Pattern.compile("^urn:[a-z0-9][a-z0-9-]{0,31}:([A-Za-z0-9()+,\\-.:=@;$_!*']|%[0-9a-f]{2})+$");
-  private static final String SCHEMA_URN_DELIMETER = ":";
 
   private final SchemasCallback schemaAPI;
   private final ResourceTypesCallback resourceTypesAPI;
@@ -70,6 +70,11 @@ public class PatchValidationFramework {
     });
     // @formatter:on
   }
+
+  public static String getThisString() {
+    return "TestPR";
+  }
+
   //TODO check utils that contain this method
   private static String addSchemaToPathIfNotExist(String path, String defaultSchema) {
     if (Strings.isNullOrEmpty(path) || path.matches(SCHEMA_PATTERN.toString())) {
