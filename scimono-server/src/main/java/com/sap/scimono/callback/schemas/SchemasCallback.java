@@ -106,7 +106,7 @@ public interface SchemasCallback {
   // TODO this could probably be optimized (e.g. it reads all schemas then returns only an id, which is used to read the schema again in
   // getComplexAttributePath)
   default String getSchemaIdFromAttributeNotation(final String attrNotation) {
-    if (attrNotation.matches(SCHEMA_PATTERN.toString())) {
+    if (isAttributeNotationContainsSchema(attrNotation)) {
       // @formatter:off
       return getSchemas().stream()
           .map(Resource::getId)
