@@ -77,7 +77,7 @@ public class DeltaReadResourcesTest extends SCIMHttpResponseCodeTest {
         assertFalse(filteredGroups.isEmpty(), "There should be one group in the response");
         assertEquals(1, filteredGroups.size(), "There should be one group in the response");
         Group filteredGroupInResponse = filteredGroups.get(0);
-        assertEquals(testGroup2, filteredGroupInResponse, "Filtering by lastModified should return newly created user.");
+        assertEquals(testGroup2, filteredGroupInResponse, "Filtering by lastModified should return newly created group.");
 
     }
 
