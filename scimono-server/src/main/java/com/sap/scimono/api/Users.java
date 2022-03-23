@@ -190,6 +190,8 @@ public class Users {
     User preparedUser = userPreProcessor.prepareForUpdate(userToUpdate, userId);
 
     User updatedUser = usersAPI.updateUser(preparedUser);
+
+    updatedUser = resourceLocationService.addLocation(updatedUser, updatedUser.getId());
     updatedUser = resourceLocationService.addRelationalEntitiesLocation(updatedUser);
 
     String version = preparedUser.getMeta().getVersion();
