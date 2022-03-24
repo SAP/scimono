@@ -83,16 +83,6 @@ public class Groups {
     groupPreProcessor = ResourcePreProcessor.forGroups(resourceLocationService, groupAPI, resourceTypesAPI, schemaAPI);
   }
 
-  public Groups(SCIMApplication scimApplication, @Context UriInfo uriInfo) {
-
-    groupAPI = scimApplication.getGroupsCallback();
-    schemaAPI = scimApplication.getSchemasCallback();
-    resourceTypesAPI = scimApplication.getResourceTypesCallback();
-    scimConfig = scimApplication.getConfigurationCallback();
-    resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, GROUPS);
-    groupPreProcessor = ResourcePreProcessor.forGroups(resourceLocationService, groupAPI, resourceTypesAPI, schemaAPI);
-  }
-
   @GET
   @Path("{id}")
   // @formatter:off

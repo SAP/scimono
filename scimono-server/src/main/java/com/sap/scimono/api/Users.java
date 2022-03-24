@@ -89,17 +89,6 @@ public class Users {
     userPreProcessor = ResourcePreProcessor.forUsers(resourceLocationService, usersAPI, resourceTypesAPI, schemaAPI);
   }
 
-  public Users(SCIMApplication scimApplication, @Context final UriInfo uriInfo) {
-    this.uriInfo = uriInfo;
-
-    usersAPI = scimApplication.getUsersCallback();
-    schemaAPI = scimApplication.getSchemasCallback();
-    resourceTypesAPI = scimApplication.getResourceTypesCallback();
-    scimConfig = scimApplication.getConfigurationCallback();
-    resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, USERS);
-    userPreProcessor = ResourcePreProcessor.forUsers(resourceLocationService, usersAPI, resourceTypesAPI, schemaAPI);
-  }
-
   @GET
   @Path("/Me")
   public Response getMe(@Context final SecurityContext sec) {
