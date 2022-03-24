@@ -13,7 +13,6 @@ import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -52,13 +51,10 @@ import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
-import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
-import com.sap.scimono.helper.ReadOnlyAttributesEraser;
 import com.sap.scimono.helper.ResourceLocationService;
-import com.sap.scimono.helper.UnnecessarySchemasEraser;
 
 @Path(API.GROUPS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -74,8 +70,20 @@ public class Groups {
   private final ResourceLocationService resourceLocationService;
   private final ResourcePreProcessor<Group> groupPreProcessor;
 
+  private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
+
   public Groups(@Context Application appContext, @Context UriInfo uriInfo) {
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
+
+    groupAPI = scimApplication.getGroupsCallback();
+    schemaAPI = scimApplication.getSchemasCallback();
+    resourceTypesAPI = scimApplication.getResourceTypesCallback();
+    scimConfig = scimApplication.getConfigurationCallback();
+    resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, GROUPS);
+    groupPreProcessor = ResourcePreProcessor.forGroups(resourceLocationService, groupAPI, resourceTypesAPI, schemaAPI);
+  }
+
+  public Groups(SCIMApplication scimApplication, @Context UriInfo uriInfo) {
 
     groupAPI = scimApplication.getGroupsCallback();
     schemaAPI = scimApplication.getSchemasCallback();
@@ -144,7 +152,7 @@ public class Groups {
   @POST
   public Response createGroup(@Valid Group newGroup) {
     if (newGroup == null) {
-      throw new InvalidInputException("One of the request inputs is not valid.");
+      throw new InvalidInputException(NOT_VALID_INPUTS);
     }
 
     Group preparedGroup = groupPreProcessor.prepareForCreate(newGroup);
@@ -161,6 +169,9 @@ public class Groups {
   @PUT
   @Path("{id}")
   public Response updateGroup(@PathParam("id") final String groupId, @Valid Group groupToUpdate) {
+    if (groupToUpdate == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
     Group preparedGroup = groupPreProcessor.prepareForUpdate(groupToUpdate, groupId);
 
     Group updatedGroup = groupAPI.updateGroup(preparedGroup);
@@ -183,6 +194,9 @@ public class Groups {
   @PATCH
   @Path("{id}")
   public Response patchGroup(@PathParam("id") final String groupId, final PatchBody patchBody) {
+    if (patchBody == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
     PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI);
     validationFramework.validate(patchBody);
 

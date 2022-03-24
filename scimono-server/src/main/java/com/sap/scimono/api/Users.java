@@ -75,9 +75,22 @@ public class Users {
   private final ResourceLocationService resourceLocationService;
   private final ResourcePreProcessor<User> userPreProcessor;
 
+  private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
+
   public Users(@Context final Application appContext, @Context final UriInfo uriInfo) {
     this.uriInfo = uriInfo;
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
+
+    usersAPI = scimApplication.getUsersCallback();
+    schemaAPI = scimApplication.getSchemasCallback();
+    resourceTypesAPI = scimApplication.getResourceTypesCallback();
+    scimConfig = scimApplication.getConfigurationCallback();
+    resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, USERS);
+    userPreProcessor = ResourcePreProcessor.forUsers(resourceLocationService, usersAPI, resourceTypesAPI, schemaAPI);
+  }
+
+  public Users(SCIMApplication scimApplication, @Context final UriInfo uriInfo) {
+    this.uriInfo = uriInfo;
 
     usersAPI = scimApplication.getUsersCallback();
     schemaAPI = scimApplication.getSchemasCallback();
@@ -170,7 +183,7 @@ public class Users {
   @POST
   public Response createUser(@Valid final User newUser) {
     if (newUser == null) {
-      throw new InvalidInputException("One of the request inputs is not valid.");
+      throw new InvalidInputException(NOT_VALID_INPUTS);
     }
 
     User preparedUser = userPreProcessor.prepareForCreate(newUser);
@@ -187,6 +200,9 @@ public class Users {
   @PUT
   @Path("{id}")
   public Response updateUser(@PathParam("id") final String userId, @Valid final User userToUpdate) {
+    if (userToUpdate == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
     User preparedUser = userPreProcessor.prepareForUpdate(userToUpdate, userId);
 
     User updatedUser = usersAPI.updateUser(preparedUser);
@@ -210,6 +226,9 @@ public class Users {
   @PATCH
   @Path("{id}")
   public Response patchUser(@PathParam("id") final String userId, final PatchBody patchBody) {
+    if (patchBody == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
     PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI);
     validationFramework.validate(patchBody);
 
