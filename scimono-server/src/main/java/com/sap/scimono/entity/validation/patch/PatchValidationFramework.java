@@ -1,15 +1,16 @@
 
 package com.sap.scimono.entity.validation.patch;
 
+import static com.sap.scimono.callback.schemas.SchemasCallback.SCHEMA_URN_DELIMETER;
+import static com.sap.scimono.callback.schemas.SchemasCallback.isAttributeNotationContainsSchema;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
@@ -24,9 +25,8 @@ import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.helper.Strings;
 
+
 public class PatchValidationFramework {
-  private static final Pattern SCHEMA_PATTERN = Pattern.compile("^urn:[a-z0-9][a-z0-9-]{0,31}:([A-Za-z0-9()+,\\-.:=@;$_!*']|%[0-9a-f]{2})+$");
-  private static final String SCHEMA_URN_DELIMETER = ":";
 
   private final SchemasCallback schemaAPI;
   private final ResourceTypesCallback resourceTypesAPI;
@@ -72,7 +72,7 @@ public class PatchValidationFramework {
   }
   //TODO check utils that contain this method
   private static String addSchemaToPathIfNotExist(String path, String defaultSchema) {
-    if (Strings.isNullOrEmpty(path) || path.matches(SCHEMA_PATTERN.toString())) {
+    if (Strings.isNullOrEmpty(path) || isAttributeNotationContainsSchema(path)) {
       return path;
     }
     return String.join(SCHEMA_URN_DELIMETER, defaultSchema, path);
@@ -122,7 +122,7 @@ public class PatchValidationFramework {
     String customExtensionSchemaId = Schema.EXTENSION_SCHEMA_URN + Group.RESOURCE_TYPE_GROUP;
     String resourceType = Group.RESOURCE_TYPE_GROUP;
 
-    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, new HashSet<String>(Arrays.asList(coreSchemaId, customExtensionSchemaId)));
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, new HashSet<>(Arrays.asList(coreSchemaId, customExtensionSchemaId)));
     return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 

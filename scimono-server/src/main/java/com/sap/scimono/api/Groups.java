@@ -165,7 +165,9 @@ public class Groups {
     Group preparedGroup = groupPreProcessor.prepareForUpdate(groupToUpdate, groupId);
 
     Group updatedGroup = groupAPI.updateGroup(preparedGroup);
+
     updatedGroup = resourceLocationService.addMembersLocation(updatedGroup);
+    updatedGroup = resourceLocationService.addLocation(updatedGroup, updatedGroup.getId());
 
     String version = preparedGroup.getMeta().getVersion();
     logger.trace("Updated group {}, new version is {}", groupId, version);
