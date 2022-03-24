@@ -18,7 +18,7 @@ import com.sap.scimono.entity.schema.resources.SchemaCSVReader;
 import com.sap.scimono.helper.Strings;
 
 public interface SchemasCallback {
-  Pattern SCHEMA_PATTERN = Pattern.compile("^urn:[a-z0-9][a-z0-9-]{0,31}:([A-Za-z0-9()+,\\-.:=@;$_!*']|%[0-9a-f]{2})+$");
+  Pattern SCHEMA_PATTERN = Pattern.compile("^urn:[a-z0-9][a-z0-9-]{0,31}:(?>[A-Za-z0-9()+,\\-.:=@;$_!*']|%[0-9a-f]{2})+$");
   String COMPLEX_ATTRIBUTE_DELIMETER = ".";
   String COMPLEX_ATTRIBUTE_DELIMETER_REGEX = "\\.";
   String SCHEMA_URN_DELIMETER = ":";
