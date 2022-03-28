@@ -24,9 +24,9 @@ import com.sap.scimono.scim.system.tests.extensions.UserClientScimResponseExtens
 import com.sap.scimono.scim.system.tests.extensions.UserFailSafeClient;
 import com.sap.scimono.scim.system.tests.util.TestData;
 
-public class DeltaReadResourcesTest extends SCIMHttpResponseCodeTest {
+public class MetadataFilterTest extends SCIMHttpResponseCodeTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(DeltaReadResourcesTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetadataFilterTest.class);
 
     @RegisterExtension
     UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);
