@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.sap.scimono.api.API;
 import com.sap.scimono.entity.ErrorResponse;
 import com.sap.scimono.entity.Group;
@@ -40,7 +41,7 @@ public class RequestOperation extends BulkOperation {
                        @JsonProperty(DATA_FIELD) final JsonNode data) {
     super(method, bulkId, version);
     this.path = path;
-    this.rawData = data;
+    this.rawData = data == null ? NullNode.getInstance() : data;
   }
 
   private RequestOperation(final Builder builder) {

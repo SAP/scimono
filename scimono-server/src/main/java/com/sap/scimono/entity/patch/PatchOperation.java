@@ -6,6 +6,7 @@ import static com.sap.scimono.helper.Strings.isNullOrEmpty;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.sap.scimono.entity.base.MultiValuedAttributeType;
 
 public class PatchOperation {
@@ -22,7 +23,7 @@ public class PatchOperation {
       @JsonProperty("value") final JsonNode value) {
     this.op = op;
     this.path = path;
-    this.value = value;
+    this.value = value == null ? NullNode.getInstance() : value;
   }
 
   private PatchOperation(final Builder builder) {
