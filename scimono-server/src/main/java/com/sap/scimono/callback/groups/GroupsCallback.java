@@ -1,10 +1,7 @@
 
 package com.sap.scimono.callback.groups;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import com.sap.scimono.api.request.RequestedResourceAttributes;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
@@ -90,7 +87,7 @@ public interface GroupsCallback {
   /**
    * @return set of schemas ids of the attributes that can be modified with PATCH request
    */
-  default Set<String> getAllowedPatchAttributesSchemaIds() {
-    return new HashSet<>(Arrays.asList(Group.SCHEMA, Schema.EXTENSION_SCHEMA_URN + Group.RESOURCE_TYPE_GROUP));
+  default Set<String> getSchemaIdsAllowingPatch() {
+    return new HashSet<>(Collections.singletonList(Group.SCHEMA));
   }
 }

@@ -100,7 +100,7 @@ public interface UsersCallback {
   /**
    * @return set of schemas ids of the attributes that can be modified with PATCH request
    */
-  default Set<String> getAllowedPatchAttributesSchemaIds() {
+  default Set<String> getSchemaIdsAllowingPatch() {
     return new HashSet<>(Arrays.asList(User.SCHEMA, EnterpriseExtension.ENTERPRISE_URN));
   }
 }

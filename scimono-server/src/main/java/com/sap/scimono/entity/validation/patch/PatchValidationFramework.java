@@ -12,8 +12,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sap.scimono.callback.groups.GroupsCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
+import com.sap.scimono.callback.users.UsersCallback;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.patch.PatchBody;
@@ -115,19 +117,20 @@ public class PatchValidationFramework {
     return path.contains("[");
   }
 
-  public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final Set<String> requiredSchemaIds) {
+  public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final
+      GroupsCallback groupsAPI) {
     String coreSchemaId = Group.SCHEMA;
     String resourceType = Group.RESOURCE_TYPE_GROUP;
 
-    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, requiredSchemaIds);
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, groupsAPI.getSchemaIdsAllowingPatch());
     return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 
-  public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final Set<String> requiredSchemaIds) {
+  public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final UsersCallback usersAPI) {
     String coreSchemaId = User.SCHEMA;
     String resourceType = User.RESOURCE_TYPE_USER;
 
-    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, requiredSchemaIds);
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, usersAPI.getSchemaIdsAllowingPatch());
     return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 

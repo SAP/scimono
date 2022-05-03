@@ -75,7 +75,6 @@ public class Users {
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceLocationService resourceLocationService;
   private final ResourcePreProcessor<User> userPreProcessor;
-  private final Set<String> allowedPatchAttributesSchemaIds;
 
   private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
 
@@ -89,7 +88,6 @@ public class Users {
     scimConfig = scimApplication.getConfigurationCallback();
     resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, USERS);
     userPreProcessor = ResourcePreProcessor.forUsers(resourceLocationService, usersAPI, resourceTypesAPI, schemaAPI);
-    allowedPatchAttributesSchemaIds = usersAPI.getAllowedPatchAttributesSchemaIds();
   }
 
   @GET
@@ -223,8 +221,7 @@ public class Users {
     if (patchBody == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
-    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI,
-        allowedPatchAttributesSchemaIds);
+    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI, usersAPI);
     validationFramework.validate(patchBody);
 
     String newVersion = UUID.randomUUID().toString();
