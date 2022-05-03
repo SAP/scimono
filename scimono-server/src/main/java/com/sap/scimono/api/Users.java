@@ -16,6 +16,7 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_STA
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -220,7 +221,7 @@ public class Users {
     if (patchBody == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
-    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI);
+    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI, usersAPI);
     validationFramework.validate(patchBody);
 
     String newVersion = UUID.randomUUID().toString();

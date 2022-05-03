@@ -6,16 +6,16 @@ import static com.sap.scimono.callback.schemas.SchemasCallback.isAttributeNotati
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.sap.scimono.callback.groups.GroupsCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
-import com.sap.scimono.entity.EnterpriseExtension;
+import com.sap.scimono.callback.users.UsersCallback;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.patch.PatchBody;
@@ -117,20 +117,20 @@ public class PatchValidationFramework {
     return path.contains("[");
   }
 
-  public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
+  public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final
+      GroupsCallback groupsAPI) {
     String coreSchemaId = Group.SCHEMA;
-    String customExtensionSchemaId = Schema.EXTENSION_SCHEMA_URN + Group.RESOURCE_TYPE_GROUP;
     String resourceType = Group.RESOURCE_TYPE_GROUP;
 
-    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, new HashSet<>(Arrays.asList(coreSchemaId, customExtensionSchemaId)));
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, groupsAPI.getSchemaIdsAllowingPatch());
     return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 
-  public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
+  public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final UsersCallback usersAPI) {
     String coreSchemaId = User.SCHEMA;
     String resourceType = User.RESOURCE_TYPE_USER;
 
-    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, new HashSet<>(Arrays.asList(coreSchemaId, EnterpriseExtension.ENTERPRISE_URN)));
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, usersAPI.getSchemaIdsAllowingPatch());
     return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 
