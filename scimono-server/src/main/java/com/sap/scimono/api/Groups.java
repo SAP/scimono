@@ -16,6 +16,7 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_STA
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -69,6 +70,7 @@ public class Groups {
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceLocationService resourceLocationService;
   private final ResourcePreProcessor<Group> groupPreProcessor;
+  private final Set<String> allowedPatchAttributesSchemaIds;
 
   private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
 
@@ -81,6 +83,7 @@ public class Groups {
     scimConfig = scimApplication.getConfigurationCallback();
     resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, GROUPS);
     groupPreProcessor = ResourcePreProcessor.forGroups(resourceLocationService, groupAPI, resourceTypesAPI, schemaAPI);
+    allowedPatchAttributesSchemaIds = groupAPI.getAllowedPatchAttributesSchemaIds();
   }
 
   @GET
@@ -189,7 +192,8 @@ public class Groups {
     if (patchBody == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
-    PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI);
+    PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI,
+        allowedPatchAttributesSchemaIds);
     validationFramework.validate(patchBody);
 
     Meta meta = new Meta.Builder(null, Instant.now()).setVersion(UUID.randomUUID().toString()).build();

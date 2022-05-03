@@ -83,8 +83,8 @@ public class Bulk {
     userPreProcessor = ResourcePreProcessor.forUsers(usersLocationService, usersAPI, resourceTypesAPI, schemasAPI);
     groupPreProcessor = ResourcePreProcessor.forGroups(groupsLocationService, groupsAPI, resourceTypesAPI, schemasAPI);
 
-    userPatchValidator = PatchValidationFramework.usersFramework(schemasAPI, resourceTypesAPI);
-    groupPatchValidator = PatchValidationFramework.groupsFramework(schemasAPI, resourceTypesAPI);
+    userPatchValidator = PatchValidationFramework.usersFramework(schemasAPI, resourceTypesAPI, usersAPI.getAllowedPatchAttributesSchemaIds());
+    groupPatchValidator = PatchValidationFramework.groupsFramework(schemasAPI, resourceTypesAPI, groupsAPI.getAllowedPatchAttributesSchemaIds());
   }
 
   @POST
