@@ -1,7 +1,10 @@
 
 package com.sap.scimono.callback.groups;
 
-import java.util.*;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 
 import com.sap.scimono.api.request.RequestedResourceAttributes;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
@@ -10,7 +13,6 @@ import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
-import com.sap.scimono.entity.schema.Schema;
 
 public interface GroupsCallback {
   /**
