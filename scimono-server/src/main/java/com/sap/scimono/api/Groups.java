@@ -70,7 +70,6 @@ public class Groups {
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceLocationService resourceLocationService;
   private final ResourcePreProcessor<Group> groupPreProcessor;
-  private final Set<String> allowedPatchAttributesSchemaIds;
 
   private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
 
@@ -83,7 +82,6 @@ public class Groups {
     scimConfig = scimApplication.getConfigurationCallback();
     resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, GROUPS);
     groupPreProcessor = ResourcePreProcessor.forGroups(resourceLocationService, groupAPI, resourceTypesAPI, schemaAPI);
-    allowedPatchAttributesSchemaIds = groupAPI.getSchemaIdsAllowingPatch();
   }
 
   @GET
