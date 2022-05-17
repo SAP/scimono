@@ -88,6 +88,14 @@ public final class SAPUserExtension extends Extension {
         return (ContactPreferences) getAttribute((CONTACT_PREFERENCES.scimName()));
     }
 
+    public PasswordDetails getPasswordDetails(){
+        return (PasswordDetails) getAttribute((PASSWORD_DETAILS.scimName()));
+    }
+
+    public SocialIdentities getSocialIdentities(){
+        return (SocialIdentities) getAttribute((SOCIAL_IDENTITIES.scimName()));
+    }
+
 
     public static final class Builder extends Extension.Builder {
 
@@ -118,11 +126,15 @@ public final class SAPUserExtension extends Extension {
             if (contactPreferences != null){
                 setContactPreferences(new ContactPreferences.Builder(contactPreferences).build());
             }
-            /*//todo multivalue
-            Manager enterpriseExtensionManager = sapExtension.getManager();
-            if (enterpriseExtensionManager != null) {
-                setManager(new Manager.Builder(enterpriseExtensionManager).build());
-            }*/
+            PasswordDetails passwordDetails = sapExtension.getPasswordDetails();
+            if (passwordDetails != null){
+                setPasswordDetails(new PasswordDetails.Builder(passwordDetails).build());
+            }
+            SocialIdentities socialIdentities = sapExtension.getSocialIdentities();
+            if (socialIdentities != null){
+                setSocialIdentities(new SocialIdentities.Builder(socialIdentities).build());
+            }
+
         }
 
         public Builder(final Map<String, Object> values) {
@@ -143,61 +155,8 @@ public final class SAPUserExtension extends Extension {
             setMfaEnabled((Boolean) values.get(MFAENABLED.scimName()));
             setValidFrom((String) values.get(VALIDFROM.scimName()));
             setValidTo((String) values.get(VALIDTO.scimName()));
-/*
-    PasswordDetails:
-      type: object
-  properties:
-        loginTime
-        failedLoginAttempts
-        setTime
-        status
-        policy
-            *
-            *
-            *
 
-            *
-            * PhoneNumber:
-      type: object
-      required:
-      - type
-      - value
-      properties:
-        type:
-          type: string
-          enum:
-          - work
-          - mobile
-          - other
-        value:
-          type: string
-        display:
-          type: string
-        primary:
-          type: boolean
-            *
-            *
-            *
-            *
-            *
-            *
-            *
-            *
-            * */
-            /*setManager(new Manager.Builder((Map<String, String>) values.get(MANAGER.scimName())).build());*/
         }
-
-        // todo multi value attributes / arrays
-        /*public Builder setManager(final Manager manager) {
-            if (manager != null && !manager.isEmpty()) {
-                setAttribute(MANAGER.scimName(), manager);
-            } else {
-                setAttribute(MANAGER.scimName(), null);
-            }
-
-            return this;
-        }
-*/
 
         public Builder setLoginTime(final String loginTime) {
             setAttribute(LOGINTIME.scimName(), loginTime);
@@ -287,6 +246,26 @@ public final class SAPUserExtension extends Extension {
             }
             return this;
         }
+
+        public SAPUserExtension.Builder setPasswordDetails(final PasswordDetails passwordDetails) {
+            if (passwordDetails != null && !passwordDetails.isEmpty()) {
+                setAttribute(PASSWORD_DETAILS.scimName(), passwordDetails);
+            } else {
+                setAttribute(PASSWORD_DETAILS.scimName(), null);
+            }
+            return this;
+        }
+
+        public SAPUserExtension.Builder setSocialIdentities(final SocialIdentities socialIdentities) {
+            if (socialIdentities != null && !socialIdentities.isEmpty()) {
+                setAttribute(SOCIAL_IDENTITIES.scimName(), socialIdentities);
+            } else {
+                setAttribute(SOCIAL_IDENTITIES.scimName(), null);
+            }
+            return this;
+        }
+
+
 
         @Override
         public SAPUserExtension build() {
