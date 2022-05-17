@@ -143,62 +143,18 @@ public final class SAPUserExtension extends Extension {
             setMfaEnabled((Boolean) values.get(MFAENABLED.scimName()));
             setValidFrom((String) values.get(VALIDFROM.scimName()));
             setValidTo((String) values.get(VALIDTO.scimName()));
-
-            /*todo multi value
-            * objects:
-            * socialIdentities
-            * passwordDetails
-            *
-
-    SocialIdentities:
-      type: object
-      properties:
-        socialId:
-          type: string
-        socialProvider:
-          type: string
-        dateOfLinking:
-          type: string
-          format: date-time
+/*
     PasswordDetails:
       type: object
   properties:
-        loginTime:
-          type: string
-          format: date-time
-        failedLoginAttempts:
-          type: integer
-        setTime:
-          type: string
-          format: date-time
-        status:
-          type: string
-        policy:
-          type: string
+        loginTime
+        failedLoginAttempts
+        setTime
+        status
+        policy
             *
             *
             *
-            * arrays
-            * emails
-            * phoneNumbers
-            *
-            * emails
-            * ExtendedMultivalue:
-      type: object
-      properties:
-        type:
-          type: string
-        value:
-          type: string
-        display:
-          type: string
-        primary:
-          type: boolean
-        verified:
-          type: boolean
-        verifiedTime:
-          type: string
-          format: date-time
 
             *
             * PhoneNumber:
