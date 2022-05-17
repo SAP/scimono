@@ -146,18 +146,10 @@ public final class SAPUserExtension extends Extension {
 
             /*todo multi value
             * objects:
-            * contactPreferences
             * socialIdentities
             * passwordDetails
             *
-            *  ContactPreferences:
-      type: object
-      properties:
-        email:
-          type: string
-        telephone:
-          type: string
-      description: Specifies the contact preferences of the user. The allowed values for each preference is "yes", "no" or "unknown".
+
     SocialIdentities:
       type: object
       properties:

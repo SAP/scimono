@@ -23,5 +23,8 @@ public interface ResourceConstants {
     String REF_FIELD = "$ref";
     String CONTACT_PREFERENCES_EMAIL = "email";
     String CONTACT_PREFERENCES_TELEPHONE = "telephone";
+    String SOCIALIDENTITIES_SOCIALID = "socialId";
+    String SOCIALIDENTITIES_SOCIALPROVIDER = "socialProvider";
+    String SOCIALIDENTITIES_DATEOFLINKING = "dateOfLinking";
   }
 }
