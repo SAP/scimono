@@ -17,17 +17,17 @@
 
 package com.sap.scimono.entity.base;
 
-import static java.util.Objects.hash;
+import com.fasterxml.jackson.annotation.JsonAnyGetter;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 
 import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonInclude.Include;
+import static java.util.Objects.hash;
 
 /**
  * This class represents a schema extension.
@@ -72,6 +72,27 @@ public class Extension implements Serializable {
 
     return String.valueOf(attributeValue);
   }
+
+  public Boolean getAttributeValueAsBoolean(String attrName) {
+    Object attributeValue = attributes.get(attrName);
+
+    if (!(attributeValue instanceof Boolean)) {
+      return null;
+    }
+
+    return (Boolean) attributeValue;
+  }
+
+  public Integer getAttributeValueAsInteger(String attrName) {
+    Object attributeValue = attributes.get(attrName);
+
+    if (!(attributeValue instanceof Integer)) {
+      return null;
+    }
+
+    return (Integer) attributeValue;
+  }
+
 
   @JsonAnyGetter
   public Map<String, Object> getAttributes() {

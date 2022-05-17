@@ -21,5 +21,7 @@ public interface ResourceConstants {
     String DISPLAY_FIELD = "display";
     String PRIMARY_FIELD = "primary";
     String REF_FIELD = "$ref";
+    String CONTACT_PREFERENCES_EMAIL = "email";
+    String CONTACT_PREFERENCES_TELEPHONE = "telephone";
   }
 }
