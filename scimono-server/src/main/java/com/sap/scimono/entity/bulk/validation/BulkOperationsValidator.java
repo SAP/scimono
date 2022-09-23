@@ -8,9 +8,9 @@ import static com.sap.scimono.entity.bulk.RequestMethod.PUT;
 import static com.sap.scimono.exception.SCIMException.Type.TOO_MANY;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -89,8 +89,10 @@ public class BulkOperationsValidator {
   }
 
   public BulkBody<ResponseOperation> getValidResponseData(BulkBody<RequestOperation> bulkRequest, BulkBody<ResponseOperation> bulkResponse) {
-    Map<String, RequestOperation> requestOperations = bulkRequest.getOperations().stream()
-        .collect(Collectors.toMap(RequestOperation::getBulkId, Function.identity()));
+    Map<String, RequestOperation> requestOperations = new HashMap<>();
+    for (RequestOperation request : bulkRequest.getOperations()) {
+      requestOperations.put(request.getBulkId(), request);
+    }
 
     List<ResponseOperation> responseOperations = bulkResponse.getOperations().stream().map(respOperation -> {
       ResponseOperation.Builder builder = respOperation.builder();
