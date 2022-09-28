@@ -35,7 +35,7 @@ public class ResponseOperation extends BulkOperation {
   private String resourceType;
 
   @JsonCreator
-  public ResponseOperation(@JsonProperty(value = METHOD_FIELD, required = true) final String method,
+  private ResponseOperation(@JsonProperty(value = METHOD_FIELD, required = true) final String method,
                             @JsonProperty(value = BULK_ID_FIELD) final String bulkId,
                             @JsonProperty(value = LOCATION_FIELD) final String location,
                             @JsonProperty(VERSION_FIELD) final String version,
@@ -179,7 +179,7 @@ public class ResponseOperation extends BulkOperation {
 
     private String location;
 
-    private Builder() {
+    public Builder() {
 
     }
 

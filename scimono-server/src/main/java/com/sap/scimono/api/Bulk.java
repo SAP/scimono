@@ -37,6 +37,7 @@ import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.bulk.BulkBody;
+import com.sap.scimono.entity.bulk.BulkResponseOperationLocationService;
 import com.sap.scimono.entity.bulk.RequestOperation;
 import com.sap.scimono.entity.bulk.ResponseOperation;
 import com.sap.scimono.entity.bulk.validation.BulkOperationsValidator;
@@ -89,14 +90,15 @@ public class Bulk {
 
   @POST
   public Response handleBulkRequest(@ValidBulkRequest BulkBody<RequestOperation> bulkRequest) {
-    BulkOperationsValidator operationsValidator = new BulkOperationsValidator(scimConfigurationCallback, usersLocationService, groupsLocationService);
+    BulkOperationsValidator operationsValidator = new BulkOperationsValidator(scimConfigurationCallback);
+    BulkResponseOperationLocationService responseService = new BulkResponseOperationLocationService(usersLocationService, groupsLocationService);
     List<RequestOperation> validatedOperations = operationsValidator.getValidBulkOperations(bulkRequest);
     List<RequestOperation> formattedBulkOperations = normalizeRequestOperations(validatedOperations);
 
     bulkRequest = BulkBody.forRequest(bulkRequest.getFailOnErrors(), formattedBulkOperations);
     BulkBody<ResponseOperation> bulkResponse = bulkAPI.handleBulkRequest(bulkRequest);
 
-    bulkResponse = operationsValidator.getValidResponseData(bulkRequest, bulkResponse);
+    bulkResponse = responseService.rebuildWithLocations(bulkResponse);
     return Response.ok().entity(bulkResponse).build();
   }
 
