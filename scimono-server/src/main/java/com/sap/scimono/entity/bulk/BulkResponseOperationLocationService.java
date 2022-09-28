@@ -22,15 +22,14 @@ public class BulkResponseOperationLocationService {
     List<ResponseOperation> responseOperations = bulkResponse.getOperations().stream().map(respOperation -> {
       ResponseOperation.Builder builder = respOperation.builder();
 
-      builder.withLocation(getValidResponseLocation(respOperation, usersLocationService, groupsLocationService));
+      builder.withLocation(getValidResponseLocation(respOperation));
       return builder.build();
     }).collect(Collectors.toList());
 
     return BulkBody.forResponse(responseOperations);
   }
 
-  private String getValidResponseLocation(ResponseOperation respOperation,
-      ResourceLocationService usersLocationService, ResourceLocationService groupsLocationService) {
+  private String getValidResponseLocation(ResponseOperation respOperation) {
     if (respOperation.getMethod() == RequestMethod.POST && !respOperation.isSuccessful()) {
       return null;
     }
