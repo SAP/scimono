@@ -221,8 +221,8 @@ public class ResponseOperation extends BulkOperation {
       return this;
     }
 
-    public Builder setResourceType(String resourceTypeUser) {
-      this.resourceType = resourceTypeUser;
+    public Builder setResourceType(String resourceType) {
+      this.resourceType = resourceType;
       return this;
     }
 
