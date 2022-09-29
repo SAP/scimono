@@ -62,7 +62,7 @@
         <jackson.version>2.13.2.20220324</jackson.version>
         <jersey.version>2.35</jersey.version>
 
-        <org.mockito.version>3.12.4</org.mockito.version>
+        <org.mockito.version>4.6.1</org.mockito.version>
         <wiremock.version>2.32.0</wiremock.version>
         <junit.version>5.8.2</junit.version>
         <surefire.version>2.22.2</surefire.version>
@@ -123,6 +123,12 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
+                <version>${org.mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
                 <version>${org.mockito.version}</version>
                 <scope>test</scope>
             </dependency>
