@@ -179,7 +179,7 @@ public class ResponseOperation extends BulkOperation {
 
     private String location;
 
-    private Builder() {
+    public Builder() {
 
     }
 
@@ -201,7 +201,7 @@ public class ResponseOperation extends BulkOperation {
       return this;
     }
 
-    private Builder withError(ErrorResponse error) {
+    public Builder withError(ErrorResponse error) {
       this.errorResponse = error;
       return this;
     }
@@ -221,10 +221,16 @@ public class ResponseOperation extends BulkOperation {
       return this;
     }
 
+    public Builder setResourceType(String resourceType) {
+      this.resourceType = resourceType;
+      return this;
+    }
+
     @Override
     public ResponseOperation build() {
       return new ResponseOperation(this);
     }
+
   }
 
 }

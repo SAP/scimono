@@ -9,8 +9,6 @@ import static com.sap.scimono.exception.SCIMException.Type.TOO_MANY;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
@@ -20,30 +18,22 @@ import javax.ws.rs.core.Response;
 import com.sap.scimono.api.API;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.entity.ErrorResponse;
-import com.sap.scimono.entity.Group;
-import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.bulk.BulkBody;
 import com.sap.scimono.entity.bulk.RequestMethod;
 import com.sap.scimono.entity.bulk.RequestOperation;
 import com.sap.scimono.entity.bulk.RequestOperation.Builder;
-import com.sap.scimono.entity.bulk.ResponseOperation;
 import com.sap.scimono.entity.config.BulkSetting;
 import com.sap.scimono.exception.InternalScimonoException;
 import com.sap.scimono.exception.SCIMException;
-import com.sap.scimono.helper.ResourceLocationService;
 
 public class BulkOperationsValidator {
   
   private static final String INVALID_PATH_ENDPOINT_ERROR_PLACEHOLDER = "Invalid path endpoint for operation with bulkId: %s. Path should start with either %s or %s endpoint.";
   
   private final SCIMConfigurationCallback scimConfigurationCallback;
-  private final ResourceLocationService usersLocationService;
-  private final ResourceLocationService groupsLocationService;
   
-  public BulkOperationsValidator(SCIMConfigurationCallback scimConfigurationCallback, ResourceLocationService usersLocationService, ResourceLocationService groupsLocationService) {
+  public BulkOperationsValidator(SCIMConfigurationCallback scimConfigurationCallback) {
     this.scimConfigurationCallback = scimConfigurationCallback;
-    this.usersLocationService = usersLocationService;
-    this.groupsLocationService = groupsLocationService;
   }
 
   public List<RequestOperation> getValidBulkOperations(BulkBody<RequestOperation> bulkRequest) {
@@ -86,41 +76,6 @@ public class BulkOperationsValidator {
     }).collect(Collectors.toList());
 
     return result;
-  }
-
-  public BulkBody<ResponseOperation> getValidResponseData(BulkBody<RequestOperation> bulkRequest, BulkBody<ResponseOperation> bulkResponse) {
-    Map<String, RequestOperation> requestOperations = bulkRequest.getOperations().stream()
-        .collect(Collectors.toMap(RequestOperation::getBulkId, Function.identity()));
-
-    List<ResponseOperation> responseOperations = bulkResponse.getOperations().stream().map(respOperation -> {
-      ResponseOperation.Builder builder = respOperation.builder();
-      RequestOperation reqOperation = requestOperations.get(respOperation.getBulkId());
-
-      builder.withLocation(getValidResponseLocation(reqOperation, respOperation, usersLocationService, groupsLocationService));
-      return builder.build();
-    }).collect(Collectors.toList());
-
-    return BulkBody.forResponse(responseOperations);
-  }
-
-  private String getValidResponseLocation(RequestOperation reqOperation, ResponseOperation respOperation,
-      ResourceLocationService usersLocationService, ResourceLocationService groupsLocationService) {
-    if (reqOperation.getMethod() == RequestMethod.POST && !respOperation.isSuccessful()) {
-      return null;
-    }
-
-    String location = respOperation.getLocation();
-    String resourceType = respOperation.getResourceType();
-
-    if (location == null && User.RESOURCE_TYPE_USER.equalsIgnoreCase(resourceType)) {
-      location = usersLocationService.getLocation(respOperation.getResourceId()).toString();
-    }
-
-    if (location == null && Group.RESOURCE_TYPE_GROUP.equalsIgnoreCase(resourceType)) {
-      location = groupsLocationService.getLocation(respOperation.getResourceId()).toString();
-    }
-
-    return location;
   }
 
   private void validateByBulkSettings(BulkBody<RequestOperation> bulkRequest, SCIMConfigurationCallback scimConfigurationCallback) {
