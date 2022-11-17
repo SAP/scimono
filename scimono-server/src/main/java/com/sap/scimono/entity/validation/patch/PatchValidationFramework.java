@@ -100,9 +100,7 @@ public class PatchValidationFramework {
     List<Validator<PatchOperation>> validators = new ArrayList<>();
 
     if(isOperationPathContainsValueFilter(path)){
-      if (!isAttributeNotationContainsSchema(path)) {
-        validators.add(new ValuePathAttributesValidator(requiredSchemas, schemaAPI, coreSchemaId));
-      }
+      validators.add(new ValuePathAttributesValidator(requiredSchemas, schemaAPI, coreSchemaId));
       validators.add(new ValuePathStructureValidator());
       validators.add(new ValuePathRestrictionsValidator());
     } else {
