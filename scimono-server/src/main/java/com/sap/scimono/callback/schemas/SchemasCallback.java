@@ -159,7 +159,7 @@ public interface SchemasCallback {
   }
 
   static String addSchemaToPathIfNotExist(final String path, final String defaultSchema) {
-    if (Strings.isNullOrEmpty(path) || path.matches(SCHEMA_PATTERN.toString())) {
+    if (Strings.isNullOrEmpty(path) || path.startsWith(URN)) {
       return path;
     }
     return String.join(SCHEMA_URN_DELIMETER, defaultSchema, path);
