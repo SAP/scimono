@@ -24,6 +24,7 @@ public interface SchemasCallback {
   String SCHEMA_URN_DELIMETER = ":";
   String ATTRIBUTE_VALUE_FILTER_OPENING = "[";
   String ATTRIBUTE_VALUE_FILTER_CLOSING = "]";
+  String URN = "urn:";
 
   /**
    * Returns the schema with the specified schemaId.
@@ -158,14 +159,14 @@ public interface SchemasCallback {
   }
 
   static String addSchemaToPathIfNotExist(final String path, final String defaultSchema) {
-    if (Strings.isNullOrEmpty(path) || path.matches(SCHEMA_PATTERN.toString())) {
+    if (Strings.isNullOrEmpty(path) || path.startsWith(URN)) {
       return path;
     }
     return String.join(SCHEMA_URN_DELIMETER, defaultSchema, path);
   }
 
   static boolean isAttributeNotationContainsSchema(final String fullAttrNotation) {
-    return fullAttrNotation.matches(SCHEMA_PATTERN.toString());
+    return fullAttrNotation.startsWith(URN);
   }
 
   default String appendSubAttributeToPath(final String fullAttributePath, final String subAttribute) {

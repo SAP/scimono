@@ -130,12 +130,11 @@ public class ValuePathAttributesValidationVisitor extends QueryFilterVisitor<Voi
       String attributeName = pathContext.getText();
 
       SchemasCallback schemaAPI = valuePathValidator.getSchemaAPI();
-      if (SchemasCallback.isAttributeNotationContainsSchema(attributeName)) {
-        attributeName = schemaAPI.removeSchemaFromAttributeNotation(attributeName, valuePathValidator.getCoreSchemaId());
+      if (!SchemasCallback.isAttributeNotationContainsSchema(attributeName)) {
+        attributeName = schemaAPI.appendSubAttributeToPath(currentAttributePath, attributeName);
       }
 
-      String newCurrentAttributePath = schemaAPI.appendSubAttributeToPath(currentAttributePath, attributeName);
-      return ctx.valFilter().accept(new ValuePathAttributesValidationVisitor(valuePathValidator, operation, newCurrentAttributePath));
+      return ctx.valFilter().accept(new ValuePathAttributesValidationVisitor(valuePathValidator, operation, attributeName));
     }
   }
 }
