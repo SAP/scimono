@@ -45,6 +45,9 @@ public class PatchOperationSchemaBasedAttributeValueValidator implements Validat
     } else {
       String pathWithoutFilter = schemaAPI.removeValueFilterFromAttributeNotation(path);
       Attribute targetAttribute = schemaAPI.getAttribute(pathWithoutFilter);
+      if (targetAttribute == null) {
+        throw new PatchValidationException(SCIMException.Type.INVALID_PATH, "Provided attribute does not exist according to the schema");
+      }
       validatePathAttribute(targetAttribute, operation);
       attributeAndValueValidator = new SchemaBasedAttributeValueValidator(targetAttribute, permittedSchemas);
     }
