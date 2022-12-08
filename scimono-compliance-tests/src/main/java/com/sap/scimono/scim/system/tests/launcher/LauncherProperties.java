@@ -17,6 +17,7 @@ public class LauncherProperties {
     AUTH_TYPE("auth.type"),
     BASIC_AUTH_USER("basic.auth.user"),
     BASIC_AUTH_PASSWORD("basic.auth.password"),
+    HEADERS("custom.headers"),
     SCIM_SERVICE_URL("scim.service.url"),
     TESTS_FILE_PATH("tests.file.path");
 
@@ -64,6 +65,10 @@ public class LauncherProperties {
 
   public LauncherProperty getOathSecret() {
     return properties.get(ParamName.OAUTH_SECRET);
+  }
+
+  public LauncherProperty getHeaders() {
+    return properties.get(ParamName.HEADERS);
   }
 
   public LauncherProperty getOauthServiceUrl() {

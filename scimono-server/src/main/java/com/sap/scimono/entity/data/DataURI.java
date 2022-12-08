@@ -17,8 +17,6 @@
 
 package com.sap.scimono.entity.data;
 
-import javax.xml.bind.DatatypeConverter;
-
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.helper.Objects;
 import com.sap.scimono.helper.Strings;
@@ -30,6 +28,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URLConnection;
+import java.util.Base64;
 
 /**
  * A URI of the form data:[<mediatype>][;base64],<data>
@@ -88,7 +87,7 @@ public class DataURI {
 
   private URI convertInputStreamToDataURI(final InputStream inputStream, final String mimeType) throws IOException {
     byte[] byteArrayPhoto = Objects.toByteArray(inputStream);
-    String base64Photo = DatatypeConverter.printBase64Binary(byteArrayPhoto);
+    String base64Photo = Base64.getEncoder().encodeToString(byteArrayPhoto);
 
     StringBuilder uriStringBuilder = new StringBuilder();
     uriStringBuilder.append(DATA).append(mimeType).append(BASE64).append(base64Photo);
@@ -115,7 +114,7 @@ public class DataURI {
   public InputStream getAsInputStream() {
     String imageCode = uri.toString().substring(uri.toString().indexOf(BASE64) + BASE64.length());
 
-    byte[] decodedBytes = DatatypeConverter.parseBase64Binary(imageCode);
+    byte[] decodedBytes = Base64.getDecoder().decode(imageCode);
     return new ByteArrayInputStream(decodedBytes);
   }
 

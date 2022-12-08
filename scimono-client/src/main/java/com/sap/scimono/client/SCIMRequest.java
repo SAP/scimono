@@ -1,19 +1,7 @@
 package com.sap.scimono.client;
 
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
+import static com.sap.scimono.client.ResourceAction.CREATE_BULK;
 import static com.sap.scimono.client.ResourceAction.CREATE_SINGLE;
 import static com.sap.scimono.client.ResourceAction.DELETE;
 import static com.sap.scimono.client.ResourceAction.GET_ALL;
@@ -27,6 +15,20 @@ import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 import static javax.ws.rs.core.Response.Status.CREATED;
 import static javax.ws.rs.core.Response.Status.NO_CONTENT;
 import static javax.ws.rs.core.Response.Status.OK;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MultivaluedHashMap;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
 
 public class SCIMRequest {
   private final MultivaluedMap<String, Object> httpHeaders;
@@ -84,7 +86,7 @@ public class SCIMRequest {
 
   public static class Builder {
     private final MultivaluedMap<String, Object> httpHeaders = defaultHeaders();
-    private Map<ResourceAction, ActionResponseStatusConfig> scimActionsResponseStatusConfig = defaultSCIMActionsResponseStatusConfig();
+    private final Map<ResourceAction, ActionResponseStatusConfig> scimActionsResponseStatusConfig = defaultSCIMActionsResponseStatusConfig();
 
     private Builder() {
     }
@@ -113,6 +115,7 @@ public class SCIMRequest {
       actionsResponseStatusConfig.put(PUT_UPDATE, new ActionResponseStatusConfig(new ArrayList<>(singleton(OK))));
       actionsResponseStatusConfig.put(PATCH_UPDATE, new ActionResponseStatusConfig(new ArrayList<>(singleton(NO_CONTENT))));
       actionsResponseStatusConfig.put(DELETE, new ActionResponseStatusConfig(new ArrayList<>(singleton(NO_CONTENT))));
+      actionsResponseStatusConfig.put(CREATE_BULK, new ActionResponseStatusConfig(new ArrayList<>(singleton(OK))));
 
       return actionsResponseStatusConfig;
     }

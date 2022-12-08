@@ -12,6 +12,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.UriInfo;
 
 import com.sap.scimono.SCIMApplication;
+import com.sap.scimono.entity.validation.ValidationUtil;
 
 public class EmailsValidator implements ConstraintValidator<ValidEmails, Object> {
   private Map<CustomInputValidator.Type, CustomInputValidator> customValidators;

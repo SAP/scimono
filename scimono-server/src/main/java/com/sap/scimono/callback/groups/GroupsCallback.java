@@ -1,7 +1,10 @@
 
 package com.sap.scimono.callback.groups;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import com.sap.scimono.api.request.RequestedResourceAttributes;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
@@ -79,7 +82,14 @@ public interface GroupsCallback {
   /**
    * Generates a group id for a new group
    *
-   * @return a unique group idnetifier
+   * @return a unique group identifier
    */
   Optional<String> generateId();
+
+  /**
+   * @return set of schemas ids of the attributes that can be modified with PATCH request
+   */
+  default Set<String> getSchemaIdsAllowingPatch() {
+    return new HashSet<>(Collections.singletonList(Group.SCHEMA));
+  }
 }

@@ -1,10 +1,14 @@
 
 package com.sap.scimono.callback.users;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import com.sap.scimono.api.request.RequestedResourceAttributes;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
+import com.sap.scimono.entity.EnterpriseExtension;
 import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PageInfo;
@@ -89,7 +93,14 @@ public interface UsersCallback {
   /**
    * Generates a user id for a new user
    *
-   * @return a unique user idnetifier
+   * @return a unique user identifier
    */
   Optional<String> generateId();
+
+  /**
+   * @return set of schemas ids of the attributes that can be modified with PATCH request
+   */
+  default Set<String> getSchemaIdsAllowingPatch() {
+    return new HashSet<>(Arrays.asList(User.SCHEMA, EnterpriseExtension.ENTERPRISE_URN));
+  }
 }

@@ -1,6 +1,8 @@
 
 package com.sap.scimono.entity.validation;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
@@ -14,11 +16,10 @@ import com.sap.scimono.exception.SCIMException;
 public class AttributeDataTypeValidator implements Validator<Attribute> {
 
   private static final String BASE_64_PERMITTED_CHARACTERS_PATTERN = "^[A-Za-z0-9+\\/=]+$";
-  private static final String URI_PATTERN = "((?<=\\()[A-Za-z][A-Za-z0-9\\+\\.\\-]*:([A-Za-z0-9\\.\\-_~:\\/\\?#\\[\\]@!\\$&'\\(\\)\\*\\+,;=]|%[A-Fa-f0-9]{2})+(?=\\)))|([A-Za-z][A-Za-z0-9\\+\\.\\-]*:([A-Za-z0-9\\.\\-_~:\\/\\?#\\[\\]@!\\$&'\\(\\)\\*\\+,;=]|%[A-Fa-f0-9]{2})+)";
   private static final String ERROR_MESSAGE = "The value data type is not correct";
   private static final SCIMException.Type ERROR_TYPE = SCIMException.Type.INVALID_VALUE;
 
-  private JsonNode value;
+  private final JsonNode value;
 
   public AttributeDataTypeValidator(final JsonNode value) {
     this.value = value;
@@ -64,7 +65,7 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
       case DECIMAL:
         return value.isBigDecimal() || value.isDouble() || value.isIntegralNumber();
       case REFERENCE:
-        return value.isTextual() && value.asText().matches(URI_PATTERN);
+        return value.isTextual() && isValidURI(value.asText());
       case BINARY:
         return value.isTextual() && value.asText().matches(BASE_64_PERMITTED_CHARACTERS_PATTERN);
       case DATE_TIME:
@@ -79,6 +80,15 @@ public class AttributeDataTypeValidator implements Validator<Attribute> {
         return false;
       default:
         return false;
+    }
+  }
+
+  private boolean isValidURI(String str) {
+    try {
+      new URI(str);
+      return true;
+    } catch (final URISyntaxException e) {
+      return false;
     }
   }
 }

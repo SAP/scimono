@@ -13,10 +13,10 @@ import static com.sap.scimono.entity.Group.RESOURCE_TYPE_GROUP;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -40,6 +40,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
+import com.sap.scimono.api.preprocessor.ResourcePreProcessor;
 import com.sap.scimono.api.request.RequestedResourceAttributesParser;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.groups.GroupsCallback;
@@ -50,15 +51,11 @@ import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
-import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
-import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
-import com.sap.scimono.helper.ReadOnlyAttributesEraser;
 import com.sap.scimono.helper.ResourceLocationService;
-import com.sap.scimono.helper.UnnecessarySchemasEraser;
 
 @Path(API.GROUPS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -72,6 +69,9 @@ public class Groups {
   private final ResourceTypesCallback resourceTypesAPI;
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceLocationService resourceLocationService;
+  private final ResourcePreProcessor<Group> groupPreProcessor;
+
+  private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
 
   public Groups(@Context Application appContext, @Context UriInfo uriInfo) {
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
@@ -80,13 +80,14 @@ public class Groups {
     schemaAPI = scimApplication.getSchemasCallback();
     resourceTypesAPI = scimApplication.getResourceTypesCallback();
     scimConfig = scimApplication.getConfigurationCallback();
-    resourceLocationService = new ResourceLocationService(uriInfo, scimApplication.getConfigurationCallback(), GROUPS);
+    resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, GROUPS);
+    groupPreProcessor = ResourcePreProcessor.forGroups(resourceLocationService, groupAPI, resourceTypesAPI, schemaAPI);
   }
 
   @GET
   @Path("{id}")
   // @formatter:off
-  public Response getGroup(@PathParam("id") @ValidId final String groupId,
+  public Response getGroup(@PathParam("id") final String groupId,
                            @QueryParam(ATTRIBUTES_PARAM) final String attributes,
                            @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
     // @formatter:on
@@ -134,7 +135,7 @@ public class Groups {
 
     return ListResponseBuilder.forGroups(groupsToReturn)
         .withPagingStartParameters(startId, startIndex)
-        .withRequestedCount(count)
+        .withRequestedCount(PagingParamsParser.getExtendedCountOrDefault(groups.getCount(), count))
         .withTotalResultsCount(groups.getTotalResourceCount())
         .build();
   }
@@ -142,63 +143,41 @@ public class Groups {
   @POST
   public Response createGroup(@Valid Group newGroup) {
     if (newGroup == null) {
-      throw new InvalidInputException("One of the request inputs is not valid.");
+      throw new InvalidInputException(NOT_VALID_INPUTS);
     }
 
-    ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
-    newGroup = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newGroup);
+    Group preparedGroup = groupPreProcessor.prepareForCreate(newGroup);
+    Group createdGroup = groupAPI.createGroup(preparedGroup);
 
-    UnnecessarySchemasEraser<Group> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
-    newGroup = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(newGroup, Group.SCHEMA);
-
-    String version = UUID.randomUUID().toString();
-    Meta groupMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_GROUP).build();
-    Group.Builder groupWithMetaBuilder = newGroup.builder().setMeta(groupMeta);
-    groupAPI.generateId().ifPresent(groupWithMetaBuilder::setId);
-
-    Group groupWithMeta = groupWithMetaBuilder.build();
-
-    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI, resourceTypesAPI);
-    customAttributesValidator.validate(groupWithMeta);
-
-    Group createdGroup = groupAPI.createGroup(groupWithMeta);
     createdGroup = resourceLocationService.addMembersLocation(createdGroup);
     createdGroup = resourceLocationService.addLocation(createdGroup, createdGroup.getId());
 
+    String version = preparedGroup.getMeta().getVersion();
     logger.trace("Created group {} with version {}", createdGroup.getId(), version);
     return Response.created(resourceLocationService.getLocation(createdGroup.getId())).tag(version).entity(createdGroup).build();
   }
 
   @PUT
   @Path("{id}")
-  public Response updateGroup(@PathParam("id") @ValidId final String groupId, @Valid Group groupToUpdate) {
-    ReadOnlyAttributesEraser<Group> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
-    groupToUpdate = readOnlyAttributesEraser.eraseAllFormCustomExtensions(groupToUpdate);
+  public Response updateGroup(@PathParam("id") final String groupId, @Valid Group groupToUpdate) {
+    if (groupToUpdate == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
+    Group preparedGroup = groupPreProcessor.prepareForUpdate(groupToUpdate, groupId);
 
-    UnnecessarySchemasEraser<Group> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
-    groupToUpdate = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(groupToUpdate, Group.SCHEMA);
+    Group updatedGroup = groupAPI.updateGroup(preparedGroup);
 
-    String newVersion = UUID.randomUUID().toString();
-    Meta.Builder lastUpdatedMeta = new Meta.Builder(groupToUpdate.getMeta());
-
-    URI groupLocation = resourceLocationService.getLocation(groupId);
-    lastUpdatedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(groupLocation.toString());
-
-    Group updatedGroup = groupToUpdate.builder().setId(groupId).setMeta(lastUpdatedMeta.build()).build();
-
-    ResourceCustomAttributesValidator<Group> customAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI, resourceTypesAPI);
-    customAttributesValidator.validate(groupToUpdate);
-
-    updatedGroup = groupAPI.updateGroup(updatedGroup);
     updatedGroup = resourceLocationService.addMembersLocation(updatedGroup);
+    updatedGroup = resourceLocationService.addLocation(updatedGroup, updatedGroup.getId());
 
-    logger.trace("Updated group {}, new version is {}", groupId, newVersion);
-    return Response.ok(updatedGroup).tag(newVersion).location(groupLocation).build();
+    String version = preparedGroup.getMeta().getVersion();
+    logger.trace("Updated group {}, new version is {}", groupId, version);
+    return Response.ok(updatedGroup).tag(version).location(resourceLocationService.getLocation(groupId)).build();
   }
 
   @DELETE
   @Path("{id}")
-  public void deleteGroup(@PathParam("id") @ValidId final String groupId) {
+  public void deleteGroup(@PathParam("id") final String groupId) {
     groupAPI.deleteGroup(groupId);
 
     logger.trace("Deleted group {}", groupId);
@@ -207,8 +186,11 @@ public class Groups {
 
   @PATCH
   @Path("{id}")
-  public Response patchGroup(@PathParam("id") @ValidId final String groupId, final PatchBody patchBody) {
-    PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI);
+  public Response patchGroup(@PathParam("id") final String groupId, final PatchBody patchBody) {
+    if (patchBody == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
+    PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI, groupAPI);
     validationFramework.validate(patchBody);
 
     Meta meta = new Meta.Builder(null, Instant.now()).setVersion(UUID.randomUUID().toString()).build();

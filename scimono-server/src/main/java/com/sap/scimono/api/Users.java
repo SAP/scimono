@@ -13,10 +13,10 @@ import static com.sap.scimono.entity.User.RESOURCE_TYPE_USER;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COUNT;
 import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_START_INDEX;
 
-import java.net.URI;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -44,6 +44,7 @@ import org.slf4j.LoggerFactory;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.patch.PATCH;
+import com.sap.scimono.api.preprocessor.ResourcePreProcessor;
 import com.sap.scimono.api.request.RequestedResourceAttributesParser;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
@@ -54,15 +55,11 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
-import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
-import com.sap.scimono.entity.validation.ResourceCustomAttributesValidator;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.ResourceNotFoundException;
-import com.sap.scimono.helper.ReadOnlyAttributesEraser;
 import com.sap.scimono.helper.ResourceLocationService;
-import com.sap.scimono.helper.UnnecessarySchemasEraser;
 
 @Path(USERS)
 @Produces(APPLICATION_JSON_SCIM)
@@ -77,6 +74,9 @@ public class Users {
   private final ResourceTypesCallback resourceTypesAPI;
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceLocationService resourceLocationService;
+  private final ResourcePreProcessor<User> userPreProcessor;
+
+  private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
 
   public Users(@Context final Application appContext, @Context final UriInfo uriInfo) {
     this.uriInfo = uriInfo;
@@ -87,6 +87,7 @@ public class Users {
     resourceTypesAPI = scimApplication.getResourceTypesCallback();
     scimConfig = scimApplication.getConfigurationCallback();
     resourceLocationService = new ResourceLocationService(uriInfo, scimConfig, USERS);
+    userPreProcessor = ResourcePreProcessor.forUsers(resourceLocationService, usersAPI, resourceTypesAPI, schemaAPI);
   }
 
   @GET
@@ -116,7 +117,7 @@ public class Users {
   @GET
   @Path("{id}")
   // @formatter:off
-  public Response getUser(@PathParam("id") @ValidId final String userId,
+  public Response getUser(@PathParam("id")  final String userId,
                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
     // @formatter:on
@@ -172,65 +173,42 @@ public class Users {
   @POST
   public Response createUser(@Valid final User newUser) {
     if (newUser == null) {
-      throw new InvalidInputException("One of the request inputs is not valid.");
+      throw new InvalidInputException(NOT_VALID_INPUTS);
     }
 
-    ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
-    User userWithoutReadOnlyAttributes = readOnlyAttributesEraser.eraseAllFormCustomExtensions(newUser);
-
-    UnnecessarySchemasEraser<User> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
-    User user = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(userWithoutReadOnlyAttributes, User.SCHEMA);
-
-    String version = UUID.randomUUID().toString();
-    Meta userMeta = new Meta.Builder().setVersion(version).setResourceType(RESOURCE_TYPE_USER).build();
-
-    User.Builder userWithMetaBuilder = user.builder().setMeta(userMeta);
-    usersAPI.generateId().ifPresent(userWithMetaBuilder::setId);
-
-    User userWithMeta = userWithMetaBuilder.build();
-
-    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPost(schemaAPI, resourceTypesAPI);
-    userCustomAttributesValidator.validate(userWithMeta);
-
-    User createdUser = usersAPI.createUser(userWithMeta);
+    User preparedUser = userPreProcessor.prepareForCreate(newUser);
+    User createdUser = usersAPI.createUser(preparedUser);
 
     createdUser = resourceLocationService.addLocation(createdUser, createdUser.getId());
     createdUser = resourceLocationService.addRelationalEntitiesLocation(createdUser);
 
+    String version = preparedUser.getMeta().getVersion();
     logger.trace("Created user {} with version {}", createdUser.getId(), version);
     return Response.created(resourceLocationService.getLocation(createdUser.getId())).tag(version).entity(createdUser).build();
   }
 
   @PUT
   @Path("{id}")
-  public Response updateUser(@PathParam("id") @ValidId final String userId, @Valid final User userToUpdate) {
-    ReadOnlyAttributesEraser<User> readOnlyAttributesEraser = new ReadOnlyAttributesEraser<>(schemaAPI);
-    User userWithoutReadOnlyAttributes = readOnlyAttributesEraser.eraseAllFormCustomExtensions(userToUpdate);
-    
-    UnnecessarySchemasEraser<User> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
-    User user = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(userWithoutReadOnlyAttributes, User.SCHEMA);
+  public Response updateUser(@PathParam("id") final String userId, @Valid final User userToUpdate) {
+    if (userToUpdate == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
+    User preparedUser = userPreProcessor.prepareForUpdate(userToUpdate, userId);
 
-    String newVersion = UUID.randomUUID().toString();
+    User updatedUser = usersAPI.updateUser(preparedUser);
 
-    Meta.Builder lastModifiedMeta = new Meta.Builder();
-
-    URI userLocation = resourceLocationService.getLocation(userId);
-    lastModifiedMeta.setLastModified(Instant.now()).setVersion(newVersion).setLocation(userLocation.toString()).setResourceType(RESOURCE_TYPE_USER);
-    User updatedUser = user.builder().setId(userId).setMeta(lastModifiedMeta.build()).build();
-
-    ResourceCustomAttributesValidator<User> userCustomAttributesValidator = ResourceCustomAttributesValidator.forPut(schemaAPI, resourceTypesAPI);
-    userCustomAttributesValidator.validate(updatedUser);
-
-    updatedUser = usersAPI.updateUser(updatedUser);
+    updatedUser = resourceLocationService.addLocation(updatedUser, updatedUser.getId());
     updatedUser = resourceLocationService.addRelationalEntitiesLocation(updatedUser);
 
-    logger.trace("Updated user {}, new version is {}", userId, newVersion);
-    return Response.ok(updatedUser).tag(newVersion).location(userLocation).build();
+    String version = preparedUser.getMeta().getVersion();
+
+    logger.trace("Updated user {}, new version is {}", userId, version);
+    return Response.ok(updatedUser).tag(version).location(resourceLocationService.getLocation(userId)).build();
   }
 
   @DELETE
   @Path("{id}")
-  public void deleteUser(@PathParam("id") @ValidId final String userId) {
+  public void deleteUser(@PathParam("id") final String userId) {
     usersAPI.deleteUser(userId);
 
     logger.trace("Deleted user {}", userId);
@@ -239,8 +217,11 @@ public class Users {
 
   @PATCH
   @Path("{id}")
-  public Response patchUser(@PathParam("id") @ValidId final String userId, final PatchBody patchBody) {
-    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI);
+  public Response patchUser(@PathParam("id") final String userId, final PatchBody patchBody) {
+    if (patchBody == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
+    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI, usersAPI);
     validationFramework.validate(patchBody);
 
     String newVersion = UUID.randomUUID().toString();

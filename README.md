@@ -3,6 +3,8 @@
 # SAP SCIMono Library
 Open source SCIM 2.0 client and server library.
 
+[![REUSE status](https://api.reuse.software/badge/github.com/SAP/scimono)](https://api.reuse.software/info/github.com/SAP/scimono)
+
 # Description
 ## Features
 
@@ -160,4 +162,5 @@ Please follow [this document](/CONTRIBUTING.md) for more information on the proc
 *  We are currently working on client-side support for the SAP SCIMono Library.  This will allow easy SCIM 2.0 client implementations.
 
 # License
-Copyright (c) 2019 SAP SE or an SAP affiliate company. All rights reserved. This file is licensed under the Apache Software License, v. 2 except as noted otherwise in the [LICENSE file](/LICENSE.txt)
+
+Copyright 2019-2021 SAP SE or an SAP affiliate company and scimono contributors. Please see our [LICENSE](LICENSE.txt) for copyright and license information. Detailed information including third-party components and their licensing/copyright information is available [via the REUSE tool](https://api.reuse.software/info/github.com/SAP/scimono).

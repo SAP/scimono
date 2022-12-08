@@ -12,6 +12,7 @@ import javax.ws.rs.core.Application;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.sap.scimono.api.Bulk;
 import com.sap.scimono.api.Groups;
 import com.sap.scimono.api.ResourceTypes;
 import com.sap.scimono.api.Schemas;
@@ -25,6 +26,8 @@ import com.sap.scimono.api.helper.JsonMappingExceptionMapper;
 import com.sap.scimono.api.helper.JsonProcessingExceptionMapper;
 import com.sap.scimono.api.helper.ScimExceptionMapper;
 import com.sap.scimono.api.helper.ValidationExceptionMapper;
+import com.sap.scimono.callback.bulk.BulkRequestCallback;
+import com.sap.scimono.callback.bulk.DefaultBulkRequestCallback;
 import com.sap.scimono.callback.config.DefaultSCIMConfigurationCallback;
 import com.sap.scimono.callback.config.SCIMConfigurationCallback;
 import com.sap.scimono.callback.groups.DefaultGroupsCallback;
@@ -62,6 +65,7 @@ public abstract class SCIMApplication extends Application {
     scimResources.add(Schemas.class);
     scimResources.add(ResourceTypes.class);
     scimResources.add(ServiceProviderConfiguration.class);
+    scimResources.add(Bulk.class);
 
     scimResources.addAll(getAdditionalResourceProviders());
 
@@ -113,6 +117,13 @@ public abstract class SCIMApplication extends Application {
    */
   public SchemasCallback getSchemasCallback() {
     return new DefaultSchemasCallback();
+  }
+  
+  /**
+   * @return a request-scoped BulkRequestCallback implementation.
+   */
+  public BulkRequestCallback getBulkRequestCallback() {
+    return new DefaultBulkRequestCallback();
   }
 
   /**

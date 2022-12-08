@@ -1,20 +1,21 @@
 
 package com.sap.scimono.entity.validation.patch;
 
+import static com.sap.scimono.callback.schemas.SchemasCallback.SCHEMA_URN_DELIMETER;
+import static com.sap.scimono.callback.schemas.SchemasCallback.isAttributeNotationContainsSchema;
+
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import com.sap.scimono.callback.groups.GroupsCallback;
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;
-import com.sap.scimono.entity.EnterpriseExtension;
+import com.sap.scimono.callback.users.UsersCallback;
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.patch.PatchBody;
@@ -24,9 +25,8 @@ import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.entity.validation.Validator;
 import com.sap.scimono.helper.Strings;
 
+
 public class PatchValidationFramework {
-  private static final Pattern SCHEMA_PATTERN = Pattern.compile("^urn:[a-z0-9][a-z0-9-]{0,31}:([A-Za-z0-9()+,\\-.:=@;$_!*']|%[0-9a-f]{2})+$");
-  private static final String SCHEMA_URN_DELIMETER = ":";
 
   private final SchemasCallback schemaAPI;
   private final ResourceTypesCallback resourceTypesAPI;
@@ -72,7 +72,7 @@ public class PatchValidationFramework {
   }
   //TODO check utils that contain this method
   private static String addSchemaToPathIfNotExist(String path, String defaultSchema) {
-    if (Strings.isNullOrEmpty(path) || path.matches(SCHEMA_PATTERN.toString())) {
+    if (Strings.isNullOrEmpty(path) || isAttributeNotationContainsSchema(path)) {
       return path;
     }
     return String.join(SCHEMA_URN_DELIMETER, defaultSchema, path);
@@ -117,28 +117,31 @@ public class PatchValidationFramework {
     return path.contains("[");
   }
 
-  public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
+  public static PatchValidationFramework groupsFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final
+      GroupsCallback groupsAPI) {
     String coreSchemaId = Group.SCHEMA;
     String resourceType = Group.RESOURCE_TYPE_GROUP;
 
-    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, Collections.singleton(coreSchemaId));
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, groupsAPI.getSchemaIdsAllowingPatch());
     return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 
-  public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI) {
+  public static PatchValidationFramework usersFramework(final SchemasCallback schemaAPI, final ResourceTypesCallback resourceTypesAPI, final UsersCallback usersAPI) {
     String coreSchemaId = User.SCHEMA;
     String resourceType = User.RESOURCE_TYPE_USER;
 
-    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, new HashSet<>(Arrays.asList(coreSchemaId, EnterpriseExtension.ENTERPRISE_URN)));
+    Map<String, Schema> requiredSchemas = getRequiredSchemas(schemaAPI, usersAPI.getSchemaIdsAllowingPatch());
     return new PatchValidationFramework(schemaAPI, resourceTypesAPI, requiredSchemas, coreSchemaId, resourceType);
   }
 
   private static Map<String, Schema> getRequiredSchemas(final SchemasCallback schemaAPI, final Set<String> requiredSchemaIds) {
     // @formatter:off
-    return schemaAPI.getSchemas().stream()
-        .filter(schema -> schema.getId().startsWith(Schema.EXTENSION_SCHEMA_URN) || requiredSchemaIds.contains(schema.getId()))
-        .collect(Collectors.toMap(Schema::getId, schema -> schema));
+    Map<String, Schema> requiredSchemas = schemaAPI.getCustomSchemas().stream().collect(Collectors.toMap(Schema::getId, schema -> schema));
+    requiredSchemas.putAll(schemaAPI.getSchemas().stream()
+        .filter(schema -> requiredSchemaIds.contains(schema.getId()))
+        .collect(Collectors.toMap(Schema::getId, schema -> schema)));
     // @formatter:on
+    return requiredSchemas;
   }
 
 }

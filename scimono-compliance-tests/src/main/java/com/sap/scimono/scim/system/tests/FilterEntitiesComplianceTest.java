@@ -1,6 +1,7 @@
 
 package com.sap.scimono.scim.system.tests;
 
+import com.sap.scimono.client.SCIMRequest;
 import com.sap.scimono.entity.Address;
 import com.sap.scimono.entity.EnterpriseExtension;
 import com.sap.scimono.entity.Group;
@@ -73,15 +74,18 @@ public class FilterEntitiesComplianceTest extends SCIMComplianceTest {
 
   @RegisterExtension
   static UserClientScimResponseExtension clearAfterAllUserRequest = UserClientScimResponseExtension
-      .forClearingAfterAllExecutions(configureScimClientService(TestProperties.SERVICE_URL).buildUserRequest());
+      .forClearingAfterAllExecutions(configureScimClientService(TestProperties.SERVICE_URL)
+      .buildUserRequest(requestWithCustomHeaders(SCIMRequest.newBuilder())));
 
   @RegisterExtension
   static GroupClientScimResponseExtension clearAfterAllGroupRequest = GroupClientScimResponseExtension
-      .forClearingAfterAllExecutions(configureScimClientService(TestProperties.SERVICE_URL).buildGroupRequest());
+      .forClearingAfterAllExecutions(configureScimClientService(TestProperties.SERVICE_URL)
+      .buildGroupRequest(requestWithCustomHeaders(SCIMRequest.newBuilder())));
 
   @RegisterExtension
   static SchemaClientScimResponseExtension clearAfterAllSchemaRequest = SchemaClientScimResponseExtension
-      .forClearingAfterAllExecutions(configureScimClientService(TestProperties.SERVICE_URL).buildSchemaRequest());
+      .forClearingAfterAllExecutions(configureScimClientService(TestProperties.SERVICE_URL)
+      .buildSchemaRequest(requestWithCustomHeaders(SCIMRequest.newBuilder())));
 
 
   @RegisterExtension

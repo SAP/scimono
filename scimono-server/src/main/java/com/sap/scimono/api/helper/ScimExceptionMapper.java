@@ -17,13 +17,15 @@ public class ScimExceptionMapper implements ExceptionMapper<WebApplicationExcept
    */
   @Override
   public Response toResponse(final WebApplicationException exception) {
+    return Response.fromResponse(exception.getResponse()).entity(toScimError(exception)).type(API.APPLICATION_JSON_SCIM).build();
+  }
+
+  public ErrorResponse toScimError(final WebApplicationException exception) {
     String scimType = null;
     if (exception instanceof SCIMException) {
       scimType = ((SCIMException) exception).getScimType();
     }
 
-    ErrorResponse scimError = new ErrorResponse(exception.getResponse().getStatus(), scimType, exception.getMessage());
-    return Response.fromResponse(exception.getResponse()).entity(scimError).type(API.APPLICATION_JSON_SCIM).build();
+    return new ErrorResponse(exception.getResponse().getStatus(), scimType, exception.getMessage());
   }
-
 }

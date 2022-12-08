@@ -30,6 +30,7 @@ import static com.sap.scimono.scim.system.tests.util.TestUtil.constructResourceL
 import static java.util.Collections.singletonMap;
 import static javax.servlet.http.HttpServletResponse.SC_NOT_FOUND;
 import static javax.servlet.http.HttpServletResponse.SC_NO_CONTENT;
+import static javax.ws.rs.core.Response.Status.CREATED;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -1038,6 +1039,18 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
     // @formatter:on
   }
 
+  @Test
+  @DisplayName("Test that creates a user with only required attributes and verifies, that the status code is 201")
+  public void testCreateUserWithOnlyRequiredAttributesAndVerifiesStatusCode201(){
+    String testUserName = "testCreateUserWithIllegalEmail400";
+    User testUser = TestData.setAttributesToATestUser(testUserName).build();
+
+    logger.info("Creating User: {}, with username", testUserName);
+    SCIMResponse<User> scimResponse = resourceAwareUserRequest.createUser(testUser);
+
+    assertAll("Verify Create User Response", getResponseStatusAssertions(scimResponse, true, CREATED));
+  }
+
   private Collection<Executable> getFullUserAssertions(final User expected, final User actual) {
     // @formatter:off
     return Arrays.asList(getMetaAssertions(actual, User.RESOURCE_TYPE_USER),
@@ -1225,7 +1238,7 @@ public class E2EUserComplianceTest extends SCIMComplianceTest {
         .getResources()
         .stream()
         .filter(group -> !group.getMembers().isEmpty() && group.getDisplayName() != null)
-        .filter(group -> group.getMembers().stream().anyMatch(member -> MemberRef.Type.USER == member.getType()))
+        .filter(group -> group.getMembers().stream().anyMatch(member -> MemberRef.Type.USER.equals(member.getType())))
         .findFirst();
   }
 
