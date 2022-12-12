@@ -10,6 +10,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.NullNode;
 import com.sap.scimono.api.API;
 import com.sap.scimono.entity.ErrorResponse;
 import com.sap.scimono.entity.Group;
@@ -40,14 +41,14 @@ public class RequestOperation extends BulkOperation {
                        @JsonProperty(DATA_FIELD) final JsonNode data) {
     super(method, bulkId, version);
     this.path = path;
-    this.rawData = data;
+    this.rawData = data == null ? NullNode.getInstance() : data;
   }
 
   private RequestOperation(final Builder builder) {
     super(builder);
     this.path = builder.path;
     this.data = builder.data;
-    this.rawData = null;
+    this.rawData = builder.rawData;
   }
 
   public static long getSerialversionuid() {
@@ -134,7 +135,7 @@ public class RequestOperation extends BulkOperation {
   }
 
   @JsonIgnore
-  public boolean isValidationErrorAvailable() {
+  public boolean hasValidationError() {
     if (data == null) {
       return false;
     }
@@ -157,8 +158,12 @@ public class RequestOperation extends BulkOperation {
 
   @JsonIgnore
   public String getResourceType() {
+    
+    if (hasValidationError()) {
+      return null;
+    }
+    
     String extractedEndpoint = extractRootFromPath(path);
-
     if (extractedEndpoint.equalsIgnoreCase(API.USERS)) {
       return User.RESOURCE_TYPE_USER;
     }
@@ -181,7 +186,7 @@ public class RequestOperation extends BulkOperation {
   }
 
   public ResponseOperation.Builder errorResponseFromExistingValidationError() {
-    if (!isValidationErrorAvailable()) {
+    if (!hasValidationError()) {
       throw new InternalScimonoException("Validation error is not present");
     }
 
@@ -199,6 +204,7 @@ public class RequestOperation extends BulkOperation {
     private String path;
     private Object data;
     private SCIMException validationError;
+    private JsonNode rawData;
 
     public Builder() {
 
@@ -208,6 +214,7 @@ public class RequestOperation extends BulkOperation {
       super(operation);
       this.path = operation.path;
       this.data = operation.data;
+      this.rawData = operation.rawData;
     }
 
     public Builder setMethod(final RequestMethod method) {

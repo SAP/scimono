@@ -37,7 +37,7 @@ public class SchemaIdValidator implements ConstraintValidator<ValidSchemaId, Str
   }
 
   private boolean isIdenifierLenghtValid(String identifier, ConstraintValidatorContext context) {
-    if (identifier == null || identifier.isEmpty() || identifier.length() >= 20) {
+    if (identifier == null || identifier.isEmpty() || identifier.length() > 21) {
       ValidationUtil.interpolateErrorMessage(context, generateViolationMessage(identifier));
 
       return false;

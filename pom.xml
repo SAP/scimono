@@ -4,7 +4,7 @@
 
     <groupId>com.sap.scimono</groupId>
     <artifactId>scimono-parent</artifactId>
-    <version>0.0.30-SNAPSHOT</version>
+    <version>0.0.60-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>SAP SCIMono Library</name>
@@ -58,13 +58,13 @@
         <maven.compiler.target>1.8</maven.compiler.target>
 
         <antlr4.version>4.9</antlr4.version>
-        <slf4j.version>1.7.30</slf4j.version>
-        <jackson.version>2.12.0</jackson.version>
-        <jersey.version>2.32</jersey.version>
+        <slf4j.version>1.7.36</slf4j.version>
+        <jackson.version>2.13.4.20221013</jackson.version>
+        <jersey.version>2.35</jersey.version>
 
-        <org.mockito.version>3.6.28</org.mockito.version>
-        <wiremock.version>2.27.2</wiremock.version>
-        <junit.version>5.7.0</junit.version>
+        <org.mockito.version>4.6.1</org.mockito.version>
+        <wiremock.version>2.32.0</wiremock.version>
+        <junit.version>5.8.2</junit.version>
         <surefire.version>2.22.2</surefire.version>
     </properties>
 
@@ -123,6 +123,12 @@
             <dependency>
                 <groupId>org.mockito</groupId>
                 <artifactId>mockito-core</artifactId>
+                <version>${org.mockito.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.mockito</groupId>
+                <artifactId>mockito-junit-jupiter</artifactId>
                 <version>${org.mockito.version}</version>
                 <scope>test</scope>
             </dependency>

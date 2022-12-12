@@ -18,12 +18,13 @@ import com.sap.scimono.entity.schema.resources.SchemaCSVReader;
 import com.sap.scimono.helper.Strings;
 
 public interface SchemasCallback {
-  Pattern SCHEMA_PATTERN = Pattern.compile("^urn:[a-z0-9][a-z0-9-]{0,31}:([A-Za-z0-9()+,\\-.:=@;$_!*']|%[0-9a-f]{2})+$");
+  Pattern SCHEMA_PATTERN = Pattern.compile("^urn:[a-z0-9][a-z0-9-]{0,31}:(?>[A-Za-z0-9()+,\\-.:=@;$_!*']|%[0-9a-f]{2})+$");
   String COMPLEX_ATTRIBUTE_DELIMETER = ".";
   String COMPLEX_ATTRIBUTE_DELIMETER_REGEX = "\\.";
   String SCHEMA_URN_DELIMETER = ":";
   String ATTRIBUTE_VALUE_FILTER_OPENING = "[";
   String ATTRIBUTE_VALUE_FILTER_CLOSING = "]";
+  String URN = "urn:";
 
   /**
    * Returns the schema with the specified schemaId.
@@ -106,7 +107,7 @@ public interface SchemasCallback {
   // TODO this could probably be optimized (e.g. it reads all schemas then returns only an id, which is used to read the schema again in
   // getComplexAttributePath)
   default String getSchemaIdFromAttributeNotation(final String attrNotation) {
-    if (attrNotation.matches(SCHEMA_PATTERN.toString())) {
+    if (isAttributeNotationContainsSchema(attrNotation)) {
       // @formatter:off
       return getSchemas().stream()
           .map(Resource::getId)
@@ -158,14 +159,14 @@ public interface SchemasCallback {
   }
 
   static String addSchemaToPathIfNotExist(final String path, final String defaultSchema) {
-    if (Strings.isNullOrEmpty(path) || path.matches(SCHEMA_PATTERN.toString())) {
+    if (Strings.isNullOrEmpty(path) || path.startsWith(URN)) {
       return path;
     }
     return String.join(SCHEMA_URN_DELIMETER, defaultSchema, path);
   }
 
   static boolean isAttributeNotationContainsSchema(final String fullAttrNotation) {
-    return fullAttrNotation.matches(SCHEMA_PATTERN.toString());
+    return fullAttrNotation.startsWith(URN);
   }
 
   default String appendSubAttributeToPath(final String fullAttributePath, final String subAttribute) {

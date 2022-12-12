@@ -16,6 +16,7 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_STA
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -54,7 +55,6 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
-import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
@@ -75,6 +75,8 @@ public class Users {
   private final SCIMConfigurationCallback scimConfig;
   private final ResourceLocationService resourceLocationService;
   private final ResourcePreProcessor<User> userPreProcessor;
+
+  private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
 
   public Users(@Context final Application appContext, @Context final UriInfo uriInfo) {
     this.uriInfo = uriInfo;
@@ -115,7 +117,7 @@ public class Users {
   @GET
   @Path("{id}")
   // @formatter:off
-  public Response getUser(@PathParam("id") @ValidId final String userId,
+  public Response getUser(@PathParam("id")  final String userId,
                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes,
                           @Context final SecurityContext sec) {
@@ -174,7 +176,7 @@ public class Users {
   public Response createUser(@Valid final User newUser,
                              @Context final SecurityContext sec) {
     if (newUser == null) {
-      throw new InvalidInputException("One of the request inputs is not valid.");
+      throw new InvalidInputException(NOT_VALID_INPUTS);
     }
 
     User preparedUser = userPreProcessor.prepareForCreate(newUser);
@@ -190,11 +192,16 @@ public class Users {
 
   @PUT
   @Path("{id}")
-  public Response updateUser(@PathParam("id") @ValidId final String userId, @Valid final User userToUpdate,
+  public Response updateUser(@PathParam("id") final String userId, @Valid final User userToUpdate,
                              @Context final SecurityContext sec) {
+    if (userToUpdate == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
     User preparedUser = userPreProcessor.prepareForUpdate(userToUpdate, userId);
 
     User updatedUser = usersAPI.updateUser(preparedUser, sec.getUserPrincipal());
+
+    updatedUser = resourceLocationService.addLocation(updatedUser, updatedUser.getId());
     updatedUser = resourceLocationService.addRelationalEntitiesLocation(updatedUser);
 
     String version = preparedUser.getMeta().getVersion();
@@ -205,7 +212,7 @@ public class Users {
 
   @DELETE
   @Path("{id}")
-  public void deleteUser(@PathParam("id") @ValidId final String userId,
+  public void deleteUser(@PathParam("id") final String userId,
                          @Context final SecurityContext sec) {
     usersAPI.deleteUser(userId, sec.getUserPrincipal());
 
@@ -215,8 +222,11 @@ public class Users {
 
   @PATCH
   @Path("{id}")
-  public Response patchUser(@PathParam("id") @ValidId final String userId, final PatchBody patchBody,
+  public Response patchUser(@PathParam("id") final String userId, final PatchBody patchBody,
                             @Context final SecurityContext sec) {
+    if (patchBody == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
     PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI);
     validationFramework.validate(patchBody);
 

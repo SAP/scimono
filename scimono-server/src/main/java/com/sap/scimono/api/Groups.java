@@ -16,6 +16,7 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_STA
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -47,7 +48,6 @@ import com.sap.scimono.entity.Meta;
 import com.sap.scimono.entity.paging.PageInfo;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.patch.PatchBody;
-import com.sap.scimono.entity.schema.validation.ValidId;
 import com.sap.scimono.entity.schema.validation.ValidStartId;
 import com.sap.scimono.entity.validation.patch.PatchValidationFramework;
 import com.sap.scimono.exception.InvalidInputException;
@@ -68,6 +68,8 @@ public class Groups {
   private final ResourceLocationService resourceLocationService;
   private final ResourcePreProcessor<Group> groupPreProcessor;
 
+  private static final String NOT_VALID_INPUTS = "One of the request inputs is not valid.";
+
   public Groups(@Context Application appContext, @Context UriInfo uriInfo) {
     SCIMApplication scimApplication = SCIMApplication.from(appContext);
 
@@ -82,7 +84,7 @@ public class Groups {
   @GET
   @Path("{id}")
   // @formatter:off
-  public Response getGroup(@PathParam("id") @ValidId final String groupId,
+  public Response getGroup(@PathParam("id") final String groupId,
                            @QueryParam(ATTRIBUTES_PARAM) final String attributes,
                            @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes,
                            @Context final SecurityContext sec) {
@@ -134,7 +136,7 @@ public class Groups {
 
     return ListResponseBuilder.forGroups(groupsToReturn)
         .withPagingStartParameters(startId, startIndex)
-        .withRequestedCount(count)
+        .withRequestedCount(PagingParamsParser.getExtendedCountOrDefault(groups.getCount(), count))
         .withTotalResultsCount(groups.getTotalResourceCount())
         .build();
   }
@@ -143,7 +145,7 @@ public class Groups {
   public Response createGroup(@Valid Group newGroup,
                               @Context final SecurityContext sec) {
     if (newGroup == null) {
-      throw new InvalidInputException("One of the request inputs is not valid.");
+      throw new InvalidInputException(NOT_VALID_INPUTS);
     }
 
     Group preparedGroup = groupPreProcessor.prepareForCreate(newGroup);
@@ -159,12 +161,17 @@ public class Groups {
 
   @PUT
   @Path("{id}")
-  public Response updateGroup(@PathParam("id") @ValidId final String groupId, @Valid Group groupToUpdate,
+  public Response updateGroup(@PathParam("id") final String groupId, @Valid Group groupToUpdate,
                               @Context final SecurityContext sec) {
+    if (groupToUpdate == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
     Group preparedGroup = groupPreProcessor.prepareForUpdate(groupToUpdate, groupId);
 
     Group updatedGroup = groupAPI.updateGroup(preparedGroup, sec.getUserPrincipal());
+
     updatedGroup = resourceLocationService.addMembersLocation(updatedGroup);
+    updatedGroup = resourceLocationService.addLocation(updatedGroup, updatedGroup.getId());
 
     String version = preparedGroup.getMeta().getVersion();
     logger.trace("Updated group {}, new version is {}", groupId, version);
@@ -173,7 +180,7 @@ public class Groups {
 
   @DELETE
   @Path("{id}")
-  public void deleteGroup(@PathParam("id") @ValidId final String groupId,
+  public void deleteGroup(@PathParam("id") final String groupId,
                           @Context final SecurityContext sec) {
     groupAPI.deleteGroup(groupId, sec.getUserPrincipal());
 
@@ -183,8 +190,11 @@ public class Groups {
 
   @PATCH
   @Path("{id}")
-  public Response patchGroup(@PathParam("id") @ValidId final String groupId, final PatchBody patchBody,
+  public Response patchGroup(@PathParam("id") final String groupId, final PatchBody patchBody,
                              @Context final SecurityContext sec) {
+    if (patchBody == null) {
+      throw new InvalidInputException(NOT_VALID_INPUTS);
+    }
     PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI);
     validationFramework.validate(patchBody);
 
