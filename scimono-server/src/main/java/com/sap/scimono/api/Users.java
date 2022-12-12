@@ -227,7 +227,7 @@ public class Users {
     if (patchBody == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
-    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI);
+    PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI, usersAPI);
     validationFramework.validate(patchBody);
 
     String newVersion = UUID.randomUUID().toString();

@@ -195,7 +195,7 @@ public class Groups {
     if (patchBody == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
-    PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI);
+    PatchValidationFramework validationFramework = PatchValidationFramework.groupsFramework(schemaAPI, resourceTypesAPI, groupAPI);
     validationFramework.validate(patchBody);
 
     Meta meta = new Meta.Builder(null, Instant.now()).setVersion(UUID.randomUUID().toString()).build();
