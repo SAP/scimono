@@ -1,5 +1,6 @@
 package com.sap.scimono.scim.system.tests.launcher;
 
+import com.sap.scimono.scim.system.tests.listeners.TestsResultListener;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
@@ -25,24 +26,35 @@ public class TestsLauncher {
 
   public void launch() {
     setTestParameters();
-
-    TestMethodsSelectorsFactory testMethodsSelectorsFactory = launcherProperties.getTestsFilePath() == null ?
-        TestMethodsSelectorsFactory.forAllTests() :
-        TestMethodsSelectorsFactory.fromPropertiesFile(launcherProperties.getTestsFilePath().getValue());
-
-    LauncherDiscoveryRequest launcherDiscoveryRequest = LauncherDiscoveryRequestBuilder.request()
-        .selectors(testMethodsSelectorsFactory.getDiscoverySelectors())
-        .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "true").build();
-
+  
+    LauncherDiscoveryRequest launcherDiscoveryRequest = createLauncherDiscoveryRequest();
+  
     LegacyXmlReportGeneratingListener xmlReporter = new LegacyXmlReportGeneratingListener(FileSystems.getDefault().getPath("."),
         new PrintWriter(System.out));
     Launcher launcher = LauncherFactory.create();
     launcher.discover(launcherDiscoveryRequest);
 
-    launcher.registerTestExecutionListeners(new TestsExecutionReporter(), xmlReporter);
+    TestsResultListener resultListener = new TestsResultListener();
+    launcher.registerTestExecutionListeners(new TestsExecutionReporter(), resultListener, xmlReporter);
     launcher.execute(launcherDiscoveryRequest);
+    
+    if(resultListener.isAnyTestFailed()) {
+      throw new RuntimeException("One of the compliance tests failed");
+    }
   }
-
+  
+  private LauncherDiscoveryRequest createLauncherDiscoveryRequest() {
+    TestMethodsSelectorsFactory testMethodsSelectorsFactory = launcherProperties.getTestsFilePath() == null ?
+        TestMethodsSelectorsFactory.forAllTests() :
+        TestMethodsSelectorsFactory.fromPropertiesFile(launcherProperties.getTestsFilePath().getValue());
+    
+    LauncherDiscoveryRequest launcherDiscoveryRequest = LauncherDiscoveryRequestBuilder.request()
+        .selectors(testMethodsSelectorsFactory.getDiscoverySelectors())
+        .configurationParameter("junit.jupiter.extensions.autodetection.enabled", "true").build();
+    return launcherDiscoveryRequest;
+  }
+  
+  
   private void setTestParameters() {
     setTestParameter(launcherProperties.getServiceUrl());
     setTestParameter(launcherProperties.getAuthType());
