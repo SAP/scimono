@@ -1,6 +1,6 @@
 package com.sap.scimono.scim.system.tests.launcher;
 
-import com.sap.scimono.scim.system.tests.listeners.TestsResultListener;
+import com.sap.scimono.scim.system.tests.listeners.FailedTestResultListener;
 import org.junit.platform.launcher.Launcher;
 import org.junit.platform.launcher.LauncherDiscoveryRequest;
 import org.junit.platform.launcher.core.LauncherDiscoveryRequestBuilder;
@@ -19,6 +19,8 @@ public class TestsLauncher {
   }
 
   private final LauncherProperties launcherProperties;
+  
+  private final FailedTestResultListener resultListener = new FailedTestResultListener();
 
   private TestsLauncher(final LauncherProperties launcherProperties) {
     this.launcherProperties = launcherProperties;
@@ -34,13 +36,14 @@ public class TestsLauncher {
     Launcher launcher = LauncherFactory.create();
     launcher.discover(launcherDiscoveryRequest);
 
-    TestsResultListener resultListener = new TestsResultListener();
-    launcher.registerTestExecutionListeners(new TestsExecutionReporter(), resultListener, xmlReporter);
+    launcher.registerTestExecutionListeners(new TestsExecutionReporter(), xmlReporter);
+    
+    if (launcherProperties.getEnabledListeners() != null) {
+      launcher.registerTestExecutionListeners(resultListener);
+    }
     launcher.execute(launcherDiscoveryRequest);
     
-    if(resultListener.isAnyTestFailed()) {
-      throw new RuntimeException("One of the compliance tests failed");
-    }
+    validatePostExecution();
   }
   
   private LauncherDiscoveryRequest createLauncherDiscoveryRequest() {
@@ -65,11 +68,18 @@ public class TestsLauncher {
     setTestParameter(launcherProperties.getOauthClientId());
     setTestParameter(launcherProperties.getOathSecret());
     setTestParameter(launcherProperties.getHeaders());
+    setTestParameter(launcherProperties.getEnabledListeners());
   }
 
   private void setTestParameter(LauncherProperties.LauncherProperty launcherProperty) {
     if (launcherProperty != null) {
       System.setProperty(launcherProperty.getName(), launcherProperty.getValue());
+    }
+  }
+  
+  private void validatePostExecution() {
+    if(launcherProperties.getEnabledListeners() != null && resultListener.isAnyTestFailed()) {
+      throw new RuntimeException("At least one of the compliance tests failed");
     }
   }
 
