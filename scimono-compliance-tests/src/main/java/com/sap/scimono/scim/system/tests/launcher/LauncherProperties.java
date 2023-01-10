@@ -19,7 +19,8 @@ public class LauncherProperties {
     BASIC_AUTH_PASSWORD("basic.auth.password"),
     HEADERS("custom.headers"),
     SCIM_SERVICE_URL("scim.service.url"),
-    TESTS_FILE_PATH("tests.file.path");
+    TESTS_FILE_PATH("tests.file.path"),
+    ENABLE_LISTENERS("tests.listeners.enabled");
 
     ParamName(String value) {
       this.value = value;
@@ -98,6 +99,11 @@ public class LauncherProperties {
   public LauncherProperty getTestsFilePath() {
     return properties.get(ParamName.TESTS_FILE_PATH);
   }
+  
+  public LauncherProperty getEnabledListeners() {
+    return properties.get(ParamName.ENABLE_LISTENERS);
+  }
+  
   public static LauncherProperties fromCommandLineArguments(String[] args) {
     if(!isArgsInValidFormat(args)) {
       throw new LauncherInitializationException("Invalid format of arguments");
