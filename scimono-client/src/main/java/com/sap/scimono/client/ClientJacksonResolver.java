@@ -3,9 +3,9 @@ package com.sap.scimono.client;
 import static com.fasterxml.jackson.annotation.JsonProperty.Access.READ_WRITE;
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.ext.ContextResolver;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;

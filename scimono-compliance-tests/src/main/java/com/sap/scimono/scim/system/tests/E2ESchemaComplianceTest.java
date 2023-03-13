@@ -34,8 +34,8 @@ import java.util.stream.Collectors;
 
 import static com.sap.scimono.scim.system.tests.util.TestData.buildTestSchema;
 import static com.sap.scimono.scim.system.tests.util.TestUtil.constructResourceLocation;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
-import static javax.ws.rs.core.Response.Status.NO_CONTENT;
+import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
+import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;

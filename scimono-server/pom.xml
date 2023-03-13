@@ -6,7 +6,7 @@
     <parent>
         <artifactId>scimono-parent</artifactId>
         <groupId>com.sap.scimono</groupId>
-        <version>0.0.71-SNAPSHOT</version>
+        <version>0.0.71-jakarta</version>
     </parent>
 
     <artifactId>scimono-server</artifactId>
