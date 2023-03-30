@@ -47,7 +47,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest {
   private static final Logger logger = LoggerFactory.getLogger(UserOperationsHttpResponseCodeTest.class);
 
-  @RegisterExtension
+  @RegisterExtension 
   UserClientScimResponseExtension resourceAwareUserRequest = UserClientScimResponseExtension.forClearingAfterEachExecutions(userRequest);
   
   private final UserFailSafeClient userFailSafeClient = resourceAwareUserRequest.getFailSafeClient();
