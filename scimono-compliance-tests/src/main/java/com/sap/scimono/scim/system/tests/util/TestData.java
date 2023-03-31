@@ -190,7 +190,7 @@ public class TestData {
     // @formatter:off
     return new Address.Builder()
         .setType(Address.Type.HOME)
-        .setCountry("Bulgaria")
+        .setCountry("BG")
         .setFormatted("Plovdiv, Bulgaria")
         .setLocality("Plovdiv")
         .setRegion("Plovdiv")
@@ -260,7 +260,7 @@ public class TestData {
 
     Address address = new Address.Builder()
         .setType(Address.Type.WORK)
-        .setCountry("Bulgaria")
+        .setCountry("BG")
         .setFormatted("Sofia, Bulgaria")
         .setLocality("Sofia")
         .setRegion("Sofia")
