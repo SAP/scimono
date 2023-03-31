@@ -138,7 +138,7 @@ public class TestData {
         .setProfileUrl("http://prifleUrl.com")
         .setTitle("Empiror")
         .setUserType("king")
-        .setPreferredLanguage("Bulgarian")
+        .setPreferredLanguage("bg_BG")
         .setLocale("bg")
         .setTimezone("UTC")
         .setExternalId(userName)
