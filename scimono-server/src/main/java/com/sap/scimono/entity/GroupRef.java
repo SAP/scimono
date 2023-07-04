@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sap.scimono.entity.base.MultiValuedAttribute;
 import com.sap.scimono.entity.base.MultiValuedAttributeType;
@@ -52,9 +53,8 @@ public final class GroupRef extends MultiValuedAttribute implements Serializable
 
   @JsonCreator
   private GroupRef(@JsonProperty(OPERATION_FIELD) final String operation, @JsonProperty(value = VALUE_FIELD, required = true) final String value,
-      @JsonProperty(DISPLAY_FIELD) final String display, @JsonProperty(PRIMARY_FIELD) final boolean primary, @JsonProperty(REF_FIELD) final String reference,
-      @JsonProperty(TYPE_FIELD) final Type type) {
-    super(operation, value, display, primary, reference);
+      @JsonProperty(DISPLAY_FIELD) final String display, @JsonProperty(REF_FIELD) final String reference, @JsonProperty(TYPE_FIELD) final Type type) {
+    super(operation, value, display, false, reference);
     this.type = type;
   }
 
@@ -74,6 +74,12 @@ public final class GroupRef extends MultiValuedAttribute implements Serializable
    */
   public Type getType() {
     return type;
+  }
+
+  @JsonIgnore
+  @Override
+  public Boolean isPrimary() {
+    return super.isPrimary();
   }
 
   @Override
