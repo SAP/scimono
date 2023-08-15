@@ -1,9 +1,9 @@
 package com.sap.scimono.client.authentication;
 
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientRequestFilter;
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientRequestFilter;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MultivaluedMap;
 
 public interface TargetSystemAuthenticator extends ClientRequestFilter {
   String OAUTH_GRANT_TYPE = "grant_type";

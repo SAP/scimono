@@ -17,7 +17,7 @@
 
 package com.sap.scimono.exception;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 public class InvalidFilterException extends SCIMException {
 

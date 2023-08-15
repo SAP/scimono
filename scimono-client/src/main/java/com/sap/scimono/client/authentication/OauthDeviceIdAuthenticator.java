@@ -1,7 +1,7 @@
 package com.sap.scimono.client.authentication;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.WebTarget;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.client.WebTarget;
 import java.net.URI;
 
 public class OauthDeviceIdAuthenticator implements TargetSystemAuthenticator {

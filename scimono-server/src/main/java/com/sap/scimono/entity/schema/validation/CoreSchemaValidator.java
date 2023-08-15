@@ -17,8 +17,8 @@
 
 package com.sap.scimono.entity.schema.validation;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.Set;
 
 class CoreSchemaValidator implements ConstraintValidator<ValidCoreSchema, Set<String>> {

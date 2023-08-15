@@ -3,8 +3,8 @@ package com.sap.scimono.client;
 import com.sap.scimono.entity.paging.PagedByIndexSearchResult;
 import com.sap.scimono.entity.schema.ResourceType;
 
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.GenericType;
 
 import static com.sap.scimono.api.API.RESOURCE_TYPES;
 

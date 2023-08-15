@@ -7,7 +7,7 @@ import com.sap.scimono.entity.Resource;
 import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.schema.Schema;
 
-import javax.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriBuilder;
 
 import static com.sap.scimono.api.API.GROUPS;
 import static com.sap.scimono.api.API.SCHEMAS;

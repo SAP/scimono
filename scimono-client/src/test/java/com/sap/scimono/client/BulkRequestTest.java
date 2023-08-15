@@ -8,7 +8,7 @@ import static com.sap.scimono.client.util.WireMockUtils.emptyResponse;
 
 import java.util.UUID;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;

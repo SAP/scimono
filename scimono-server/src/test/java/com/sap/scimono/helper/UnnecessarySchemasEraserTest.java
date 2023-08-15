@@ -1,8 +1,8 @@
 
 package com.sap.scimono.helper;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.User;
@@ -39,9 +39,10 @@ class UnnecessarySchemasEraserTest {
     User userWithNecessarySchemas = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(user, User.SCHEMA);
 
     Set<String> userSchemas = userWithNecessarySchemas.getSchemas();
-    assertFalse(SCHEMA_SHOULD_BE_REMOVED_MESSAGE.apply(customSchemaWithoutProvidedAttributes),
-        userSchemas.contains(customSchemaWithoutProvidedAttributes));
-    assertTrue(SCHEMA_SHOULD_BE_PRESENT_MESSAGE.apply(customSchemaWithProvidedAttributes), userSchemas.contains(customSchemaWithProvidedAttributes));
+    assertFalse(userSchemas.contains(customSchemaWithoutProvidedAttributes),
+            SCHEMA_SHOULD_BE_REMOVED_MESSAGE.apply(customSchemaWithoutProvidedAttributes));
+    assertTrue(userSchemas.contains(customSchemaWithProvidedAttributes),
+            SCHEMA_SHOULD_BE_PRESENT_MESSAGE.apply(customSchemaWithProvidedAttributes));
   }
 
   @Test
@@ -56,8 +57,8 @@ class UnnecessarySchemasEraserTest {
     User userWithNecessarySchemas = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(user, User.SCHEMA);
 
     Set<String> userSchemas = userWithNecessarySchemas.getSchemas();
-    assertFalse(SCHEMA_SHOULD_BE_REMOVED_MESSAGE.apply(Group.SCHEMA), userSchemas.contains(Group.SCHEMA));
-    assertTrue(SCHEMA_SHOULD_BE_PRESENT_MESSAGE.apply(User.SCHEMA), userSchemas.contains(User.SCHEMA));
+    assertFalse(userSchemas.contains(Group.SCHEMA), SCHEMA_SHOULD_BE_REMOVED_MESSAGE.apply(Group.SCHEMA));
+    assertTrue(userSchemas.contains(User.SCHEMA), SCHEMA_SHOULD_BE_PRESENT_MESSAGE.apply(User.SCHEMA));
   }
 
   @Test
@@ -67,8 +68,8 @@ class UnnecessarySchemasEraserTest {
     UnnecessarySchemasEraser<User> unnecessarySchemasEraser = new UnnecessarySchemasEraser<>();
     User userWithNecessarySchemas = unnecessarySchemasEraser.eraseAllUnnecessarySchemas(user, User.SCHEMA);
 
-    assertFalse(SCHEMA_SHOULD_BE_REMOVED_MESSAGE.apply(Group.SCHEMA), userWithNecessarySchemas.isExtensionPresent(Group.SCHEMA));
-    assertFalse(SCHEMA_SHOULD_BE_REMOVED_MESSAGE.apply(Group.SCHEMA), userWithNecessarySchemas.getSchemas().contains(Group.SCHEMA));
+    assertFalse(userWithNecessarySchemas.isExtensionPresent(Group.SCHEMA), SCHEMA_SHOULD_BE_REMOVED_MESSAGE.apply(Group.SCHEMA));
+    assertFalse(userWithNecessarySchemas.getSchemas().contains(Group.SCHEMA), SCHEMA_SHOULD_BE_REMOVED_MESSAGE.apply(Group.SCHEMA));
   }
 
 }

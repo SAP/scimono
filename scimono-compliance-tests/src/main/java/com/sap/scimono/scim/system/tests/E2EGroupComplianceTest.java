@@ -17,7 +17,7 @@ import static com.sap.scimono.scim.system.tests.util.TestData.buildGroupMemberRe
 import static com.sap.scimono.scim.system.tests.util.TestData.buildTestUser;
 import static com.sap.scimono.scim.system.tests.util.TestData.extractGroupIds;
 import static java.util.Collections.singletonMap;
-import static javax.ws.rs.core.Response.Status.NOT_FOUND;
+import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;

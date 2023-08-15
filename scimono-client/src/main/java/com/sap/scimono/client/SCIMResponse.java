@@ -1,8 +1,8 @@
 package com.sap.scimono.client;
 
-import javax.ws.rs.WebApplicationException;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.WebApplicationException;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.Response;
 
 public class SCIMResponse<T> {
   private final ResponseEntityReader<T> responseEntityReader;

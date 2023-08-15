@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
 import java.util.stream.Stream;
 
 import static com.sap.scimono.scim.system.tests.util.TestData.JACKSON_NODE_FACTORY;
-import static javax.ws.rs.core.Response.Status.BAD_REQUEST;
+import static jakarta.ws.rs.core.Response.Status.BAD_REQUEST;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class PatchResourceWithInvalidResourceAttributeTest extends SCIMHttpResponseCodeTest {

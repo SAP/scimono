@@ -1,7 +1,7 @@
 package com.sap.scimono.client.authentication;
 
-import javax.ws.rs.client.Client;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.client.Client;
+import jakarta.ws.rs.core.UriBuilder;
 
 public class OauthAuthenticatorFactory {
 

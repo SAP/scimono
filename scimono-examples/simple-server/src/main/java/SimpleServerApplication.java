@@ -2,7 +2,7 @@ import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.callback.users.UsersCallback;
 import org.glassfish.jersey.server.ServerProperties;
 
-import javax.ws.rs.ApplicationPath;
+import jakarta.ws.rs.ApplicationPath;
 import java.util.HashMap;
 import java.util.Map;
 

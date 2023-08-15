@@ -4,8 +4,8 @@ import com.sap.scimono.client.query.ResourcePageQuery;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.WebTarget;
+import jakarta.ws.rs.client.ClientBuilder;
+import jakarta.ws.rs.client.WebTarget;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 

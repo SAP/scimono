@@ -1,7 +1,7 @@
 
 package com.sap.scimono.entity.definition;
 
-import javax.ws.rs.WebApplicationException;
+import jakarta.ws.rs.WebApplicationException;
 
 public class NotExistingScimAttributeException extends WebApplicationException {
   public NotExistingScimAttributeException(String attributeName) {

@@ -4,8 +4,8 @@ package com.sap.scimono.entity.schema.validation;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.validation.ValidationUtil;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import java.util.regex.Pattern;
 
 public class SchemaIdValidator implements ConstraintValidator<ValidSchemaId, String> {

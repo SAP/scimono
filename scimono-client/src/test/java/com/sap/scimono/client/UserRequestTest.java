@@ -13,9 +13,9 @@ import static com.sap.scimono.client.query.ResourcePageQuery.indexPageQuery;
 import static com.sap.scimono.client.util.ResponseBodyAttributeExistenceAssertions.getCommonResourceAssertions;
 import static com.sap.scimono.client.util.ResponseBodyAttributeExistenceAssertions.getPagedByIdentityResponseAssertions;
 import static com.sap.scimono.client.util.ResponseBodyAttributeExistenceAssertions.getPagedByIndexResponseAssertions;
-import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static javax.ws.rs.core.Response.Status.CREATED;
-import static javax.ws.rs.core.Response.Status.OK;
+import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static jakarta.ws.rs.core.Response.Status.CREATED;
+import static jakarta.ws.rs.core.Response.Status.OK;
 import static org.glassfish.jersey.client.HttpUrlConnectorProvider.SET_METHOD_WORKAROUND;
 import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -32,8 +32,8 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-import javax.ws.rs.ProcessingException;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.ProcessingException;
+import jakarta.ws.rs.core.Response;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
