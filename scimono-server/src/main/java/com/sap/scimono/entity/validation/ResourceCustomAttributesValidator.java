@@ -3,7 +3,7 @@ package com.sap.scimono.entity.validation;
 
 import java.util.Collections;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 
 import com.sap.scimono.callback.resourcetype.ResourceTypesCallback;
 import com.sap.scimono.callback.schemas.SchemasCallback;

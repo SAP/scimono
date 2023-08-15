@@ -13,7 +13,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.Collections;
 

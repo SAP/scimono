@@ -2,18 +2,16 @@ package com.sap.scimono.api;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.exception.InvalidInputException;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.Before;
+import org.junit.Test;
 
 import java.util.UUID;
-
-import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class GroupsTest {
 
   private Groups groups;
 
-  @BeforeEach
+  @Before
   public void setup() {
     SCIMApplication scimApplication = new SCIMApplication() {
 
@@ -21,16 +19,16 @@ public class GroupsTest {
     groups = new Groups(scimApplication, null);
   }
 
-  @Test
+  @Test(expected = InvalidInputException.class)
   public void testUpdateGroupWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    assertThrows(InvalidInputException.class, () -> groups.updateGroup(userId, null));
+    groups.updateGroup(userId, null);
   }
 
-  @Test
+  @Test(expected = InvalidInputException.class)
   public void testPatchGroupWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    assertThrows(InvalidInputException.class, () -> groups.patchGroup(userId, null));
+    groups.patchGroup(userId, null);
   }
 
 }

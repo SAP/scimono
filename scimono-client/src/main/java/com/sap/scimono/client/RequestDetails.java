@@ -1,6 +1,6 @@
 package com.sap.scimono.client;
 
-import jakarta.ws.rs.client.WebTarget;
+import javax.ws.rs.client.WebTarget;
 
 import com.sap.scimono.client.query.FilterQuery;
 import com.sap.scimono.client.query.SCIMQuery;
