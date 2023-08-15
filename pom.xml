@@ -4,7 +4,7 @@
 
     <groupId>com.sap.scimono</groupId>
     <artifactId>scimono-parent</artifactId>
-    <version>0.0.71-SNAPSHOT</version>
+    <version>0.1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
 
     <name>SAP SCIMono Library</name>
