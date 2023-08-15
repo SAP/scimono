@@ -1,8 +1,8 @@
 
 package com.sap.scimono.entity.validation.patch;
 
-import jakarta.validation.ValidationException;
-import jakarta.ws.rs.core.Response;
+import javax.validation.ValidationException;
+import javax.ws.rs.core.Response;
 
 import com.sap.scimono.exception.SCIMException;
 import com.sap.scimono.exception.SCIMException.Type;

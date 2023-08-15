@@ -3,7 +3,7 @@ package com.sap.scimono.entity.validation;
 
 import java.util.regex.Pattern;
 
-import jakarta.validation.ConstraintValidatorContext;
+import javax.validation.ConstraintValidatorContext;
 
 public class ValidationUtil {
   private static final Pattern EXPRESSION_LANGUAGE_CHARACTERS = Pattern.compile("([${}])");

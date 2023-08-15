@@ -2,9 +2,9 @@ package com.sap.scimono.client.util;
 
 import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
-import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;

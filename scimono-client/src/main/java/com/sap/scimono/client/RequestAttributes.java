@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.function.Function;
 
-import jakarta.ws.rs.client.WebTarget;
+import javax.ws.rs.client.WebTarget;
 
 import com.sap.scimono.client.query.SCIMQuery;
 

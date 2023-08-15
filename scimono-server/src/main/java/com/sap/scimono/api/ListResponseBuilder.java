@@ -6,7 +6,7 @@ import static com.sap.scimono.helper.Strings.isNullOrEmpty;
 import java.util.List;
 import java.util.function.Supplier;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 
 import com.sap.scimono.entity.Group;
 import com.sap.scimono.entity.Resource;
