@@ -3,7 +3,7 @@ package com.sap.scimono.api;
 
 import static org.mockito.Mockito.spy;
 
-import jakarta.ws.rs.container.ContainerRequestContext;
+import javax.ws.rs.container.ContainerRequestContext;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;

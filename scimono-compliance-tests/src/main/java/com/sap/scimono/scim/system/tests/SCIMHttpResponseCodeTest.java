@@ -5,9 +5,9 @@ import com.sap.scimono.scim.system.tests.util.CustomTargetSystemRestClient;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 
-import static jakarta.ws.rs.core.Response.Status.NOT_FOUND;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SCIMHttpResponseCodeTest extends SCIMComplianceTest {

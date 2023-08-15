@@ -2,7 +2,7 @@ package com.sap.scimono.entity.validation;
 
 import java.util.Map;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

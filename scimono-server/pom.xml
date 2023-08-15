@@ -6,7 +6,7 @@
     <parent>
         <artifactId>scimono-parent</artifactId>
         <groupId>com.sap.scimono</groupId>
-        <version>0.1.0-SNAPSHOT</version>
+        <version>0.0.78-SNAPSHOT</version>
     </parent>
 
     <artifactId>scimono-server</artifactId>
@@ -70,8 +70,8 @@
             <artifactId>jackson-datatype-jsr310</artifactId>
         </dependency>
         <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
             <scope>provided</scope>
         </dependency>
         <dependency>

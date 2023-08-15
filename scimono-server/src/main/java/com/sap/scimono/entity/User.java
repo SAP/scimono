@@ -58,7 +58,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
-import jakarta.validation.Valid;
+import javax.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnore;

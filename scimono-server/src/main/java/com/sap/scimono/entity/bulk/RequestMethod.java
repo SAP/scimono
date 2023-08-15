@@ -4,7 +4,7 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.Map;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 
 public enum RequestMethod {
   POST, PUT, PATCH, DELETE;

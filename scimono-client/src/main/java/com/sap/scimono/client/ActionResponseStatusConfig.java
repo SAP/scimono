@@ -1,6 +1,6 @@
 package com.sap.scimono.client;
 
-import jakarta.ws.rs.core.Response;
+import javax.ws.rs.core.Response;
 import java.util.Collection;
 
 public class ActionResponseStatusConfig {
