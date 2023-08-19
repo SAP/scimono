@@ -119,10 +119,11 @@ public class Users {
   // @formatter:off
   public Response getUser(@PathParam("id")  final String userId,
                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
-                          @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+                          @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes,
+                          @Context final SecurityContext sec) {
     // @formatter:on
     logger.trace("Reading user {}", userId);
-    User userFromDb = usersAPI.getUser(userId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
+    User userFromDb = usersAPI.getUser(userId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes), sec.getUserPrincipal());
 
     if (userFromDb == null) {
       throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
@@ -140,7 +141,8 @@ public class Users {
                            @QueryParam(START_ID_PARAM) @ValidStartId final String startId,
                            @QueryParam(FILTER_PARAM) final String filter,
                            @QueryParam(ATTRIBUTES_PARAM) final String attributes,
-                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes,
+                           @Context final SecurityContext sec) {
     // @formatter:on
     logger.trace("Reading users with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
@@ -154,7 +156,7 @@ public class Users {
     }
 
     PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
-    PagedResult<User> users = usersAPI.getUsers(pageInfo, filter, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
+    PagedResult<User> users = usersAPI.getUsers(pageInfo, filter, RequestedResourceAttributesParser.parse(attributes, excludedAttributes), sec.getUserPrincipal());
 
     List<User> usersToReturn = new ArrayList<>();
     for (User user : users.getResources()) {
@@ -171,13 +173,14 @@ public class Users {
   }
 
   @POST
-  public Response createUser(@Valid final User newUser) {
+  public Response createUser(@Valid final User newUser,
+                             @Context final SecurityContext sec) {
     if (newUser == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
 
     User preparedUser = userPreProcessor.prepareForCreate(newUser);
-    User createdUser = usersAPI.createUser(preparedUser);
+    User createdUser = usersAPI.createUser(preparedUser, sec.getUserPrincipal());
 
     createdUser = resourceLocationService.addLocation(createdUser, createdUser.getId());
     createdUser = resourceLocationService.addRelationalEntitiesLocation(createdUser);
@@ -189,13 +192,14 @@ public class Users {
 
   @PUT
   @Path("{id}")
-  public Response updateUser(@PathParam("id") final String userId, @Valid final User userToUpdate) {
+  public Response updateUser(@PathParam("id") final String userId, @Valid final User userToUpdate,
+                             @Context final SecurityContext sec) {
     if (userToUpdate == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
     User preparedUser = userPreProcessor.prepareForUpdate(userToUpdate, userId);
 
-    User updatedUser = usersAPI.updateUser(preparedUser);
+    User updatedUser = usersAPI.updateUser(preparedUser, sec.getUserPrincipal());
 
     updatedUser = resourceLocationService.addLocation(updatedUser, updatedUser.getId());
     updatedUser = resourceLocationService.addRelationalEntitiesLocation(updatedUser);
@@ -208,8 +212,9 @@ public class Users {
 
   @DELETE
   @Path("{id}")
-  public void deleteUser(@PathParam("id") final String userId) {
-    usersAPI.deleteUser(userId);
+  public void deleteUser(@PathParam("id") final String userId,
+                         @Context final SecurityContext sec) {
+    usersAPI.deleteUser(userId, sec.getUserPrincipal());
 
     logger.trace("Deleted user {}", userId);
     Response.noContent().build();
@@ -217,7 +222,8 @@ public class Users {
 
   @PATCH
   @Path("{id}")
-  public Response patchUser(@PathParam("id") final String userId, final PatchBody patchBody) {
+  public Response patchUser(@PathParam("id") final String userId, final PatchBody patchBody,
+                            @Context final SecurityContext sec) {
     if (patchBody == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
@@ -226,7 +232,7 @@ public class Users {
 
     String newVersion = UUID.randomUUID().toString();
     Meta meta = new Meta.Builder(null, Instant.now()).setVersion(newVersion).build();
-    usersAPI.patchUser(userId, patchBody, meta);
+    usersAPI.patchUser(userId, patchBody, meta, sec.getUserPrincipal());
 
     logger.trace("Updated user {}, new version is {}", userId, newVersion);
     return Response.status(Status.NO_CONTENT).build();
@@ -234,7 +240,7 @@ public class Users {
 
   @POST
   @Path(".query")
-  public Response queryUsers() {
-    return getUsers("0", "0", null, null, null, null);
+  public Response queryUsers(@Context final SecurityContext sec) {
+    return getUsers("0", "0", null, null, null, null, sec);
   }
 }

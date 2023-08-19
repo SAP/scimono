@@ -22,13 +22,13 @@ public class GroupsTest {
   @Test(expected = InvalidInputException.class)
   public void testUpdateGroupWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    groups.updateGroup(userId, null);
+    groups.updateGroup(userId, null, null);
   }
 
   @Test(expected = InvalidInputException.class)
   public void testPatchGroupWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    groups.patchGroup(userId, null);
+    groups.patchGroup(userId, null, null);
   }
 
 }

@@ -22,13 +22,13 @@ public class UsersTest {
   @Test(expected = InvalidInputException.class)
   public void testUpdateUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    users.updateUser(userId, null);
+    users.updateUser(userId, null, null);
   }
 
   @Test(expected = InvalidInputException.class)
   public void testPatchUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    users.patchUser(userId, null);
+    users.patchUser(userId, null, null);
   }
 
 }

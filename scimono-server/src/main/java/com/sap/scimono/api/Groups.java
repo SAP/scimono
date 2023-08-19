@@ -30,10 +30,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriInfo;
+import javax.ws.rs.core.*;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,10 +86,12 @@ public class Groups {
   // @formatter:off
   public Response getGroup(@PathParam("id") final String groupId,
                            @QueryParam(ATTRIBUTES_PARAM) final String attributes,
-                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes,
+                           @Context final SecurityContext sec) {
     // @formatter:on
     logger.trace("Reading group {}", groupId);
-    Group groupFromDb = groupAPI.getGroup(groupId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
+    Group groupFromDb = groupAPI.getGroup(groupId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes),
+            sec.getUserPrincipal());
 
     if (groupFromDb == null) {
       throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);
@@ -110,7 +109,8 @@ public class Groups {
                             @QueryParam(START_ID_PARAM) @ValidStartId String startId,
                             @QueryParam(FILTER_PARAM) final String filter,
                             @QueryParam(ATTRIBUTES_PARAM) final String attributes,
-                            @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
+                            @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes,
+                            @Context final SecurityContext sec) {
     // @formatter:on
     logger.trace("Reading groups with paging parameters startIndex {} startId {} count {}", startIndexParam, startId, countParam);
 
@@ -124,7 +124,8 @@ public class Groups {
     }
 
     PageInfo pageInfo = PageInfo.getInstance(count, startIndex - 1, startId);
-    PagedResult<Group> groups = groupAPI.getGroups(pageInfo, filter, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
+    PagedResult<Group> groups = groupAPI.getGroups(pageInfo, filter, RequestedResourceAttributesParser.parse(attributes, excludedAttributes),
+            sec.getUserPrincipal());
 
     List<Group> groupsToReturn = new ArrayList<>();
     for (Group group : groups.getResources()) {
@@ -141,13 +142,14 @@ public class Groups {
   }
 
   @POST
-  public Response createGroup(@Valid Group newGroup) {
+  public Response createGroup(@Valid Group newGroup,
+                              @Context final SecurityContext sec) {
     if (newGroup == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
 
     Group preparedGroup = groupPreProcessor.prepareForCreate(newGroup);
-    Group createdGroup = groupAPI.createGroup(preparedGroup);
+    Group createdGroup = groupAPI.createGroup(preparedGroup, sec.getUserPrincipal());
 
     createdGroup = resourceLocationService.addMembersLocation(createdGroup);
     createdGroup = resourceLocationService.addLocation(createdGroup, createdGroup.getId());
@@ -159,13 +161,14 @@ public class Groups {
 
   @PUT
   @Path("{id}")
-  public Response updateGroup(@PathParam("id") final String groupId, @Valid Group groupToUpdate) {
+  public Response updateGroup(@PathParam("id") final String groupId, @Valid Group groupToUpdate,
+                              @Context final SecurityContext sec) {
     if (groupToUpdate == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
     Group preparedGroup = groupPreProcessor.prepareForUpdate(groupToUpdate, groupId);
 
-    Group updatedGroup = groupAPI.updateGroup(preparedGroup);
+    Group updatedGroup = groupAPI.updateGroup(preparedGroup, sec.getUserPrincipal());
 
     updatedGroup = resourceLocationService.addMembersLocation(updatedGroup);
     updatedGroup = resourceLocationService.addLocation(updatedGroup, updatedGroup.getId());
@@ -177,8 +180,9 @@ public class Groups {
 
   @DELETE
   @Path("{id}")
-  public void deleteGroup(@PathParam("id") final String groupId) {
-    groupAPI.deleteGroup(groupId);
+  public void deleteGroup(@PathParam("id") final String groupId,
+                          @Context final SecurityContext sec) {
+    groupAPI.deleteGroup(groupId, sec.getUserPrincipal());
 
     logger.trace("Deleted group {}", groupId);
     Response.noContent().build();
@@ -186,7 +190,8 @@ public class Groups {
 
   @PATCH
   @Path("{id}")
-  public Response patchGroup(@PathParam("id") final String groupId, final PatchBody patchBody) {
+  public Response patchGroup(@PathParam("id") final String groupId, final PatchBody patchBody,
+                             @Context final SecurityContext sec) {
     if (patchBody == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
@@ -194,7 +199,7 @@ public class Groups {
     validationFramework.validate(patchBody);
 
     Meta meta = new Meta.Builder(null, Instant.now()).setVersion(UUID.randomUUID().toString()).build();
-    groupAPI.patchGroup(groupId, patchBody, meta);
+    groupAPI.patchGroup(groupId, patchBody, meta, sec.getUserPrincipal());
 
     logger.trace("Updated group {}", groupId);
     return Response.status(Response.Status.NO_CONTENT).build();
