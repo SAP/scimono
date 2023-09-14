@@ -17,7 +17,7 @@
 
 package com.sap.scimono.exception;
 
-import javax.ws.rs.core.Response.Status;
+import jakarta.ws.rs.core.Response.Status;
 
 public class ResourceNotFoundException extends SCIMException {
 

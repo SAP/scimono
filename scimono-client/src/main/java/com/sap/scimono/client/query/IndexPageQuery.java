@@ -1,6 +1,6 @@
 package com.sap.scimono.client.query;
 
-import javax.ws.rs.client.WebTarget;
+import jakarta.ws.rs.client.WebTarget;
 
 import static com.sap.scimono.api.API.COUNT_PARAM;
 import static com.sap.scimono.api.API.START_INDEX_PARAM;

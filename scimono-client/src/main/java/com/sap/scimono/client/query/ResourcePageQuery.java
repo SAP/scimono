@@ -3,7 +3,7 @@ package com.sap.scimono.client.query;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import javax.ws.rs.client.WebTarget;
+import jakarta.ws.rs.client.WebTarget;
 
 public class ResourcePageQuery implements SCIMQuery {
   public static final int DEFAULT_COUNT = 100;

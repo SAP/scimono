@@ -54,7 +54,7 @@ mvn clean install
   ```java
     import com.sap.scimono.SCIMApplication;
     
-    import javax.ws.rs.ApplicationPath;
+    import jakarta.ws.rs.ApplicationPath;
     
     @ApplicationPath("scim")
     public class MySCIMApi extends SCIMApplication {}
@@ -87,7 +87,7 @@ import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.callback.users.UsersCallback;
 import com.sap.scimono.callback.users.ResourceTypesCallback;
 
-import javax.ws.rs.ApplicationPath;
+import jakarta.ws.rs.ApplicationPath;
 
 @ApplicationPath("scim")
 public class MySCIMApi extends SCIMApplication {
@@ -122,7 +122,7 @@ The library also provides an extension point for custom resources. Example snipp
 ```java
 import com.sap.scimono.SCIMApplication;
 
-import javax.ws.rs.ApplicationPath;
+import jakarta.ws.rs.ApplicationPath;
 import java.util.Set;
 
 @ApplicationPath("scim")

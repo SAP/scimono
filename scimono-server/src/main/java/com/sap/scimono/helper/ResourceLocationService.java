@@ -15,8 +15,8 @@ import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.exception.InternalScimonoException;
 
-import javax.ws.rs.core.UriBuilder;
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.UriInfo;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URI;

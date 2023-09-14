@@ -1,6 +1,6 @@
 package com.sap.scimono.client.query;
 
-import javax.ws.rs.client.WebTarget;
+import jakarta.ws.rs.client.WebTarget;
 
 public interface SCIMQuery {
   WebTarget apply(WebTarget target);

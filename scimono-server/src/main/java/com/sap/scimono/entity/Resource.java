@@ -46,8 +46,8 @@ import com.sap.scimono.entity.schema.Schema;
 import com.sap.scimono.exception.InvalidInputException;
 import com.sap.scimono.exception.SCIMException;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.*;
 
 /**

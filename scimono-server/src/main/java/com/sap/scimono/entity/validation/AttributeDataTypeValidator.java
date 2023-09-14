@@ -6,7 +6,7 @@ import java.net.URISyntaxException;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.sap.scimono.entity.schema.Attribute;

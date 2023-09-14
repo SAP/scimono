@@ -12,9 +12,9 @@ package com.sap.scimono.api.helper;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.Produces;
-import javax.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.ext.ContextResolver;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

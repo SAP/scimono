@@ -7,11 +7,11 @@ import static com.sap.scimono.entity.schema.validation.CustomInputValidator.Type
 import static com.sap.scimono.entity.schema.validation.CustomInputValidator.Type.RESOURCE_ID;
 import static com.sap.scimono.helper.Strings.isNullOrEmpty;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
-import javax.ws.rs.core.Application;
-import javax.ws.rs.core.Context;
-import javax.ws.rs.core.UriInfo;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
+import jakarta.ws.rs.core.Application;
+import jakarta.ws.rs.core.Context;
+import jakarta.ws.rs.core.UriInfo;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.api.API;

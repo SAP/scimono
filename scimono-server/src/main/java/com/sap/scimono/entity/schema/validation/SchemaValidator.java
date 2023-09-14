@@ -3,8 +3,8 @@ package com.sap.scimono.entity.schema.validation;
 
 import java.util.List;
 
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;

@@ -1,7 +1,7 @@
 package com.sap.scimono.api.helper;
 
-import javax.validation.ValidationException;
-import javax.ws.rs.WebApplicationException;
+import jakarta.validation.ValidationException;
+import jakarta.ws.rs.WebApplicationException;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;

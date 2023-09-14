@@ -25,7 +25,7 @@ import static com.sap.scimono.entity.definition.ResourceConstants.META_FIELD;
 import static com.sap.scimono.entity.definition.ResourceConstants.SCHEMAS_FIELD;
 import static java.util.Objects.hash;
 
-import javax.validation.Valid;
+import jakarta.validation.Valid;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonInclude;
