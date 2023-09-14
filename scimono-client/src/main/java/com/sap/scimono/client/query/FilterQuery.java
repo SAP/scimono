@@ -3,7 +3,7 @@ package com.sap.scimono.client.query;
 import com.sap.scimono.SCIMFilterBaseVisitor;
 import com.sap.scimono.filter.QueryFilterParser;
 
-import javax.ws.rs.client.WebTarget;
+import jakarta.ws.rs.client.WebTarget;
 
 public class FilterQuery implements SCIMQuery {
   private static final String FILTER_QUERY_PARAM = "filter";

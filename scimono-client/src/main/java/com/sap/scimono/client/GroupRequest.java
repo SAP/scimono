@@ -3,9 +3,9 @@ package com.sap.scimono.client;
 import static com.sap.scimono.api.API.GROUPS;
 import static com.sap.scimono.client.query.ResourcePageQuery.indexPageQuery;
 
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.Response;
 
 import com.sap.scimono.client.query.IdentityPageQuery;
 import com.sap.scimono.client.query.IndexPageQuery;

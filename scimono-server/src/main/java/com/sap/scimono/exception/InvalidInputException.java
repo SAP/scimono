@@ -1,7 +1,7 @@
 
 package com.sap.scimono.exception;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 
 public class InvalidInputException extends SCIMException {
   private static final long serialVersionUID = -3458413407035304091L;

@@ -12,9 +12,9 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_COU
 import java.util.LinkedList;
 import java.util.List;
 
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.GenericType;
+import jakarta.ws.rs.core.Response;
 
 import com.sap.scimono.client.query.SCIMQuery;
 import com.sap.scimono.entity.Resource;

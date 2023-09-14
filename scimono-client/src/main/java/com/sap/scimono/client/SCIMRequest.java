@@ -9,12 +9,12 @@ import static com.sap.scimono.client.ResourceAction.GET_SINGLE;
 import static com.sap.scimono.client.ResourceAction.PATCH_UPDATE;
 import static com.sap.scimono.client.ResourceAction.PUT_UPDATE;
 import static java.util.Collections.singleton;
-import static javax.ws.rs.HttpMethod.PATCH;
-import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.HttpHeaders.CONTENT_TYPE;
-import static javax.ws.rs.core.Response.Status.CREATED;
-import static javax.ws.rs.core.Response.Status.NO_CONTENT;
-import static javax.ws.rs.core.Response.Status.OK;
+import static jakarta.ws.rs.HttpMethod.PATCH;
+import static jakarta.ws.rs.client.Entity.entity;
+import static jakarta.ws.rs.core.HttpHeaders.CONTENT_TYPE;
+import static jakarta.ws.rs.core.Response.Status.CREATED;
+import static jakarta.ws.rs.core.Response.Status.NO_CONTENT;
+import static jakarta.ws.rs.core.Response.Status.OK;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,11 +24,11 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-import javax.ws.rs.client.Invocation;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 
 public class SCIMRequest {
   private final MultivaluedMap<String, Object> httpHeaders;

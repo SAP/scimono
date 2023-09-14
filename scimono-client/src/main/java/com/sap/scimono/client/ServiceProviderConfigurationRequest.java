@@ -2,8 +2,8 @@ package com.sap.scimono.client;
 
 import com.sap.scimono.entity.config.ServiceProviderConfig;
 
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.Response;
 
 import static com.sap.scimono.api.API.SERVICE_PROVIDER_CONFIG;
 import static com.sap.scimono.client.ResourceAction.GET_SINGLE;

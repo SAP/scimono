@@ -2,16 +2,17 @@ package com.sap.scimono.api;
 
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.exception.InvalidInputException;
-import org.junit.Before;
-import org.junit.Test;
-
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import java.util.UUID;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class UsersTest {
 
   private Users users;
 
-  @Before
+  @BeforeEach
   public void setup() {
     SCIMApplication scimApplication = new SCIMApplication() {
 
@@ -19,16 +20,17 @@ public class UsersTest {
     users = new Users(scimApplication, null);
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testUpdateUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    users.updateUser(userId, null);
+
+    assertThrows(InvalidInputException.class, () -> users.updateUser(userId, null));
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testPatchUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
-    users.patchUser(userId, null);
+    assertThrows(InvalidInputException.class, () -> users.patchUser(userId, null));
   }
 
 }
