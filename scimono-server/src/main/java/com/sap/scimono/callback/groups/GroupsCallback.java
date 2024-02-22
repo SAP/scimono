@@ -16,13 +16,28 @@ import com.sap.scimono.entity.patch.PatchBody;
 
 public interface GroupsCallback {
   /**
-   * @param groupId, unique group id
+   * @param groupId unique group id of the requested group
    * @return the group with the specified groupId or null if no such group exists
    */
   Group getGroup(final String groupId);
 
+  /**
+   * @param groupId               unique group id of the requested group
+   * @param additionalAttributes  additional attributes to be returned or excluded from the response
+   * @return the group with the specified groupId or null if no such group exists
+   */
   default Group getGroup(String groupId, RequestedResourceAttributes additionalAttributes) {
     return getGroup(groupId);
+  }
+
+  /**
+   * @param groupId               unique group id of the requested group
+   * @param additionalAttributes  additional attributes to be returned or excluded from the response
+   * @param filter                value of the filter query parameter
+   * @return the group with the specified groupId or null if no such group exists
+   */
+  default Group getGroup(String groupId, RequestedResourceAttributes additionalAttributes, String filter) {
+    return getGroup(groupId, additionalAttributes);
   }
 
   /**
