@@ -86,10 +86,11 @@ public class Groups {
   // @formatter:off
   public Response getGroup(@PathParam("id") final String groupId,
                            @QueryParam(ATTRIBUTES_PARAM) final String attributes,
+                           @QueryParam(FILTER_PARAM) final String filter,
                            @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
     // @formatter:on
     logger.trace("Reading group {}", groupId);
-    Group groupFromDb = groupAPI.getGroup(groupId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
+    Group groupFromDb = groupAPI.getGroup(groupId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes), filter);
 
     if (groupFromDb == null) {
       throw new ResourceNotFoundException(RESOURCE_TYPE_GROUP, groupId);

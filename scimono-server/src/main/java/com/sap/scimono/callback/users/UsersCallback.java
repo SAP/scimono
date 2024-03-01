@@ -37,6 +37,15 @@ public interface UsersCallback {
   }
 
   /**
+   * @param additionalAttributes additional attributes to be returned of excluded from the response
+   * @param filter               value of the filter query parameter
+   * @return the user with the specified userId or null if no such user exists
+   */
+  default User getUser(String userId, RequestedResourceAttributes additionalAttributes, final String filter) {
+    return getUser(userId, additionalAttributes);
+  }
+
+  /**
    * Returns a page of users (limited by {@link SCIMConfigurationCallback#getMaxResourcesPerPage()}),
    * taking into account the specified filter and paging parameters.
    *
