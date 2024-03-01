@@ -193,7 +193,7 @@ public interface SchemasCallback {
   }
 
   static boolean isCustomSchema(final String schemaId) {
-    return schemaId.matches(SCHEMA_PATTERN.toString());
+    return !isCoreSchema(schemaId) && schemaId.matches(SCHEMA_PATTERN.toString());
   }
 
   static boolean isCoreSchema(final String schemaId) {
