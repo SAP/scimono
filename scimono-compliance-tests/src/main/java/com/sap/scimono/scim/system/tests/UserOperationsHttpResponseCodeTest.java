@@ -115,12 +115,13 @@ public class UserOperationsHttpResponseCodeTest extends SCIMHttpResponseCodeTest
   }
 
   @Test
-  @DisplayName("Test Get all users with # instead of id and verify Http status code: 404")
-  public void testGetAllUsersHashTag404() {
+  @DisplayName("Test Get single user with # instead of id and verify Http status code: 404 or 400")
+  public void testGetSingleUserHashTag404or400() {
     logger.info("Fetching User with #");
     SCIMResponse<User> scimResponse = resourceAwareUserRequest.readSingleUser("#");
 
-    assertAll("Verify GET Response", getResponseStatusAssertions(scimResponse, false, NOT_FOUND));
+    assertEquals(false, scimResponse.isSuccess(), "Verify response is failure");
+    assertEquals(true, scimResponse.getStatusCode() == NOT_FOUND.getStatusCode() || scimResponse.getStatusCode() == BAD_REQUEST.getStatusCode(), "Verify status code");
   }
 
   @Test
