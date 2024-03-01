@@ -118,11 +118,12 @@ public class Users {
   @Path("{id}")
   // @formatter:off
   public Response getUser(@PathParam("id")  final String userId,
+                          @QueryParam(FILTER_PARAM) final String filter,
                           @QueryParam(ATTRIBUTES_PARAM) final String attributes,
                           @QueryParam(EXCLUDED_ATTRIBUTES_PARAM) final String excludedAttributes) {
     // @formatter:on
     logger.trace("Reading user {}", userId);
-    User userFromDb = usersAPI.getUser(userId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes));
+    User userFromDb = usersAPI.getUser(userId, RequestedResourceAttributesParser.parse(attributes, excludedAttributes), filter);
 
     if (userFromDb == null) {
       throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
