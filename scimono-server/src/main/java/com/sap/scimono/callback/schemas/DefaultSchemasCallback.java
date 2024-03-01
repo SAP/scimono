@@ -4,7 +4,6 @@ package com.sap.scimono.callback.schemas;
 import jakarta.ws.rs.WebApplicationException;
 import jakarta.ws.rs.core.Response;
 
-import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.entity.schema.Schema;
 
 import java.util.List;
@@ -34,11 +33,6 @@ public class DefaultSchemasCallback implements SchemasCallback {
 
   @Override
   public boolean isValidSchemaName(String schemaName) {
-    throw new WebApplicationException(Response.Status.NOT_IMPLEMENTED);
-  }
-
-  @Override
-  public Attribute getAttribute(String path) {
     throw new WebApplicationException(Response.Status.NOT_IMPLEMENTED);
   }
 
