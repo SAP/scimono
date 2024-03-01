@@ -12,6 +12,7 @@ import com.sap.scimono.entity.paging.PagedResult;
 import com.sap.scimono.entity.schema.ResourceType;
 import com.sap.scimono.entity.schema.ResourceType.Builder;
 import com.sap.scimono.entity.schema.Schema;
+import com.sap.scimono.entity.schema.SchemaExtension;
 import com.sap.scimono.exception.ResourceNotFoundException;
 import com.sap.scimono.helper.ResourceLocationService;
 
@@ -35,6 +36,15 @@ import static com.sap.scimono.api.API.RESOURCE_TYPES;
 @Consumes(APPLICATION_JSON_SCIM)
 public class ResourceTypes {
   private static final Instant now = Instant.now();
+  private static final List<SchemaExtension> USER_SCHEMA_EXTENSIONS = new ArrayList<>();
+  private static final List<SchemaExtension> GROUP_SCHEMA_EXTENSIONS = new ArrayList<>();
+
+  static {
+    USER_SCHEMA_EXTENSIONS.add(new SchemaExtension("urn:ietf:params:scim:schemas:extension:enterprise:2.0:User", false));
+    USER_SCHEMA_EXTENSIONS.add(new SchemaExtension("urn:sap:cloud:scim:schemas:extension:custom:2.0:User", false));
+    USER_SCHEMA_EXTENSIONS.add(new SchemaExtension("urn:ietf:params:scim:schemas:extension:sap:2.0:User", false));
+    GROUP_SCHEMA_EXTENSIONS.add(new SchemaExtension("urn:sap:cloud:scim:schemas:extension:custom:2.0:Group", false));
+  }
 
   //@formatter:off
   private static final ResourceType RESOURCE_TYPE_USER = new Builder()
@@ -137,7 +147,21 @@ public class ResourceTypes {
   private ResourceType withSchemaExtensions(ResourceType resourceType) {
     Builder builder = resourceType.builder();
     builder.clearSchemaExtensions();
-    builder.addSchemaExtensions(resourceTypesCallback.getSchemaExtensions(resourceType.getId()));
+
+    switch (resourceType.getName()) {
+
+      case User.RESOURCE_TYPE_USER:
+        builder.addSchemaExtensions(USER_SCHEMA_EXTENSIONS);
+        break;
+
+      case Group.RESOURCE_TYPE_GROUP:
+        builder.addSchemaExtensions(GROUP_SCHEMA_EXTENSIONS);
+        break;
+
+      default:
+        builder.addSchemaExtensions(resourceTypesCallback.getSchemaExtensions(resourceType.getId()));
+    }
+
     return builder.build();
   }
 }
