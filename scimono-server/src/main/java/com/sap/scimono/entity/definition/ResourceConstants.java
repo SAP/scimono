@@ -21,5 +21,15 @@ public interface ResourceConstants {
     String DISPLAY_FIELD = "display";
     String PRIMARY_FIELD = "primary";
     String REF_FIELD = "$ref";
+    String CONTACT_PREFERENCES_EMAIL = "email";
+    String CONTACT_PREFERENCES_TELEPHONE = "telephone";
+    String SOCIALIDENTITIES_SOCIALID = "socialId";
+    String SOCIALIDENTITIES_SOCIALPROVIDER = "socialProvider";
+    String SOCIALIDENTITIES_DATEOFLINKING = "dateOfLinking";
+    String PASSWORDDETAILS_LOGINTIME = "loginTime";
+    String PASSWORDDETAILS_FAILEDLOGINATTEMPTS = "failedLoginAttempts";
+    String PASSWORDDETAILS_SETTIME = "setTime";
+    String PASSWORDDETAILS_STATUS = "status";
+    String PASSWORDDETAILS_POLICY = "policy";
   }
 }
