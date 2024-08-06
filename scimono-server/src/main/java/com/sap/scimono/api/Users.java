@@ -16,7 +16,6 @@ import static com.sap.scimono.entity.paging.PagedByIndexSearchResult.DEFAULT_STA
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import javax.validation.Valid;
@@ -222,6 +221,12 @@ public class Users {
     if (patchBody == null) {
       throw new InvalidInputException(NOT_VALID_INPUTS);
     }
+
+    User userFromDb = usersAPI.getUser(userId);
+    if (userFromDb == null) {
+      throw new ResourceNotFoundException(RESOURCE_TYPE_USER, userId);
+    }
+
     PatchValidationFramework validationFramework = PatchValidationFramework.usersFramework(schemaAPI, resourceTypesAPI, usersAPI);
     validationFramework.validate(patchBody);
 
