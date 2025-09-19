@@ -1,5 +1,7 @@
 package com.sap.scimono.api;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -55,14 +57,16 @@ public class UsersTest {
     users = new Users(scimApplication, null);
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testUpdateUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
+    assertThrows(InvalidInputException.class, () -> users.updateUser(userId, null));
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testPatchUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
+    assertThrows(InvalidInputException.class, () -> users.patchUser(userId, null));
   }
 
   @Test
