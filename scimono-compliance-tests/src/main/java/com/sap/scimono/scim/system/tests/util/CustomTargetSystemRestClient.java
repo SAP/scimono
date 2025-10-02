@@ -25,6 +25,8 @@ import java.util.Base64;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.sap.scimono.api.API.APPLICATION_JSON_SCIM;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.AUTH_TYPE;
@@ -35,6 +37,7 @@ import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_GRANT;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SECRET;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.OAUTH_SERVICE_URL;
 import static com.sap.scimono.scim.system.tests.util.TestProperties.SERVICE_URL;
+import static com.sap.scimono.scim.system.tests.util.TestProperties.HEADERS;
 
 public class CustomTargetSystemRestClient {
   private static final org.slf4j.Logger logger = LoggerFactory.getLogger(CustomTargetSystemRestClient.class);
@@ -144,7 +147,28 @@ public class CustomTargetSystemRestClient {
   }
 
   private static String getOauthHeader() {
+    // First check if Oauth Token is provided by customer.headers
+    if (HEADERS != null){
+      String authHeader = requestWithCustomHeaders();
+      if(! "".equals(authHeader)){
+        return authHeader;
+      }
+    }
     return "Bearer " + getToken();
+  }
+
+  private static String requestWithCustomHeaders(){
+    if (HEADERS != null) {
+      Pattern p = Pattern.compile(Pattern.quote("'") + "(.*?)" + Pattern.quote("'"));
+      Matcher m = p.matcher(HEADERS);
+      while (m.find()) {
+        String[] header = m.group(1).split(":");
+        if("Authorization".equalsIgnoreCase(header[0])){
+          return header[1];
+        }
+      }   
+    }
+    return "";
   }
   @SuppressWarnings("unchecked")
   private static String getToken() {
