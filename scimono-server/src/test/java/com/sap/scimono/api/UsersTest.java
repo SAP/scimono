@@ -1,5 +1,7 @@
 package com.sap.scimono.api;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Set;
@@ -8,6 +10,7 @@ import java.util.UUID;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.jupiter.api.DisplayName;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
@@ -17,9 +20,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sap.scimono.SCIMApplication;
 import com.sap.scimono.callback.schemas.SchemasCallback;
 import com.sap.scimono.callback.users.UsersCallback;
+import com.sap.scimono.entity.User;
 import com.sap.scimono.entity.patch.PatchBody;
 import com.sap.scimono.entity.patch.PatchOperation;
+import com.sap.scimono.entity.schema.Attribute;
 import com.sap.scimono.exception.InvalidInputException;
+import com.sap.scimono.exception.ResourceNotFoundException;
 
 public class UsersTest {
 
@@ -51,20 +57,23 @@ public class UsersTest {
     users = new Users(scimApplication, null);
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testUpdateUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
+    assertThrows(InvalidInputException.class, () -> users.updateUser(userId, null));
   }
 
-  @Test(expected = InvalidInputException.class)
+  @Test
   public void testPatchUserWithEmptyBody() {
     String userId = String.valueOf(UUID.randomUUID());
+    assertThrows(InvalidInputException.class, () -> users.patchUser(userId, null));
   }
 
   @Test
   public void testPatchUserActivate() throws JsonProcessingException {
     Mockito.doNothing().when(usersCallbackMock).patchUser(Mockito.any(), Mockito.any(), Mockito.any());
     Mockito.doReturn(new ArrayList<>()).when(schemasCallbackMock).getCustomSchemas();
+    Mockito.doReturn(new User.Builder().build()).when(usersCallbackMock).getUser(Mockito.any());
     String userId = String.valueOf(UUID.randomUUID());
     Set<String> schemas = new HashSet<>();
     schemas.add(PATCH_OP_SCHEMA);
@@ -87,9 +96,63 @@ public class UsersTest {
     Assert.assertEquals(patchBody, patchBodyCaptor.getValue());
   }
 
+  @Test(expected = ResourceNotFoundException.class)
+  @DisplayName("Test patch user with non existing resource and remove operation on a not removable attribute. The existence of the resource given in the path should be validated first. Expected ResourceNotFoundException (404).")
+  public void testPatchUserNonExistingResource() throws JsonProcessingException {
+    Mockito.doNothing().when(usersCallbackMock).patchUser(Mockito.any(), Mockito.any(), Mockito.any());
+    Mockito.doReturn(new Attribute.Builder().required(true).build()).when(schemasCallbackMock).getAttribute(Mockito.any());
+    Mockito.doReturn(new ArrayList<>()).when(schemasCallbackMock).getCustomSchemas();
+    String userId = String.valueOf(UUID.randomUUID());
+    Set<String> schemas = new HashSet<>();
+    schemas.add(PATCH_OP_SCHEMA);
+
+
+    JsonNode valueDisplayName = getValueDisplayName();
+    PatchOperation patchOperation1 = new PatchOperation.Builder()
+        .setOp(PatchOperation.Type.REMOVE)
+        .setPath("displayName")
+        .setValue(valueDisplayName)
+        .build();
+    PatchBody patchBody = new PatchBody.Builder()
+        .addOperation(patchOperation1)
+        .setSchemas(schemas)
+        .build();
+    users.patchUser(userId, patchBody);
+  }
+
+  @Test(expected = InvalidInputException.class)
+  @DisplayName("Test patch user with existing resource and remove operation on a not removable attribute. Expected InvalidInputException (400) since this is not allowed.")
+  public void testPatchUserExistingResource() throws JsonProcessingException {
+    Mockito.doNothing().when(usersCallbackMock).patchUser(Mockito.any(), Mockito.any(), Mockito.any());
+    Mockito.doReturn(new Attribute.Builder().required(true).build()).when(schemasCallbackMock).getAttribute(Mockito.any());
+    Mockito.doReturn(new User.Builder().build()).when(usersCallbackMock).getUser(Mockito.any());
+    Mockito.doReturn(new ArrayList<>()).when(schemasCallbackMock).getCustomSchemas();
+    String userId = String.valueOf(UUID.randomUUID());
+    Set<String> schemas = new HashSet<>();
+    schemas.add(PATCH_OP_SCHEMA);
+
+
+    JsonNode valueDisplayName = getValueDisplayName();
+    PatchOperation patchOperation1 = new PatchOperation.Builder()
+        .setOp(PatchOperation.Type.REMOVE)
+        .setPath("displayName")
+        .setValue(valueDisplayName)
+        .build();
+    PatchBody patchBody = new PatchBody.Builder()
+        .addOperation(patchOperation1)
+        .setSchemas(schemas)
+        .build();
+    users.patchUser(userId, patchBody);
+  }
+
   private JsonNode getValueTrue() throws JsonProcessingException {
     JsonNode boolValue = mapper.readTree("true");
     return boolValue;
+  }
+
+  private JsonNode getValueDisplayName() throws JsonProcessingException {
+    JsonNode stringValue = mapper.readTree("\"displayName\"");
+    return stringValue;
   }
 
 }
